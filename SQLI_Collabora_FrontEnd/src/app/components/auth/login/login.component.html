@@ -1,0 +1,96 @@
+<div class="auth-container">
+  <div class="welcome-section" *ngIf="isBrowser && windowWidth > 768">
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+     <div class="sparkle-dot"></div>
+    <img src="assets/images/etoile.png" alt="Icône d'étoile" class="sparkle-icon">
+    <h1 class="welcome-title"><strong>Bienvenue sur Collabora</strong></h1>
+    <p class="welcome-description">
+      <span>La plateforme collaborative ultime pour</span>
+      <span>gérer les projets, les équipes et les idées en parfaite harmonie</span>
+    </p>
+    <div class="features">
+      <div class="feature-item">
+        <strong>Collaboration d'équipe</strong><br>
+        <span class="feature-text">Travaillez de manière fluide avec votre équipe</span>
+      </div>
+      <div class="feature-item">
+        <strong>Gestion de projets</strong><br>
+        <span class="feature-text">Organisez et suivez les progrès</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="auth-card">
+      <img src="assets/images/logo.png" alt="Logo Collabora" class="form-logo">
+      <h2 class="form-title">Bienvenue</h2>
+      <p class="form-subtitle">Connectez-vous pour rejoindre Collabora</p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-regular fa-envelope"></i>
+            <label for="email">Adresse email</label>
+          </div>
+          <input type="email" id="email" formControlName="email" 
+                 placeholder="exemple@email.com" 
+                 [class.invalid]="showErrors && f['email'].invalid">
+          
+          <div *ngIf="showErrors && f['email'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['email'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['email'].errors['email']">
+                Format d'email invalide (ex:  exemple&#64;email.com)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-solid fa-lock"></i>
+            <label for="password">Mot de passe</label>
+          </div>
+          <div class="password-input-container">
+            <input [type]="showPassword ? 'text' : 'password'" id="password" 
+                   formControlName="password" placeholder="Votre mot de passe"
+                   [class.invalid]="showErrors && f['password'].invalid">
+            <i class="fa-solid password-toggle" 
+               [class.fa-eye]="!showPassword" 
+               [class.fa-eye-slash]="showPassword" 
+               (click)="toggleShowPassword()"></i>
+          </div>
+          
+          <div *ngIf="showErrors && f['password'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['password'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['password'].errors['minlength']">
+                Minimum 8 caractères requis
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="remember-forgot-container">
+          <input type="checkbox" id="rememberMe" formControlName="rememberMe" class="mr-2">
+          <label for="rememberMe">Se souvenir de moi</label>
+          <a href="/forgot-password" class="ml-auto text-[#8432DF] ">Mot de passe oublié ?</a>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="loginForm.invalid && showErrors">
+          Se connecter
+        </button>
+      </form>
+
+      <p class="switch-link">
+        Vous n'avez pas de compte ? 
+        <a href="/register" class="text-primary">S'inscrire</a>
+      </p>
+    </div>
+  </div>
+</div>

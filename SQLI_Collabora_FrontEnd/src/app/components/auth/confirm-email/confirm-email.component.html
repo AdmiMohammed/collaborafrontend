@@ -1,0 +1,35 @@
+<div class="auth-container">
+  <div class="form-container">
+    <div class="auth-card">
+      <img src="assets/images/logo.png" alt="Logo Collabora" class="form-logo">
+      <h2 class="form-title">Confirmation d'email</h2>
+      <div *ngIf="!isConfirmed && !message" class="message-container">
+        <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#6B7280">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <p class="message-text">
+          Veuillez vérifier votre boîte de réception<br>et cliquer sur le lien de confirmation.
+        </p>
+      </div>
+      <div *ngIf="message && isSuccess" class="message-container">
+        <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#8432DF">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <p class="message-text">
+          Votre confirmation est réussie !<br>Vous pouvez maintenant vous connecter.
+        </p>
+      </div>
+      <div *ngIf="message && !isSuccess" class="message-container">
+        <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#DC2626">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <p class="message-text">
+          Échec de la confirmation de l'email.<br>Veuillez réessayer.
+        </p>
+      </div>
+      <p *ngIf="isSuccess" class="redirect-message">
+        Vous serez redirigé vers la page de connexion...
+      </p>
+    </div>
+  </div>
+</div>

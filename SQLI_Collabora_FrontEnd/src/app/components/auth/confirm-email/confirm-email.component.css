@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.form-container {
+  flex: 1;
+  width: 100%; /* Modifié de 50% à 100% pour occuper toute la largeur */
+  max-width: 100%; /* Modifié pour correspondre */
+  background-color: #F4F6FE;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 30px; /* Conservé pour plus d'espace interne */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-logo {
+  display: block;
+  margin: 0 auto 0.5rem;
+  max-width: 100px; /* Réduit de 200px pour correspondre au style cible */
+}
+
+.form-title {
+  font-size: 1.3rem; /* Réduit de 1.8rem à 1.3rem */
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.5rem; /* Réduit de 1.5rem à 0.5rem */
+  color: #4D4D4D; /* Modifié pour correspondre au style cible */
+}
+
+.form-subtitle {
+  font-size: 0.9rem; /* Ajouté pour correspondre au style cible */
+  color: #6B7280;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0; /* Conservé pour l'espacement */
+}
+
+.message-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1rem;
+}
+
+.message-text {
+  font-size: 0.9rem; /* Réduit de 1.25rem à 0.9rem */
+  line-height: 1.5;
+  text-align: center;
+}
+
+.redirect-message {
+  font-size: 0.8rem; /* Ajouté pour le texte de redirection */
+  color: #6B7280; /* Correspond à text-gray-600 */
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(to right, #8432DF, #C020D0, #FC0FC0);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem; /* Ajouté pour correspondre au style cible */
+  margin-top: 1.5rem; /* Ajouté pour l'espacement */
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.switch-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.8rem; /* Ajouté pour correspondre au style cible */
+}
+
+.switch-link a {
+  color: #8432DF;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.switch-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+  .form-container {
+    width: 100%;
+    max-width: 100%;
+    background: #F4F6FE;
+  }
+  .auth-card {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 20px; /* Conservé pour mobile */
+  }
+}

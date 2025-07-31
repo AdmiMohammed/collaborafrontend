@@ -1,0 +1,139 @@
+<div class="auth-container">
+  <div class="welcome-section" *ngIf="isBrowser && windowWidth > 768">
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+    <div class="sparkle-dot"></div>
+     <div class="sparkle-dot"></div>
+    <img src="assets/images/etoile.png" alt="Icône d'étoile" class="sparkle-icon">
+    <h1 class="welcome-title"><strong>Bienvenue sur Collabora</strong></h1>
+    <p class="welcome-description">
+      <span>La plateforme collaborative ultime pour</span>
+      <span>gérer les projets, les équipes et les idées en parfaite harmonie</span>
+    </p>
+    <div class="features">
+      <div class="feature-item">
+        <strong>Collaboration d'équipe</strong><br>
+        <span class="feature-text">Travaillez de manière fluide avec votre équipe</span>
+      </div>
+      <div class="feature-item">
+        <strong>Gestion de projets</strong><br>
+        <span class="feature-text">Organisez et suivez les progrès</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="auth-card">
+      <img src="assets/images/logo.png" alt="Logo Collabora" class="form-logo">
+      <h2 class="form-title">Créer un compte</h2>
+      <p class="form-subtitle">Inscrivez-vous pour rejoindre Collabora</p>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-regular fa-user"></i>
+            <label for="firstName">Prénom</label>
+          </div>
+          <input type="text" id="firstName" formControlName="firstName" 
+                 placeholder="Votre prénom" 
+                 [class.invalid]="showErrors && f['firstName'].invalid">
+          
+          <div *ngIf="showErrors && f['firstName'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['firstName'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['firstName'].errors['maxlength']">
+                Maximum 100 caractères
+              </span>
+              <span *ngIf="f['firstName'].errors['pattern']">
+                Caractères alphabétiques seulement (lettres, espaces, apostrophes et traits d'union)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-regular fa-user"></i>
+            <label for="lastName">Nom</label>
+          </div>
+          <input type="text" id="lastName" formControlName="lastName" 
+                 placeholder="Votre nom" 
+                 [class.invalid]="showErrors && f['lastName'].invalid">
+          
+          <div *ngIf="showErrors && f['lastName'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['lastName'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['lastName'].errors['maxlength']">
+                Maximum 100 caractères
+              </span>
+              <span *ngIf="f['lastName'].errors['pattern']">
+                Caractères alphabétiques seulement (lettres, espaces, apostrophes et traits d'union)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-regular fa-envelope"></i>
+            <label for="email">Adresse email</label>
+          </div>
+          <input type="email" id="email" formControlName="email" 
+                 placeholder="exemple@email.com" 
+                 [class.invalid]="showErrors && f['email'].invalid">
+          
+          <div *ngIf="showErrors && f['email'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['email'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['email'].errors['email'] || f['email'].errors['pattern']">
+                Format d'email invalide (ex: exemple&#64;email.com)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="label-wrapper">
+            <i class="fa-solid fa-lock"></i>
+            <label for="password">Mot de passe</label>
+          </div>
+          <div class="password-input-container">
+            <input [type]="showPassword ? 'text' : 'password'" id="password" 
+                   formControlName="password" placeholder="Au moins 8 caractères"
+                   [class.invalid]="showErrors && f['password'].invalid">
+            <i class="fa-solid password-toggle" 
+               [class.fa-eye]="!showPassword" 
+               [class.fa-eye-slash]="showPassword" 
+               (click)="toggleShowPassword()"></i>
+          </div>
+          
+          <div *ngIf="showErrors && f['password'].errors" class="error-message">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div class="error-text">
+              <span *ngIf="f['password'].errors['required']">Ce champ est obligatoire</span>
+              <span *ngIf="f['password'].errors['minlength']">
+                Minimum 8 caractères requis
+              </span>
+              <span *ngIf="f['password'].errors['pattern']">
+                Doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="registerForm.invalid && showErrors">
+          S'inscrire
+        </button>
+      </form>
+
+      <p class="switch-link">
+        Vous avez déjà un compte ? 
+        <a href="/login" class="text-primary">Se connecter</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { LoginComponent } from './components/auth/login/login.component';
+import { RegisterComponent } from './components/auth/register/register.component';
+import { ConfirmEmailComponent } from './components/auth/confirm-email/confirm-email.component';
+import { ResetPasswordComponent } from './components/auth/reset-password/reset-password.component';
+import { HomeComponent } from './components/home/home.component';
+import { ForgotPasswordComponent } from './components/auth/forgot-password/forgot-password.component';
+const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'confirm-email', component: ConfirmEmailComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+   { path: 'home', component: HomeComponent }
+
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
