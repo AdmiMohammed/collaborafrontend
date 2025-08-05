@@ -1,0 +1,106 @@
+<div 
+  [ngClass]="{
+    'w-64': isOpen,
+    'w-20': !isOpen,
+    'md':!isOpen
+  }"
+  class="h-screen bg-gradient-to-b from-white to-purple-100 p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out"
+>
+  <div>
+    <div class="mb-8">
+      <div *ngIf="isOpen" class="flex items-center justify-between mt-3">
+        <div class="flex flex-row" >
+            <img [src]="imgUrl" alt="" class="w-8 h-8 object-cover mx-2 ">
+
+            <div class="font-bold text-gray-700 text-xl">
+                Colla<span class="text-purple-600">bora</span>
+            </div>
+        </div>
+        
+        <button (click)="toggleSidebar()" class="text-gray-500 hover:text-gray-700 text-xl">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <div *ngIf="!isOpen" class="flex justify-center">
+        <button (click)="toggleSidebar()" class="text-gray-500 hover:text-gray-700 text-xl">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <nav class="space-y-2 text-sm text-gray-700">
+
+        <p *ngIf="isOpen" class="text-xs text-gray-400 mt-4 mb-2 px-3">MAIN</p>
+        <!-- Dashboard -->
+        <a
+            routerLink="./"
+            routerLinkActive="bg-white shadow font-semibold text-purple-700"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="px-3 py-2 hover:bg-white rounded-lg flex items-center transition"
+            [ngClass]="{ 'gap-2 ': isOpen, 'justify-center': !isOpen }"
+        >
+            <i class="fas fa-home text-purple-600 w-5 text-center"></i>
+            <span *ngIf="isOpen">Dashboard</span>
+        </a>
+         <a
+            routerLink=""
+            routerLinkActive="bg-white shadow font-semibold text-purple-700"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="px-3 py-2 hover:bg-white rounded-lg flex items-center transition"
+            [ngClass]="{ 'gap-2 ': isOpen, 'justify-center': !isOpen }"
+        >
+            <i class="fas fa-diagram-project text-purple-600 w-5 text-center"></i>
+            <span *ngIf="isOpen">Projects</span>
+        </a>
+         <a
+            routerLink=""
+            routerLinkActive="bg-white shadow font-semibold text-purple-700"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="px-3 py-2 hover:bg-white rounded-lg flex items-center transition"
+            [ngClass]="{ 'gap-2 ': isOpen, 'justify-center': !isOpen }"
+        >
+            <i class="fas fa-chart-line text-purple-600 w-5 text-center"></i>
+            <span *ngIf="isOpen">Statistics</span>
+        </a>
+        <!-- Profile -->
+        <a
+            routerLink="profile"
+            routerLinkActive="bg-white shadow font-semibold text-purple-700"
+            class="px-3 py-2 hover:bg-white rounded-lg flex items-center transition"
+            [ngClass]="{ 'gap-2': isOpen, 'justify-center': !isOpen }"
+          >
+          <i class="fas fa-user text-purple-600 w-5 text-center"></i>
+          <span *ngIf="isOpen">Profile</span>
+        </a>
+
+       
+      
+
+    </nav>
+  </div>
+  <!-- Settings -->
+    <div class="text-gray-700 text-sm">
+       <a
+        routerLink="settings"
+        routerLinkActive="bg-white shadow font-semibold text-purple-700"
+        class="px-3 py-2 hover:bg-white rounded-lg flex items-center transition"
+        [ngClass]="{ 'gap-2': isOpen, 'justify-center': !isOpen }"
+      >
+        <i class="fas fa-cog text-purple-600 w-5 text-center"></i>
+        <span *ngIf="isOpen">Settings</span>
+      </a>
+       <!-- Logout -->
+
+      <button
+        class="px-3 py-2  hover:bg-white rounded-lg flex items-center transition w-full"
+        [ngClass]="{ 'gap-2': isOpen, 'justify-center': !isOpen }"
+        (click)="onLogout()"
+      >
+        <i class="fas fa-sign-out-alt text-purple-600 w-5 text-center"></i>
+        <span *ngIf="isOpen">Logout</span>
+      </button>
+    </div>
+     
+</div>
+

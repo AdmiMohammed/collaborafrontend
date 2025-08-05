@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 .toast-error {
   background: linear-gradient(to right, #8432DF, #C020D0, #FC0FC0) !important;
   color: white !important;

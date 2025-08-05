@@ -6,6 +6,9 @@ import { ConfirmEmailComponent } from './components/auth/confirm-email/confirm-e
 import { ResetPasswordComponent } from './components/auth/reset-password/reset-password.component';
 import { HomeComponent } from './components/home/home.component';
 import { ForgotPasswordComponent } from './components/auth/forgot-password/forgot-password.component';
+import { DashboardPageComponent } from './modules/dashboard-page/dashboard-page.component';
+import { ProfileComponent } from './modules/profile/profile.component';
+import { MainDashComponent } from './modules/main-dash/main-dash.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -13,7 +16,15 @@ const routes: Routes = [
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-   { path: 'home', component: HomeComponent }
+   { path: 'home', component: HomeComponent },
+   {
+     path : 'dashboard', component: DashboardPageComponent,
+     children: [
+      { path: '', component: MainDashComponent },
+      { path: 'profile', component: ProfileComponent },
+     ]
+    
+    }
 
 ];
 

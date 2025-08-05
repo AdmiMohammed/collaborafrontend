@@ -13,6 +13,13 @@ import { ResetPasswordComponent } from './components/auth/reset-password/reset-p
 import { AuthService } from './services/auth.service';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 import { ForgotPasswordComponent } from './components/auth/forgot-password/forgot-password.component';
+import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+import { DashboardPageComponent } from './modules/dashboard-page/dashboard-page.component';
+import { TopbarComponent } from './shared/components/topbar/topbar.component';
+import { ProfileComponent } from './modules/profile/profile.component';
+import { MainDashComponent } from './modules/main-dash/main-dash.component';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -20,7 +27,12 @@ import { ForgotPasswordComponent } from './components/auth/forgot-password/forgo
     RegisterComponent,
     ConfirmEmailComponent,
     ResetPasswordComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    SidebarComponent,
+    DashboardPageComponent,
+    TopbarComponent,
+    ProfileComponent,
+    MainDashComponent,
   ],
   imports: [
     BrowserModule,
@@ -38,6 +50,7 @@ import { ForgotPasswordComponent } from './components/auth/forgot-password/forgo
   ],
   providers: [
     AuthService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]

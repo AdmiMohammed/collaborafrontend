@@ -68,8 +68,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.loginForm.valid) {
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
+          const token = response.token;
+
+          if(token) {
+            localStorage.setItem('token', token);
+          }
           console.log('Connexion réussie', response);
-          this.router.navigate(['/home']);
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           console.error('Échec de la connexion', error);
