@@ -19,6 +19,8 @@ import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { ProfileComponent } from './modules/profile/profile.component';
 import { MainDashComponent } from './modules/main-dash/main-dash.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { ProjectCardComponent } from './shared/components/project-card/project-card.component';
+import { SortableDirective } from './sortable.directive';
 
 @NgModule({
   declarations: [
@@ -33,6 +35,8 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     TopbarComponent,
     ProfileComponent,
     MainDashComponent,
+    ProjectCardComponent,
+    SortableDirective,
   ],
   imports: [
     BrowserModule,

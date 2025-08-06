@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+.sortable-ghost {
+  opacity: 0.3;
+  border: 2px dashed #8432df;
+  border-radius: 1rem;
+  background-color: #f9f4fe;
+  transition: all 0.25s ease-in-out;
+  box-shadow: none !important;
+}
+
 
 .toast-error {
   background: linear-gradient(to right, #8432DF, #C020D0, #FC0FC0) !important;

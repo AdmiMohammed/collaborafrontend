@@ -1,1 +1,27 @@
-<p>main-dash works!</p>
+  
+  <div class="flex justify-between items-center mb-6">
+<h1 class="text-2xl font-bold text-[#16306B]">Projets</h1>
+
+<button
+  class="flex items-center gap-2 text-white px-4 py-2 rounded-xl hover:bg-primary-mid transition duration-200"
+  [ngStyle]="{ background: '#C020D0' }"
+>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke-width="1.5"
+       stroke="currentColor"
+       class="w-5 h-5">
+    <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+  Nouveau projet
+</button>
+
+  </div>
+
+  <div appSortable [items]="projects" (projectsReordered)="onProjectReorder($event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div *ngFor="let project of projects; let i = index">
+      <app-project-card [project]="project" [index]="i"></app-project-card>
+    </div>
+  </div>
