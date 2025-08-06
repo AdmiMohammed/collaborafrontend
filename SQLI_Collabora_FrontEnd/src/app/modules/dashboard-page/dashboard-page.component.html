@@ -1,9 +1,9 @@
 <div class="flex h-screen">
   <!-- Sidebar -->
-  <app-sidebar></app-sidebar>
+  <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
 
-  <div class="flex-1 bg-gray-100 p-3">
-     <app-topbar></app-topbar>
+  <div class="flex-1 bg-background p-3">
+     <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
      <main class="flex-1 bg-white h-[calc(100vh-6rem)] rounded-2xl p-4 mt-3">
         <router-outlet></router-outlet>
      </main>

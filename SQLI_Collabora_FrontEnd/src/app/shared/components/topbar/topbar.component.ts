@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
@@ -7,6 +7,8 @@ import { UserService } from 'src/app/services/user-service/user.service';
   styleUrls: ['./topbar.component.css']
 })
 export class TopbarComponent {
+  @Input() isSidebarOpen!: boolean;
+  @Output() toggle = new EventEmitter<void>();
   user: any;
   constructor(private userService : UserService){}
 
@@ -20,5 +22,8 @@ export class TopbarComponent {
         console.error('Erreur lors de la récupération de l’utilisateur connecté', err);
       }
     });
+  }
+  toggleSidebar() {
+    this.toggle.emit();
   }
 }

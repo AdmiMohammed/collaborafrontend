@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ToastrModule } from 'ngx-toastr';
 import { AppRoutingModule } from './app-routing.module';
@@ -40,6 +40,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     AppRoutingModule,
     ReactiveFormsModule,
     HttpClientModule,
+    FormsModule,
     ToastrModule.forRoot({
       timeOut: 5000,
       positionClass: 'toast-top-right',

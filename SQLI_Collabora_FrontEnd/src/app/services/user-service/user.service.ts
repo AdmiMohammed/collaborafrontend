@@ -13,5 +13,7 @@ export class UserService {
   getCurrentUser(): Observable<any> {
     return this.http.get(`${this.apiUrl}/me`);
   }
-  
+  updateUser(userData: any): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/me`, userData); // PUT ou PATCH selon ton backend
+  }
 }
