@@ -1,6 +1,145 @@
-<!-- <div class="flex justify-between items-center p-3">
-    <div>
-        <h1 class="text-2xl font-bolds">User Profile</h1>
-        <p>Manage your personal information</p>
+<main class="p-3">
+    <!-- Header -->
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 ">User Profile</h1>
+    <p class="text-gray-500">Manage your personal information</p>
+  </div>
+
+  <ng-container *ngIf="!isEditing; else editMode">
+    <button
+      (click)="handleEdit()"
+      class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity flex items-center"
+    >
+      <i class="fas fa-edit mr-2"></i>
+      Edit Profile
+    </button>
+  </ng-container>
+
+  <ng-template #editMode>
+    <div class="flex gap-2 ">
+      <button
+        (click)="handleSave()"
+        class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity flex items-center"
+      >
+        <i class="fas fa-save mr-2"></i>
+        Save
+      </button>
+      <button
+        (click)="handleCancel()"
+        class="border px-4 py-2 rounded-md flex items-center"
+      >
+        <i class="fas fa-times mr-2"></i>
+        Cancel
+      </button>
     </div>
-</div> -->
+  </ng-template>
+</div>
+
+<!-- Content layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Left column -->
+  <div class="lg:col-span-2">
+    <div class="bg-white shadow rounded p-6">
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold flex items-center gap-2 text-purple-600">
+          <i class="fas fa-user"></i>
+          Personal Information
+        </h2>
+      </div>
+
+      <!-- Avatar + fields -->
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <!-- Avatar -->
+        <div class="relative">
+          <div class="w-24 h-24 rounded-full border-4 border-purple-100 bg-purple-50 flex items-center justify-center text-purple-700 font-semibold text-xl overflow-hidden">
+            <ng-container *ngIf="profile.avatar; else initialsOnly">
+              <img [src]="profile.avatar" [alt]="profile.name" class="w-full h-full object-cover rounded-full" />
+            </ng-container>
+            <ng-template #initialsOnly>{{ initials }}</ng-template>
+          </div>
+          <button
+            *ngIf="isEditing"
+            class="absolute -bottom-2 -right-2 w-8 h-8 p-0 rounded-full border bg-white shadow"
+          >
+            <i class="fas fa-edit text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Editable fields -->
+        <div class="flex-1 space-y-4 w-full">
+          <!-- Name -->
+          <div>
+            <label class="text-sm font-medium text-gray-500 block mb-1">Full Name</label>
+            <ng-container *ngIf="isEditing; else nameView">
+              <input
+                [(ngModel)]="editedProfile.name"
+                class="w-full border px-3 py-2 rounded"
+                placeholder="Full Name"
+              />
+            </ng-container>
+            <ng-template #nameView>
+              <p class="text-lg font-semibold">{{ profile.name }}</p>
+            </ng-template>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="text-sm font-medium text-gray-500 block mb-1">Email Address</label>
+            <ng-container *ngIf="isEditing; else emailView">
+              <input
+                type="email"
+                [(ngModel)]="editedProfile.email"
+                class="w-full border px-3 py-2 rounded"
+                placeholder="Email"
+              />
+            </ng-container>
+            <ng-template #emailView>
+              <div class="flex items-center gap-2 text-gray-700">
+                <i class="fas fa-envelope text-gray-400"></i>
+                {{ profile.email }}
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Role -->
+          <div>
+            <label class="text-sm font-medium text-gray-500 block mb-1">Role / Position</label>
+            <ng-container *ngIf="isEditing; else roleView">
+              <input
+                [(ngModel)]="editedProfile.role"
+                class="w-full border px-3 py-2 rounded"
+                placeholder="Role"
+              />
+            </ng-container>
+            <ng-template #roleView>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-briefcase text-gray-400"></i>
+                <span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-sm">
+                  {{ profile.role }}
+                </span>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="pt-6 mt-6 border-t">
+        <label class="text-sm font-medium text-gray-500 block mb-2">About</label>
+        <ng-container *ngIf="isEditing; else aboutView">
+          <textarea
+            [(ngModel)]="editedProfile.about"
+            class="w-full min-h-[100px] border px-3 py-2 rounded resize-none"
+            placeholder="Tell us about yourself..."
+          ></textarea>
+        </ng-container>
+        <ng-template #aboutView>
+          <p class="text-gray-700 leading-relaxed">{{ profile.about }}</p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>

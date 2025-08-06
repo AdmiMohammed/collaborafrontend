@@ -6,5 +6,9 @@ import { Component } from '@angular/core';
   styleUrls: ['./dashboard-page.component.css']
 })
 export class DashboardPageComponent {
+  isSidebarOpen = true;
   
+    toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
 }
