@@ -17,6 +17,7 @@ export interface ProjectReadDto {
   name: string;
   description: string;
   createdAt: string;
+  position : number;
   boardCount: number;
   attachmentCount: number;
   totalTasks: number;

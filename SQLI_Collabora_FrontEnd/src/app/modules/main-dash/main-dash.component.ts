@@ -8,17 +8,18 @@ import { ProjectService, ProjectReadDto } from 'src/app/services/project-service
 })
 export class MainDashComponent {
   projects: ProjectReadDto[] = [];
+  isGridView: boolean = true;
 
   constructor(private projectService: ProjectService) {}
 
   ngOnInit(): void {
     this.projectService.getAll().subscribe({
       next: (data) => {
-        this.projects = data;
+        this.projects = data.sort((a, b) => a.position - b.position);
       },
       error: (err) => {
-        console.error('Erreur de chargement des projets :', err);
-      },
+        console.error('Erreur chargement projets :', err);
+      }
     });
   }
 
