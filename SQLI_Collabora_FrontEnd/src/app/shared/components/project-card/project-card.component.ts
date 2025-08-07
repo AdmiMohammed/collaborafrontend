@@ -9,6 +9,7 @@ import { ProjectReadDto } from 'src/app/services/project-service/project.service
 export class ProjectCardComponent {
   @Input() project!: ProjectReadDto;
   @Input() index: number = 0;
+  @Input() view: 'grid' | 'list' = 'grid';
 
 badgeColors = [
   { text: 'text-[#A855F7]', bg: 'bg-[#F3E8FF]' }, // lavande clair
