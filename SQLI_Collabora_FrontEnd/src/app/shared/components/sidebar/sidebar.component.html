@@ -24,8 +24,7 @@
 
     <!-- Navigation -->
     <nav class="space-y-4 text-sm ml-1">
-
-      <!-- Dashboard -->
+      <!-- Tableau de bord -->
       <a
         routerLink="./"
         routerLinkActive="bg-white shadow font-semibold text-purple-700"
@@ -36,10 +35,10 @@
         ]"
       >
         <i class="fas fa-home"></i>
-        <span *ngIf="isOpen">Dashboard</span>
+        <span *ngIf="isOpen">Tableau de bord</span>
       </a>
 
-      <!-- Projects -->
+      <!-- Projets -->
       <a
         routerLink=""
         routerLinkActive="bg-white shadow font-semibold text-purple-700"
@@ -50,10 +49,10 @@
         ]"
       >
         <i class="fas fa-diagram-project"></i>
-        <span *ngIf="isOpen">Projects</span>
+        <span *ngIf="isOpen">Projets</span>
       </a>
 
-      <!-- Statistics -->
+      <!-- Statistiques -->
       <a
         routerLink=""
         routerLinkActive="bg-white shadow font-semibold text-purple-700"
@@ -63,12 +62,12 @@
           isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
         ]"
       >
-        <i class="fas  fa-chart-line"></i>
-        <span *ngIf="isOpen">Statistics</span>
+        <i class="fas fa-chart-line"></i>
+        <span *ngIf="isOpen">Statistiques</span>
       </a>
 
-      <!-- Profile -->
-     <a
+      <!-- Profil -->
+      <a
         routerLink="profile"
         routerLinkActive="bg-white shadow font-semibold text-purple-700"
         [routerLinkActiveOptions]="{ exact: true }"
@@ -78,10 +77,11 @@
         ]"
       >
         <i class="fas fa-user"></i>
-        <span *ngIf="isOpen">Profile</span>
+        <span *ngIf="isOpen">Profil</span>
       </a>
-       <!-- Settings -->
-   <a
+
+      <!-- Paramètres -->
+      <a
         routerLink=""
         routerLinkActive="bg-white shadow font-semibold text-purple-700"
         [routerLinkActiveOptions]="{ exact: true }"
@@ -90,23 +90,22 @@
           isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
         ]"
       >
-        <i class="fas fa-cog "></i>
-        <span *ngIf="isOpen">Settings</span>
+        <i class="fas fa-cog"></i>
+        <span *ngIf="isOpen">Paramètres</span>
       </a>
     </nav>
   </div>
 
-  <!-- Bottom section: Settings + Logout -->
+  <!-- Section inférieure : Déconnexion -->
   <div class="text-sm">
-  
-    <!-- Logout -->
+    <!-- Déconnexion -->
     <button
       class="px-3 py-2 rounded-lg flex items-center transition w-full"
       [ngClass]="{ 'gap-2': isOpen, 'justify-center': !isOpen }"
       (click)="onLogout()"
     >
       <i class="fas fa-sign-out-alt w-5 text-center"></i>
-      <span *ngIf="isOpen">Logout</span>
+      <span *ngIf="isOpen">Déconnexion</span>
     </button>
   </div>
 </div>

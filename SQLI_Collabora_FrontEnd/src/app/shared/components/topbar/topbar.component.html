@@ -1,20 +1,20 @@
 <div class="flex items-center justify-between p-2">
 
   
-<div class="flex w-full items-center gap-3">
+<div class="flex  items-center gap-3">
   <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
   <img *ngIf="isSidebarOpen"  src="../../../../assets/images/open.svg" alt="Open" >
   <img *ngIf="!isSidebarOpen"  src="../../../../assets/images/close.svg" alt="Close">
 </button>
 
 <div
-  class="flex items-center bg-white rounded-full px-4 py-2 w-full max-w-md mx-2 shadow-sm
+  class="flex items-center bg-white rounded-full px-4 py-2 w-96 max-w-md mx-2 shadow-sm
          focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300"
 >
   <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
   <input
     type="text"
-    placeholder="Find something"
+    placeholder="Chercher un projet, une tâche, un utilisateur..."
     class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
   />
 </div>
@@ -22,7 +22,7 @@
 
 
 
-  <div class="flex items-center gap-4 mx-8">
+  <div class="flex items-center gap-4 mx-10">
     <button class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200">
       <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
     </button>

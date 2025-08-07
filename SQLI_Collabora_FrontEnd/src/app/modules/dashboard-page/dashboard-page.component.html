@@ -3,9 +3,9 @@
   <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
 
 
-  <div class="flex-1 bg-background p-3">
+  <div class="flex-1 bg-background p-3 ">
      <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
-     <main class="flex-1 bg-white h-[calc(100vh-6rem)] rounded-2xl p-4 mt-3">
+     <main class="bg-white h-[calc(100vh-6rem)] w-[98%] rounded-2xl p-4 mt-3 mx-auto">
         <router-outlet></router-outlet>
      </main>
   </div>

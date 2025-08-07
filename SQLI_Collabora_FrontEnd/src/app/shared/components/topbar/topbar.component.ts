@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { User } from 'src/app/models/user';
 import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
@@ -6,24 +7,26 @@ import { UserService } from 'src/app/services/user-service/user.service';
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.css']
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit {
   @Input() isSidebarOpen!: boolean;
   @Output() toggle = new EventEmitter<void>();
-  user: any;
-  constructor(private userService : UserService){}
 
-   ngOnInit(): void {
-    this.userService.getCurrentUser().subscribe({
-      next: (data) => {
-        this.user = data;
-        console.log(data);
-      },
-      error: (err) => {
-        console.error('Erreur lors de la récupération de l’utilisateur connecté', err);
-      }
+  user: User | null = null;
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit(): void {
+    if (!this.userService.getCurrentUserValue()) {
+      this.userService.fetchCurrentUser().subscribe();
+    }
+
+    this.userService.currentUser$.subscribe((data: User | null) => {
+      this.user = data;
     });
   }
+
   toggleSidebar() {
     this.toggle.emit();
   }
 }
+
