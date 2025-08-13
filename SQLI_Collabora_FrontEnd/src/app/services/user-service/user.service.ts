@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface User {
@@ -22,15 +23,8 @@ export class UserService {
 
   // Observable que les composants peuvent écouter
   currentUser$ = this.currentUserSubject.asObservable();
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router) { }
 
-  // getCurrentUser(): Observable<any> {
-  //   return this.http.get(`${this.apiUrl}/me`);
-  // }
-
-  // updateUser(userData: any): Observable<any> {
-  //   return this.http.patch(`${this.apiUrl}/me`, userData); // PUT ou PATCH selon ton backend
-  // }
 
   /** Charge l'utilisateur depuis l'API et le met dans BehaviorSubject */
   fetchCurrentUser(): Observable<User> {
@@ -48,6 +42,15 @@ updateUser(userData: Partial<User>): Observable<User> {
   /** Permet d'accéder directement à la dernière valeur */
   getCurrentUserValue() {
     return this.currentUserSubject.value;
+  }
+   clearCurrentUser() {
+    this.currentUserSubject.next(null);
+  }
+
+  logout() {
+    localStorage.removeItem('token');  // Supprime le token
+    this.clearCurrentUser();             // Vide l'utilisateur courant
+    this.router.navigate(['/login']);   // Redirige vers login
   }
 }
 

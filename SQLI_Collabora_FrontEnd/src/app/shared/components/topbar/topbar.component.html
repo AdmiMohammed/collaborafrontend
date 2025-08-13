@@ -1,4 +1,4 @@
-<div class="flex items-center justify-between p-2">
+<!-- <div class="flex items-center justify-between p-2">
 
   
 <div class="flex  items-center gap-3">
@@ -20,13 +20,18 @@
 </div>
 </div>
 
-
-
   <div class="flex items-center gap-4 mx-10">
-    <button class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200">
-      <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
-    </button>
-
+    <button class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200">
+    <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
+    
+    Affichage d'un point rouge si notification
+    <span *ngIf="notificationMessage" 
+          class="absolute top-1 right-1 w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+  </button>
+  Affichage du message (optionnel, tu peux mettre un tooltip ou un toast)
+  <div *ngIf="notificationMessage" class="ml-2 max-w-xs text-xs text-red-600 truncate" title="{{notificationMessage}}">
+    {{ notificationMessage }}
+  </div>
     <div class="flex items-center">
         <img
           src="../../../../assets/images/adnane.png"
@@ -45,4 +50,84 @@
   </div>
   
 </div>
+ -->
 
+ <!-- topbar.component.html -->
+<div class="flex items-center justify-between p-2 bg-white shadow-sm">
+
+  <!-- Groupe gauche : bouton sidebar + recherche -->
+  <div class="flex items-center gap-3">
+    <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
+      <img *ngIf="isSidebarOpen" src="../../../../assets/images/open.svg" alt="Open" />
+      <img *ngIf="!isSidebarOpen" src="../../../../assets/images/close.svg" alt="Close" />
+    </button>
+
+    <div
+      class="flex items-center bg-white rounded-full px-4 py-2 w-96 max-w-md mx-2 shadow-sm
+             focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300"
+    >
+      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
+      <input
+        type="text"
+        placeholder="Chercher un projet, une tâche, un utilisateur..."
+        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
+      />
+    </div>
+  </div>
+
+  <!-- Groupe droit : notifications + utilisateur -->
+  <div class="flex items-center gap-6 mx-10 relative">
+
+    <!-- Bouton notifications -->
+    <button (click)="toggleDropdown()" class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 focus:outline-none">
+      <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
+      <!-- Point rouge animé si notifications non lues -->
+      <span *ngIf="unreadCount > 0" class="absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+    </button>
+
+    <!-- Dropdown notifications -->
+    <div *ngIf="isOpen" 
+         class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+      
+      <!-- Header dropdown -->
+      <div class="flex items-center justify-between px-4 py-2 border-b">
+        <h3 class="font-semibold text-gray-800">Notifications</h3>
+        <button (click)="markAllAsRead()" class="text-sm text-blue-600 hover:underline">Tout marquer comme lu</button>
+      </div>
+
+      <!-- Liste notifications -->
+      <div class="max-h-64 overflow-y-auto">
+        <ng-container *ngIf="notifications.length > 0; else noNotifications">
+          <div *ngFor="let notif of notifications" class="flex justify-between items-start px-4 py-3 border-b hover:bg-gray-50 transition">
+            <div class="flex-1 pr-2">
+              <p class="text-sm font-medium text-gray-800" [class.font-bold]="!notif.isRead">{{ notif.content }}</p>
+              <p class="text-xs text-gray-400 mt-1">{{ notif.createdAt | date:'short' }}</p>
+            </div>
+            <div class="flex flex-col gap-1 ml-2">
+              <button *ngIf="!notif.isRead" (click)="markAsRead(notif.id)" class="text-green-500 hover:text-green-700" title="Marquer comme lu">
+                <i class="fas fa-check"></i>
+              </button>
+              <button (click)="deleteNotification(notif.id)" class="text-red-500 hover:text-red-700" title="Supprimer">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #noNotifications>
+          <div class="p-4 text-center text-gray-500 text-sm">Aucune notification</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Utilisateur -->
+    <div class="flex items-center gap-2">
+      <img *ngIf="user" src="../../../../assets/images/adnane.png" alt="Avatar" class="rounded-full w-10 h-10 object-cover" />
+      <div class="flex flex-col overflow-hidden">
+        <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">{{ user.firstName }} {{ user.lastName }}</p>
+        <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">{{ user.email }}</p>
+      </div>
+    </div>
+
+  </div>
+</div>
