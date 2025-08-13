@@ -9,7 +9,7 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber: string;
-  avatar?: string;
+  profilePictureUrl : string;
 }
 
 @Injectable({

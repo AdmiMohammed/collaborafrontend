@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-import { User } from 'src/app/models/user';
-import { UserService } from 'src/app/services/user-service/user.service';
+import { User, UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-topbar',

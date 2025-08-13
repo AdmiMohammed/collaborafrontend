@@ -9,7 +9,7 @@ import {
   TemplatesService,
   TemplateReadDto,
 } from 'src/app/services/project-service/project-template.service';
-import { UserService } from 'src/app/services/user-service/user.service';
+import { User1Service } from 'src/app/services/user-service/user1.service';
 import { ProjectService } from 'src/app/services/project-service/project.service';
 import { finalize } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -85,7 +85,7 @@ export class ProjectWizardComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private templatesSvc: TemplatesService,
-    private userService: UserService,
+    private user1Service: User1Service,
     private projectService: ProjectService,
     private toastr: ToastrService
   ) {
@@ -129,7 +129,7 @@ export class ProjectWizardComponent implements OnInit {
     this.loadMembers();
   }
   private loadMembers() {
-    this.userService.getOtherUsers().subscribe((users) => {
+    this.user1Service.getOtherUsers().subscribe((users) => {
       this.members = users.map((u) => ({
         id: u.id,
         name: `${u.firstName} ${u.lastName}`.trim(),
