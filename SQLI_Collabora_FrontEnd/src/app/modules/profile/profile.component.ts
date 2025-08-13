@@ -1,71 +1,66 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { User } from 'src/app/models/user';
 import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-user-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent {
-  // isEditing = false;
-  // userData = {
-  //   email: '',
-  //   firstName: '',
-  //   lastName : '',
-  //   phoneNumber: ''
-  // };
-
-  // constructor(private userService: UserService) {}
-
-  // handleEdit() {
-  //   this.isEditing = true;
-  // }
-
-  // handleSave() {
-  //   this.userService.updateUser(this.userData).subscribe({
-  //     next: () => {
-  //       this.isEditing = false;
-  //       // affichage d'une notification 
-  //     },
-  //     error: (err) => {
-  //       console.error('Erreur lors de la sauvegarde :', err);
-  //       // affichage d'une erreur 
-  //     }
-  //   });
-  // }
-
-  // handleCancel() {
-  //   this.isEditing = false;
-  // }
+export class ProfileComponent implements OnInit {
   isEditing = false;
 
-  profile = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'Frontend Developer',
-    avatar: '',
-    about: 'Passionate about building great user interfaces.'
+  userData: User = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    avatar: ''
   };
 
-  editedProfile = { ...this.profile };
+  editedUserData: User = { ...this.userData };
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit(): void {
+    // Si aucun utilisateur n’est encore en mémoire → fetch depuis API
+    if (!this.userService.getCurrentUserValue()) {
+      this.userService.fetchCurrentUser().subscribe();
+    }
+
+    // On écoute les changements du BehaviorSubject
+    this.userService.currentUser$.subscribe((user: User | null) => {
+      if (user) {
+        this.userData = user;
+        this.editedUserData = { ...user };
+      }
+    });
+  }
 
   handleEdit() {
     this.isEditing = true;
-    this.editedProfile = { ...this.profile };
-  }
-
-  handleSave() {
-    // Appel API ici si besoin
-    this.profile = { ...this.editedProfile };
-    this.isEditing = false;
+    this.editedUserData = { ...this.userData };
   }
 
   handleCancel() {
     this.isEditing = false;
   }
 
+  handleSave() {
+    this.userService.updateUser(this.editedUserData).subscribe({
+      next: () => {
+        this.isEditing = false;
+        // éventuellement une notification de succès
+      },
+      error: (err) => {
+        console.error('Erreur lors de la sauvegarde :', err);
+      }
+    });
+  }
+
   get initials(): string {
-    return this.profile.name
+    const fullName = `${this.userData.firstName} ${this.userData.lastName}`;
+    return fullName
       .split(' ')
       .map(word => word[0])
       .join('')

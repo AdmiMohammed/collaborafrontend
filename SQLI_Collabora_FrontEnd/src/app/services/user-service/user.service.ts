@@ -1,53 +1,54 @@
 // src/app/core/services/user.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map, switchMap, catchError, of, shareReplay } from 'rxjs';
 
-export interface AppUser {
-  id: number;
-  email: string;
+import { BehaviorSubject, Observable, tap } from 'rxjs';
+
+export interface User {
   firstName: string;
   lastName: string;
-  phoneNumber?: string | null;
-  profilePictureUrl?: string | null;
+  email: string;
+  phoneNumber: string;
+  avatar?: string;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class UserService {
-  private apiUrl = 'http://localhost:5205/api/User';
 
-  constructor(private http: HttpClient) {}
+  private apiUrl : string = 'http://localhost:5205/api/User';
 
-  getCurrentUser(): Observable<AppUser> {
-    return this.http.get<AppUser>(`${this.apiUrl}/me`).pipe(shareReplay(1));
-  }
+   // BehaviorSubject avec valeur initiale "null" (pas encore de user)
+  private currentUserSubject = new BehaviorSubject<any>(null);
 
-  updateUser(userData: Partial<AppUser>): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/me`, userData);
-  }
+  // Observable que les composants peuvent écouter
+  currentUser$ = this.currentUserSubject.asObservable();
+  constructor(private http: HttpClient) { }
 
-  /** Tous les utilisateurs */
-  getUsers(): Observable<AppUser[]> {
-    return this.http.get<AppUser[]>(`${this.apiUrl}/users`);
-  }
+  // getCurrentUser(): Observable<any> {
+  //   return this.http.get(`${this.apiUrl}/me`);
+  // }
 
-  /** Tous les utilisateurs SAUF l'utilisateur courant */
-  getOtherUsers(): Observable<AppUser[]> {
-    return this.getCurrentUser().pipe(
-      switchMap(me =>
-        this.getUsers().pipe(
-          map(users =>
-            users
-              .filter(u => u.id !== me.id)
-              .map(u => ({
-                ...u,
-                // petit nettoyage si l'API renvoie un \n dans l’URL
-                profilePictureUrl: u.profilePictureUrl?.trim() ?? null,
-              }))
-          )
-        )
-      ),
-      catchError(() => of([])) // évite de casser l’UI si non authentifié
-    );
+  // updateUser(userData: any): Observable<any> {
+  //   return this.http.patch(`${this.apiUrl}/me`, userData); // PUT ou PATCH selon ton backend
+  // }
+
+  /** Charge l'utilisateur depuis l'API et le met dans BehaviorSubject */
+  fetchCurrentUser(): Observable<User> {
+  return this.http.get<User>(`${this.apiUrl}/me`).pipe(
+    tap((user: User) => this.currentUserSubject.next(user))
+  );
+}
+
+updateUser(userData: Partial<User>): Observable<User> {
+  return this.http.patch<User>(`${this.apiUrl}/me`, userData).pipe(
+    tap((updatedUser: User) => this.currentUserSubject.next(updatedUser))
+  );
+}
+
+  /** Permet d'accéder directement à la dernière valeur */
+  getCurrentUserValue() {
+    return this.currentUserSubject.value;
   }
 }

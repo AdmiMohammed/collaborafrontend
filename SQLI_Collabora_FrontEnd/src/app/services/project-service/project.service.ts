@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap, take } from 'rxjs';
-import { UserService } from '../user-service/user.service';
+import { User1Service } from '../user-service/user1.service';
 
 export interface ProjectMemberDto {
   userId: number;
@@ -43,10 +43,10 @@ export interface ProjectCreateDto {
 export class ProjectService {
   private apiBase = 'http://localhost:5205/api/Projects';
 
-  constructor(private http: HttpClient, private userService: UserService) {}
+  constructor(private http: HttpClient, private user1Service: User1Service) {}
 
   getAll(): Observable<ProjectReadDto[]> {
-    return this.userService.getCurrentUser().pipe(
+    return this.user1Service.getCurrentUser().pipe(
       switchMap((user) => {
         const userId = user.id;
         return this.http.get<ProjectReadDto[]>(`${this.apiBase}/user/${userId}`);
@@ -55,7 +55,7 @@ export class ProjectService {
   }
 
     create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
-    return this.userService.getCurrentUser().pipe(
+    return this.user1Service.getCurrentUser().pipe(
       take(1),
       switchMap(user =>
         this.http.post<ProjectReadDto>(
