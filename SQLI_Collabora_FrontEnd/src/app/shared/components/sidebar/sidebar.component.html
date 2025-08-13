@@ -1,111 +1,82 @@
-<div 
-  [ngClass]="{
-    'w-64': isOpen,
-    'w-20': !isOpen
-  }"
-  class="h-screen bg-[#1d0554] p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out text-white"
+<div
+  [ngClass]="{ 'w-64': isOpen, 'w-20': !isOpen }"
+  class="h-screen bg-white border-r border-slate-200 p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out text-slate-600 shadow-sm"
 >
+  <!-- Haut -->
   <div>
-    <!-- Logo + texte Collabora -->
-    <div class="mb-16">
-      <div *ngIf="isOpen" class="flex items-center mt-3">
-        <div class="flex flex-row">
-          <img [src]="imgUrl" alt="" class="w-10 h-10 object-cover mx-4" />
-          <h1 class="font-bold text-xl mt-1">
-            Collabora
-          </h1>
-        </div>
+    <!-- Logo -->
+    <div class="mb-8">
+      <div class="flex items-center" [ngClass]="{ 'gap-3': isOpen, 'justify-center': !isOpen }">
+        <img [src]="imgUrl" alt="Collabora" class="w-10 h-10 object-cover" />
+        <h1
+          *ngIf="isOpen"
+          class="font-bold text-xl text-[#16306B] whitespace-nowrap overflow-hidden transition-opacity duration-200"
+        >
+          Collabora
+        </h1>
       </div>
-
-      <div *ngIf="!isOpen" class="flex justify-center">
-        <img [src]="imgUrl" alt="" class="w-10 h-10 object-cover" />
-      </div>
+      <div class="mt-5 h-px bg-slate-200/70"></div>
     </div>
 
     <!-- Navigation -->
-    <nav class="space-y-4 text-sm ml-1">
-
-      <!-- Dashboard -->
-      <a
-        routerLink="./"
-        routerLinkActive="bg-white shadow font-semibold text-purple-700"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [ngClass]="[
-          'flex items-center transition',
-          isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
-        ]"
-      >
-        <i class="fas fa-home"></i>
-        <span *ngIf="isOpen">Dashboard</span>
-      </a>
-
-      <!-- Projects -->
-      <a
-        routerLink=""
-        routerLinkActive="bg-white shadow font-semibold text-purple-700"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [ngClass]="[
-          'flex items-center transition',
-          isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
-        ]"
-      >
-        <i class="fas fa-diagram-project"></i>
-        <span *ngIf="isOpen">Projects</span>
-      </a>
-
-      <!-- Statistics -->
-      <a
-        routerLink=""
-        routerLinkActive="bg-white shadow font-semibold text-purple-700"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [ngClass]="[
-          'flex items-center transition',
-          isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
-        ]"
-      >
-        <i class="fas  fa-chart-line"></i>
-        <span *ngIf="isOpen">Statistics</span>
-      </a>
-
-      <!-- Profile -->
-     <a
-        routerLink="profile"
-        routerLinkActive="bg-white shadow font-semibold text-purple-700"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [ngClass]="[
-          'flex items-center transition',
-          isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
-        ]"
-      >
-        <i class="fas fa-user"></i>
-        <span *ngIf="isOpen">Profile</span>
-      </a>
-       <!-- Settings -->
-   <a
-        routerLink=""
-        routerLinkActive="bg-white shadow font-semibold text-purple-700"
-        [routerLinkActiveOptions]="{ exact: true }"
-        [ngClass]="[
-          'flex items-center transition',
-          isOpen ? 'p-3 rounded-xl gap-2' : 'justify-center p-2 rounded-full w-10 h-10'
-        ]"
-      >
-        <i class="fas fa-cog "></i>
-        <span *ngIf="isOpen">Settings</span>
-      </a>
+    <nav class="mt-12 space-y-6">
+      <ng-container *ngFor="let item of menuItems">
+        <a
+          [routerLink]="item.link"
+          [routerLinkActiveOptions]="{ exact: true }"
+          routerLinkActive="bg-[#f4f0ff] text-[#6f3ef6] font-semibold shadow-sm"
+          class="relative text-sm flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all duration-200"
+          [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-12 h-12': !isOpen }"
+        >
+          <span
+            *ngIf="isRouteActive(item.link)"
+            class="absolute -left-3 top-2 bottom-2 w-[3px] rounded-full bg-[#6f3ef6]"
+          ></span>
+          <img
+            *ngIf="item.iconType === 'img'"
+            [src]="isRouteActive(item.link) ? item.iconActive : item.icon"
+            class="w-5 h-5"
+            [alt]="item.label"
+          />
+          <i
+            *ngIf="item.iconType === 'fa'"
+            [class]="item.icon"
+            [ngClass]="isRouteActive(item.link) ? 'text-[#6f3ef6]' : 'text-[#9fa3ae]'"
+          ></i>
+          <span
+            *ngIf="isOpen"
+            class="whitespace-nowrap overflow-hidden transition-opacity duration-200"
+            >{{ item.label }}</span
+          >
+        </a>
+      </ng-container>
     </nav>
   </div>
 
-  <!-- Bottom section: Settings + Logout -->
-  <div class="text-sm">
-  
+  <!-- Bas -->
+  <div>
+    <!-- Nouveau projet -->
+    <button
+      (click)="openNewProjectWizard()"
+      class="flex items-center gap-2 bg-primary-start text-white text-xs font-medium rounded-xl hover:shadow-lg transition-all duration-200"
+      [ngClass]="{
+        'px-5 py-3 w-full justify-center': isOpen,
+        'w-10 h-10 justify-center rounded-full': !isOpen
+      }"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span *ngIf="isOpen">Nouveau projet</span>
+    </button>
+
+    <div class="h-px bg-slate-200/70 my-4"></div>
+
     <!-- Logout -->
     <button
-      class="px-3 py-2 rounded-lg flex items-center transition w-full"
-      [ngClass]="{ 'gap-2': isOpen, 'justify-center': !isOpen }"
+      class="relative text-xs flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all duration-200 w-full text-slate-500"
+      [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-10 h-10': !isOpen }"
       (click)="onLogout()"
     >
-      <i class="fas fa-sign-out-alt w-5 text-center"></i>
+      <i class="fas fa-sign-out-alt w-4 text-center text-[14px] text-[#9fa3ae]"></i>
       <span *ngIf="isOpen">Logout</span>
     </button>
   </div>

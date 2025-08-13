@@ -1,48 +1,54 @@
 <div class="flex items-center justify-between p-2">
-
   
-<div class="flex w-full items-center gap-3">
-  <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
-  <img *ngIf="isSidebarOpen"  src="../../../../assets/images/open.svg" alt="Open" >
-  <img *ngIf="!isSidebarOpen"  src="../../../../assets/images/close.svg" alt="Close">
-</button>
+  <div class="flex items-center gap-3 flex-grow">
+    <!-- Bouton menu -->
+    <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
+      <i class="fa-solid fa-bars" style="color: #16306b;"></i>
+    </button>
 
-<div
-  class="flex items-center bg-white rounded-full px-4 py-2 w-full max-w-md mx-2 shadow-sm
-         focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300"
->
-  <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
-  <input
-    type="text"
-    placeholder="Find something"
-    class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
-  />
-</div>
-</div>
+    <!-- Recherche -->
+    <div
+      class="flex items-center bg-white rounded-full px-4 py-2 flex-grow max-w-md mx-2 shadow-sm
+             focus-within:ring-2 focus-within:ring-purple-500 transition-all duration-300"
+    >
+      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
+      <input
+        type="text"
+        placeholder="Find something"
+        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
+      />
+    </div>
+  </div>
 
-
-
-  <div class="flex items-center gap-4 mx-8">
-    <button class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200">
+  <!-- Bloc droite -->
+  <div class="flex items-center gap-4 ml-4 flex-shrink-0">
+    <button class="w-10 h-10 rounded-full flex items-center justify-center bg-white hover:bg-gray-200">
       <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
     </button>
 
-    <div class="flex items-center">
-        <img
-          src="../../../../assets/images/adnane.png"
-          alt="Avatar"
-          class="rounded-full object-cover w-10 h-10"
-        />
-        <div class="flex-1 ml-2 overflow-hidden">
-          <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">
-            {{ user.firstName }} {{ user.lastName }}
-          </p>
-          <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">
-            {{ user.email }}
-          </p>
-        </div>
+    <div class="flex items-center min-w-[150px]">
+      <img
+        [src]="user.profilePictureUrl"
+        alt="Avatar"
+        class="rounded-full object-cover w-10 h-10"
+      />
+      <div class="flex-1 ml-2">
+        <p
+          class="text-sm font-semibold text-gray-800 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip"
+          *ngIf="user"
+          [title]="user.firstName + ' ' + user.lastName"
+        >
+          {{ user.firstName }} {{ user.lastName }}
+        </p>
+        <p
+          class="text-xs text-gray-500 truncate sm:whitespace-normal sm:overflow-visible sm:text-clip"
+          *ngIf="user"
+          [title]="user.email"
+        >
+          {{ user.email }}
+        </p>
+      </div>
     </div>
   </div>
-  
-</div>
 
+</div>
