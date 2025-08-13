@@ -23,3 +23,18 @@
   overflow: hidden; /* Hide overflow if necessary */
   text-overflow: ellipsis; /* Add ellipsis if the text is too long */
 }
+
+/* Toast succès moderne */
+.toast-success {
+  background-color: #22c55e !important; /* Vert moderne */
+  color: white !important;
+  white-space: nowrap; /* Prevent text wrapping */
+  max-width: 600px !important; /* Increase max-width to fit longer messages */
+  width: auto !important; /* Allow width to adjust to content */
+  padding: 10px 20px !important; /* Adjust padding for better appearance */
+  font-size: 0.9rem !important; /* Ensure readable font size */
+  overflow: hidden; /* Hide overflow if necessary */
+  text-overflow: ellipsis; /* Add ellipsis if the text is too long */
+    background-image: none !important; 
+}
+

@@ -1,6 +1,9 @@
+// src/app/core/services/user.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+
 import { Router } from '@angular/router';
+
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface User {
@@ -8,7 +11,7 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber: string;
-  avatar?: string;
+  profilePictureUrl : string;
 }
 
 @Injectable({
@@ -53,7 +56,3 @@ updateUser(userData: Partial<User>): Observable<User> {
     this.router.navigate(['/login']);   // Redirige vers login
   }
 }
-
-  
-
-

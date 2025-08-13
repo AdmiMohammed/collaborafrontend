@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap } from 'rxjs';
+import { Observable, switchMap, take } from 'rxjs';
 import { User1Service } from '../user-service/user1.service';
 
 export interface ProjectMemberDto {
@@ -11,13 +11,15 @@ export interface ProjectMemberDto {
   joinedAt: string;
   profilePictureUrl: string;
 }
-
 export interface ProjectReadDto {
   id: number;
   name: string;
   description: string;
   createdAt: string;
-  position : number;
+  createdBy: number;
+  startDate: string;          // <-- ajout
+  estimatedEndDate: string | null; // <-- ajout
+  position: number;
   boardCount: number;
   attachmentCount: number;
   totalTasks: number;
@@ -25,6 +27,16 @@ export interface ProjectReadDto {
   projectMembers: ProjectMemberDto[];
 }
 
+export interface ProjectCreateDto {
+  name: string;
+  description: string;
+  startDate: string;          // ISO
+  createdBy: number;          // rempli côté front via /me
+  estimatedEndDate: string | null; // ISO ou null
+  templateId: number;
+  initialBoardCount: number;
+  memberIds: number[];
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -39,6 +51,18 @@ export class ProjectService {
         const userId = user.id;
         return this.http.get<ProjectReadDto[]>(`${this.apiBase}/user/${userId}`);
       })
+    );
+  }
+
+    create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
+    return this.user1Service.getCurrentUser().pipe(
+      take(1),
+      switchMap(user =>
+        this.http.post<ProjectReadDto>(
+          this.apiBase,
+          { ...dto, createdBy: user.id },
+        )
+      )
     );
   }
 }

@@ -21,6 +21,8 @@ import { MainDashComponent } from './modules/main-dash/main-dash.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ProjectCardComponent } from './shared/components/project-card/project-card.component';
 import { SortableDirective } from './sortable.directive';
+import { ProjectWizardComponent } from './modules/project-wizard/project-wizard/project-wizard.component';
+import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +39,8 @@ import { SortableDirective } from './sortable.directive';
     MainDashComponent,
     ProjectCardComponent,
     SortableDirective,
+    ProjectWizardComponent,
+    ProjectCardSkeletonComponent,
   ],
   imports: [
     BrowserModule,
