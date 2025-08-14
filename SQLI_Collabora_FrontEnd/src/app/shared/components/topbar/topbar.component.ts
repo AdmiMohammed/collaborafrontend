@@ -1,11 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-
 import { Notification } from 'src/app/models/notification';
-
 import { NotificationService } from 'src/app/services/notification.service';
-
 import { User, UserService } from 'src/app/services/user-service/user.service';
-
 
 @Component({
   selector: 'app-topbar',
@@ -27,16 +23,16 @@ export class TopbarComponent implements OnInit {
     this.userService.fetchCurrentUser().subscribe(user => {
       this.user = user;
 
-      // 1. S'abonner aux notifications (initial + temps réel)
+      // S'abonner aux notifications (initial + temps réel)
       this.notificationService.notifications$.subscribe(notifications => {
         this.notifications = notifications;
         this.unreadCount = notifications.filter(n => !n.isRead).length;
       });
 
-      // 2. Charger les notifications initiales
+      // Charger les notifications initiales
       this.notificationService.loadInitialNotifications(1, 10);
 
-      // 3. Démarrer la connexion SignalR
+      // Démarrer la connexion SignalR
       const token = localStorage.getItem('token');
       if (token) {
         this.notificationService.startConnection(token);
@@ -44,41 +40,48 @@ export class TopbarComponent implements OnInit {
     });
   }
 
-  loadNotifications() {
-    this.notificationService.getUserNotifications(1, 10).subscribe(data => {
-      this.notifications = data;
-    });
-  }
-
-  loadStats() {
-    this.notificationService.getStats().subscribe(stats => {
-      this.unreadCount = stats.unreadCount;
-    });
-  }
-
   toggleDropdown() {
     this.isOpen = !this.isOpen;
   }
 
-  markAsRead(id: number) {
-    this.notificationService.markAsRead(id).subscribe(() => {
-      this.notifications = this.notifications.map(n =>
-        n.id === id ? { ...n, isRead: true } : n
-      );
-      this.unreadCount--;
-    });
+  handleNotificationAction(id: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.checked) {
+      // Marquer comme lu et supprimer
+      this.notificationService.markAsRead(id).subscribe({
+        next: () => {
+          this.notificationService.deleteNotification(id).subscribe({
+            next: () => {
+              this.notifications = this.notifications.filter(n => n.id !== id);
+              this.unreadCount = this.notifications.filter(n => !n.isRead).length;
+            },
+            error: (err) => {
+              console.error('Erreur lors de la suppression de la notification:', err);
+              input.checked = false; // Réinitialiser la checkbox en cas d'erreur
+            }
+          });
+        },
+        error: (err) => {
+          console.error('Erreur lors du marquage comme lu:', err);
+          input.checked = false; // Réinitialiser la checkbox en cas d'erreur
+        }
+      });
+    }
   }
 
   markAllAsRead() {
-    this.notificationService.markAllAsRead().subscribe(() => {
-      this.notifications = this.notifications.map(n => ({ ...n, isRead: true }));
-      this.unreadCount = 0;
-    });
-  }
-
-  deleteNotification(id: number) {
-    this.notificationService.deleteNotification(id).subscribe(() => {
-      this.notifications = this.notifications.filter(n => n.id !== id);
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        // Supprimer toutes les notifications après les avoir marquées comme lues
+        this.notifications.forEach(notif => {
+          this.notificationService.deleteNotification(notif.id).subscribe({
+            error: (err) => console.error(`Erreur lors de la suppression de la notification ${notif.id}:`, err)
+          });
+        });
+        this.notifications = [];
+        this.unreadCount = 0;
+      },
+      error: (err) => console.error('Erreur lors du marquage de toutes les notifications comme lues:', err)
     });
   }
 
