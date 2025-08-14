@@ -3,11 +3,12 @@
   appearance: none;
   width: 20px;
   height: 20px;
-  border: 2px solid #FC0FC0;
+  border: 2px solid #C020D0;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  flex-shrink: 0;
 }
 
 .circular-checkbox:checked {
@@ -27,11 +28,14 @@
   transform: translate(-50%, -50%);
 }
 
-.notification-item {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.notification-dropdown {
+  transform-origin: top right;
 }
 
-.notification-item.ng-leave {
-  opacity: 0;
-  transform: translateX(20px);
+.notification-item {
+  transition: all 0.2s ease;
+}
+
+.notification-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
 }
