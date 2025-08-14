@@ -39,3 +39,7 @@
 .notification-item:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
+
+.notification-item:hover {
+  background-color: #F4F6FE;
+}
