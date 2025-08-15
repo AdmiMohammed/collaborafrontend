@@ -69,7 +69,12 @@
 
     <!-- Utilisateur -->
     <div class="flex items-center gap-2">
-      <img *ngIf="user" src="../../../../assets/images/adnane.png" alt="Avatar" class="rounded-full w-10 h-10 object-cover" />
+      <div class="rounded-full w-10 h-10 bg-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden">
+        <ng-container *ngIf="user?.profilePictureUrl; else showInitials">
+          <img [src]="user?.profilePictureUrl" alt="Avatar" class="w-full h-full object-cover" />
+        </ng-container>
+        <ng-template #showInitials>{{ initials }}</ng-template>
+      </div>
       <div class="flex flex-col overflow-hidden">
         <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">{{ user.firstName }} {{ user.lastName }}</p>
         <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">{{ user.email }}</p>

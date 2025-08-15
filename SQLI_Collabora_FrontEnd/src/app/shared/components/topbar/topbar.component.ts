@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 
 import { Notification } from 'src/app/models/notification';
+import { User } from 'src/app/models/user';
 
 import { NotificationService } from 'src/app/services/notification.service';
 
-import { User, UserService } from 'src/app/services/user-service/user.service';
+import { UserService } from 'src/app/services/user-service/user.service';
 
 
 @Component({
@@ -24,25 +25,27 @@ export class TopbarComponent implements OnInit {
   constructor(private userService: UserService, private notificationService: NotificationService) {}
 
   ngOnInit(): void {
-    this.userService.fetchCurrentUser().subscribe(user => {
+    this.userService.currentUser$.subscribe(user => {
       this.user = user;
-
-      // 1. S'abonner aux notifications (initial + temps réel)
-      this.notificationService.notifications$.subscribe(notifications => {
-        this.notifications = notifications;
-        this.unreadCount = notifications.filter(n => !n.isRead).length;
-      });
-
-      // 2. Charger les notifications initiales
-      this.notificationService.loadInitialNotifications(1, 10);
-
-      // 3. Démarrer la connexion SignalR
-      const token = localStorage.getItem('token');
-      if (token) {
-        this.notificationService.startConnection(token);
-      }
     });
+
+    if (!this.userService.getCurrentUserValue()) {
+      this.userService.fetchCurrentUser().subscribe();
+    }
+
+    this.notificationService.notifications$.subscribe(notifications => {
+      this.notifications = notifications;
+      this.unreadCount = notifications.filter(n => !n.isRead).length;
+    });
+
+    this.notificationService.loadInitialNotifications(1, 10);
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      this.notificationService.startConnection(token);
+    }
   }
+
 
   loadNotifications() {
     this.notificationService.getUserNotifications(1, 10).subscribe(data => {
@@ -85,4 +88,14 @@ export class TopbarComponent implements OnInit {
   toggleSidebar() {
     this.toggle.emit();
   }
+
+  get initials(): string {
+  if (!this.user) return '';
+  const fullName = `${this.user.firstName} ${this.user.lastName}`.trim();
+  return fullName
+    .split(' ')
+    .map(w => w[0]?.toUpperCase())
+    .join('');
+}
+
 }
