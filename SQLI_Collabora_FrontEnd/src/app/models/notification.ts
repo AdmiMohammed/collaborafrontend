@@ -3,7 +3,7 @@ export interface Notification {
   content: string;
   createdAt: string;
   isRead: boolean;
-  notificationType: string;
-  relatedEntityType?: string;
+  notificationType: { value: 'Comment' | 'Assignment' | 'Unassignment' };
+  relatedEntityType?: { value: 'Task' | 'Project' | string };
   relatedEntityId?: number;
 }
