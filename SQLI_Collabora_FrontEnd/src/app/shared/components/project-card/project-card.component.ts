@@ -1,5 +1,6 @@
 
 import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 import { ProjectReadDto } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -7,9 +8,14 @@ import { ProjectReadDto } from 'src/app/services/project-service/project.service
   templateUrl: './project-card.component.html',
 })
 export class ProjectCardComponent {
+  router: Router;
   @Input() project!: ProjectReadDto;
   @Input() index: number = 0;
   @Input() view: 'grid' | 'list' = 'grid';
+
+  constructor(router: Router){
+    this.router = router
+  }
 
 badgeColors = [
   { text: 'text-[#A855F7]', bg: 'bg-[#F3E8FF]' }, // lavande clair
@@ -22,5 +28,9 @@ badgeColors = [
 
   getRandomBadgeColor(index: number) {
     return this.badgeColors[index % this.badgeColors.length];
+  }
+
+  goToProject(id: number){
+    return this.router.navigate(['/projects', id])
   }
 }

@@ -1,24 +1,19 @@
-<div class="flex items-center justify-between p-2">
+<div *ngIf="!inProject" class="flex items-center justify-between p-2">
 
-  
-<div class="flex  items-center gap-3">
-  <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
-  <img *ngIf="isSidebarOpen"  src="../../../../assets/images/open.svg" alt="Open" >
-  <img *ngIf="!isSidebarOpen"  src="../../../../assets/images/close.svg" alt="Close">
-</button>
 
-<div
-  class="flex items-center bg-white rounded-full px-4 py-2 w-96 max-w-md mx-2 shadow-sm
-         focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300"
->
-  <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
-  <input
-    type="text"
-    placeholder="Chercher un projet, une tâche, un utilisateur..."
-    class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
-  />
-</div>
-</div>
+  <div class="flex  items-center gap-3">
+    <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
+      <img *ngIf="isSidebarOpen" src="../../../../assets/images/open.svg" alt="Open">
+      <img *ngIf="!isSidebarOpen" src="../../../../assets/images/close.svg" alt="Close">
+    </button>
+
+    <div class="flex items-center bg-white rounded-full px-4 py-2 w-96 max-w-md mx-2 shadow-sm
+         focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300">
+      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
+      <input type="text" placeholder="Chercher un projet, une tâche, un utilisateur..."
+        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none" />
+    </div>
+  </div>
 
 
 
@@ -28,21 +23,76 @@
     </button>
 
     <div class="flex items-center">
-        <img
-          src="../../../../assets/images/adnane.png"
-          alt="Avatar"
-          class="rounded-full object-cover w-10 h-10"
-        />
-        <div class="flex-1 ml-2 overflow-hidden">
-          <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">
-            {{ user.firstName }} {{ user.lastName }}
-          </p>
-          <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">
-            {{ user.email }}
-          </p>
-        </div>
+      <img src="../../../../assets/images/adnane.png" alt="Avatar" class="rounded-full object-cover w-10 h-10" />
+      <div class="flex-1 ml-2 overflow-hidden">
+        <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">
+          {{ user.firstName }} {{ user.lastName }}
+        </p>
+        <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">
+          {{ user.email }}
+        </p>
+      </div>
     </div>
   </div>
-  
+
 </div>
 
+<!--in project (later i will try to optimize this)-->
+<div *ngIf="inProject" class="flex items-center justify-between relative px-4">
+
+  <!-- Left side: Back button + Logo + App Name -->
+  <div class="flex items-center gap-6 min-w-[250px]">
+
+
+    <!-- Back button -->
+    <button class="flex items-center gap-1 text-gray-500 hover:text-primary-end text-sm font-medium transition tooltip left-edge"
+      data-tooltip="Tableau de bord"
+      aria-label="Retour au tableau de bord" (click)="goToDashboard()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+        class="size-6">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+      </svg>
+    </button>
+
+    <!-- Logo + App name -->
+    <div class="flex items-center gap-2">
+      <img src="../../../../assets/images/logo_collabora_icon.svg" alt="Collabora Logo" class="w-8 h-8 object-cover" />
+      <h1 class="font-bold text-lg text-primary-start select-none">Collabora</h1>
+    </div>
+  </div>
+
+  <!-- Center: Search bar -->
+  <div class="flex-grow max-w-lg px-4 mx-auto">
+    <div
+      class="flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-300
+             focus-within:ring-2 focus-within:ring-primary-start focus-within:border-primary-start transition duration-300">
+      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
+      <input type="text" placeholder="Chercher un projet, une tâche, un utilisateur..."
+        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none" />
+    </div>
+  </div>
+
+  <!-- Right side: Icons + User info -->
+  <div class="flex items-center gap-4 min-w-[250px] justify-end">
+    <button class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition"
+      aria-label="Notifications">
+
+
+      <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
+    </button>
+
+    <div class="flex items-center gap-3">
+      <app-avatar [user]="user!" size="global-header" />
+      <div class="flex flex-col overflow-hidden">
+        <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">
+          {{ user.firstName }} {{ user.lastName }}
+        </p>
+        <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">
+          {{ user.email }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>

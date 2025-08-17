@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
-import { User } from 'src/app/models/user';
+import { Router } from '@angular/router';
+import { User } from 'src/app/services/user-service/user.service';
 import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
@@ -10,10 +11,14 @@ import { UserService } from 'src/app/services/user-service/user.service';
 export class TopbarComponent implements OnInit {
   @Input() isSidebarOpen!: boolean;
   @Output() toggle = new EventEmitter<void>();
+  router: Router;
+  @Input() inProject: boolean = false;
 
   user: User | null = null;
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, router: Router) {
+    this.router = router;
+  }
 
   ngOnInit(): void {
     if (!this.userService.getCurrentUserValue()) {
@@ -27,6 +32,10 @@ export class TopbarComponent implements OnInit {
 
   toggleSidebar() {
     this.toggle.emit();
+  }
+  
+  goToDashboard(){
+    return this.router.navigate(['/dashboard'])
   }
 }
 

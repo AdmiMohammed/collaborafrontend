@@ -1,13 +1,14 @@
 <div class="flex h-screen">
-  <!-- Sidebar -->
-  <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
+   <!-- Sidebar -->
+   <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
 
-  <div class="flex-1 bg-background p-4">
-     <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
-    <main class="flex-1 bg-white h-[calc(100vh-6.8rem)] w-[98%] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background rounded-2xl p-6 m-3">
+   <div class="flex-1 bg-background p-4">
+      <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
+      <main
+         class="flex-1 bg-white h-[calc(100vh-6.8rem)] w-[98%] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background rounded-2xl p-6 m-3">
 
-        <router-outlet></router-outlet>
-     </main>
-  </div>
+         <router-outlet></router-outlet>
+      </main>
+   </div>
 
 </div>

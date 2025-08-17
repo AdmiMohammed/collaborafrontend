@@ -21,6 +21,12 @@ import { MainDashComponent } from './modules/main-dash/main-dash.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ProjectCardComponent } from './shared/components/project-card/project-card.component';
 import { SortableDirective } from './sortable.directive';
+import { ProjectPageComponent } from './modules/project-page/project-page.component';
+import { BoardHeaderComponent } from './components/project/board-header/board-header.component';
+import { ColumnComponent } from './components/project/column/column.component';
+import { TaskCardComponent } from './components/project/task-card/task-card.component';
+import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
+import { AvatarComponent } from './shared/components/avatar/avatar.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +43,12 @@ import { SortableDirective } from './sortable.directive';
     MainDashComponent,
     ProjectCardComponent,
     SortableDirective,
+    ProjectPageComponent,
+    BoardHeaderComponent,
+    ColumnComponent,
+    TaskCardComponent,
+    AddMemberModalComponent,
+    AvatarComponent,
   ],
   imports: [
     BrowserModule,

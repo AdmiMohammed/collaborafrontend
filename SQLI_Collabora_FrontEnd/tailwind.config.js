@@ -10,6 +10,7 @@ module.exports = {
         'primary-mid': '#C020D0',
         'primary-end': '#FC0FC0',
         'background': '#F4F6FE',
+        // 'background': '#fbfaf8'
       },
       animation: {
         'slide-out-right': 'slideOutRight 0.5s ease-in-out forwards',

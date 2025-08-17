@@ -3,11 +3,13 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface User {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
   avatar?: string;
+  profilePictureUrl?: string;
 }
 
 @Injectable({
@@ -48,6 +50,12 @@ updateUser(userData: Partial<User>): Observable<User> {
   /** Permet d'accéder directement à la dernière valeur */
   getCurrentUserValue() {
     return this.currentUserSubject.value;
+  }
+
+
+  //added by me alae
+  getAllUsers(){
+    return this.http.get<User[]>(`${this.apiUrl}/users`)
   }
 }
 

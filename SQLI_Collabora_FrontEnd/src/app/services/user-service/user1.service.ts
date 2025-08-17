@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class User1Service {
 
-   private apiUrl : string = 'http://localhost:5205/api/User';
+  private apiUrl : string = 'http://localhost:5205/api/User';
   constructor(private http: HttpClient) { }
 
   getCurrentUser(): Observable<any> {
