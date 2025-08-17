@@ -25,8 +25,10 @@ import { ProjectPageComponent } from './modules/project-page/project-page.compon
 import { BoardHeaderComponent } from './components/project/board-header/board-header.component';
 import { ColumnComponent } from './components/project/column/column.component';
 import { TaskCardComponent } from './components/project/task-card/task-card.component';
-import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
 import { AvatarComponent } from './shared/components/avatar/avatar.component';
+import { ProjectWizardComponent } from './modules/project-wizard/project-wizard/project-wizard.component';
+import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
+import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
 
 @NgModule({
   declarations: [
@@ -49,6 +51,8 @@ import { AvatarComponent } from './shared/components/avatar/avatar.component';
     TaskCardComponent,
     AddMemberModalComponent,
     AvatarComponent,
+    ProjectWizardComponent,
+    ProjectCardSkeletonComponent,
   ],
   imports: [
     BrowserModule,

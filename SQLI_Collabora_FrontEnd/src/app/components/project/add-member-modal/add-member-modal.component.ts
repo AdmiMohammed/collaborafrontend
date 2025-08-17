@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ProjectMemberDto } from 'src/app/services/project-service/project.service';
-import { User, UserService } from 'src/app/services/user-service/user.service';
+import { AppUser, User1Service } from 'src/app/services/user-service/user1.service';
 
 @Component({
   selector: 'app-add-member-modal',
@@ -10,30 +10,30 @@ export class AddMemberModalComponent implements OnInit {
   @Input() existingMembers!: ProjectMemberDto[];
   @Output() close = new EventEmitter<void>();
   @Output() memberChangesConfirmed = new EventEmitter<{
-    newMembers: User[];
+    newMembers: AppUser[];
     removedMembers: ProjectMemberDto[];
   }>();
 
   // State for search
   searchQuery = '';
-  candidateUsers: User[] = [];
-  searchResults: User[] = [];
+  candidateUsers: AppUser[] = [];
+  searchResults: AppUser[] = [];
   focusedIndex = -1;
 
   // Lists
   existingMembersWithStatus: (ProjectMemberDto & { pendingRemoval?: boolean })[] = [];
-  newMembers: User[] = [];
+  newMembers: AppUser[] = [];
 
   @ViewChild('searchContainer') searchContainer!: ElementRef;
   dropdownOpen = false;
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: User1Service) { }
 
   ngOnInit() {
     this.existingMembersWithStatus = this.existingMembers
       .filter(m => m.role !== "Owner")
       .map(m => ({ ...m, pendingRemoval: false }));
-    this.userService.getAllUsers().subscribe(users => {
+    this.userService.getUsers().subscribe(users => {
       this.candidateUsers = users.filter(
         u => !this.existingMembers.map(m => m.userId).includes(u.id)
       );
@@ -62,7 +62,7 @@ export class AddMemberModalComponent implements OnInit {
     this.dropdownOpen = true;
   }
 
-  addNewMember(user: User) {
+  addNewMember(user: AppUser) {
     this.newMembers.push(user);
     // Remove from  candidateUsers so they don't show again
     this.candidateUsers = this.candidateUsers.filter(u => u.id !== user.id);
@@ -71,7 +71,7 @@ export class AddMemberModalComponent implements OnInit {
     this.dropdownOpen = false;
   }
 
-  removeNewMember(user: User) {
+  removeNewMember(user: AppUser) {
     this.newMembers = this.newMembers.filter(m => m.id !== user.id);
     // Put them back into available list
     this.candidateUsers.push(user);

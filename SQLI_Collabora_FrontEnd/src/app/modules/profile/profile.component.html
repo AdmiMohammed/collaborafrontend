@@ -38,22 +38,37 @@
     <!-- Avatar -->
     <div class="flex items-center gap-6">
       <div class="relative w-28 h-28">
-        <div class="w-full h-full rounded-full border-4 border-purple-100 bg-purple-50 flex items-center justify-center text-purple-700 font-bold text-2xl overflow-hidden">
-          <ng-container *ngIf="userData.avatar; else initialsOnly">
-            <img [src]="userData.avatar" [alt]="userData.lastName" class="w-full h-full object-cover rounded-full" />
+        <div
+          class="w-full h-full rounded-full border-4 border-purple-100 bg-purple-50 flex items-center justify-center text-purple-700 font-bold text-2xl overflow-hidden"
+        >
+          <ng-container
+            *ngIf="(isEditing && editedUserData.profilePictureUrl) || userData.profilePictureUrl; else initialsOnly"
+          >
+            <img
+              [src]="isEditing && editedUserData.profilePictureUrl 
+                      ? editedUserData.profilePictureUrl 
+                      : userData.profilePictureUrl"
+              [alt]="userData.lastName || 'Avatar'"
+              class="w-full h-full object-cover rounded-full"
+            />
           </ng-container>
           <ng-template #initialsOnly>{{ initials }}</ng-template>
         </div>
 
-        <!-- Bouton pour modifier l'avatar -->
-        <button
-          *ngIf="isEditing"
-          class="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-white shadow border flex items-center justify-center hover:bg-gray-100 transition"
-        >
-          <i class="fas fa-edit text-gray-700 text-sm"></i>
-        </button>
+      <!-- Bouton pour sélectionner l'avatar -->
+      <button
+        *ngIf="isEditing"
+        class="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-white shadow border flex items-center justify-center hover:bg-gray-100 transition"
+      >
+        <i class="fas fa-edit text-gray-700 text-sm"></i>
+        <input
+          type="file"
+          accept="image/*"
+          (change)="onAvatarSelected($event)"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+      </button>
       </div>
-
       <div>
         <h2 class="text-xl font-semibold text-gray-900">
           {{ userData.firstName }} {{ userData.lastName }}
@@ -129,5 +144,6 @@
         </ng-template>
       </div>
     </div>
+    
   </div>
 </main>

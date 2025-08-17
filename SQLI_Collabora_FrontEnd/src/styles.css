@@ -15,20 +15,27 @@
 .toast-error {
   background: linear-gradient(to right, #8432DF, #C020D0, #FC0FC0) !important;
   color: white !important;
-  white-space: nowrap;
-  /* Prevent text wrapping */
-  max-width: 600px !important;
-  /* Increase max-width to fit longer messages */
-  width: auto !important;
-  /* Allow width to adjust to content */
-  padding: 10px 20px !important;
-  /* Adjust padding for better appearance */
-  font-size: 0.9rem !important;
-  /* Ensure readable font size */
-  overflow: hidden;
-  /* Hide overflow if necessary */
-  text-overflow: ellipsis;
-  /* Add ellipsis if the text is too long */
+  white-space: nowrap; /* Prevent text wrapping */
+  max-width: 600px !important; /* Increase max-width to fit longer messages */
+  width: auto !important; /* Allow width to adjust to content */
+  padding: 10px 20px !important; /* Adjust padding for better appearance */
+  font-size: 0.9rem !important; /* Ensure readable font size */
+  overflow: hidden; /* Hide overflow if necessary */
+  text-overflow: ellipsis; /* Add ellipsis if the text is too long */
+}
+
+/* Toast succès moderne */
+.toast-success {
+  background-color: #22c55e !important; /* Vert moderne */
+  color: white !important;
+  white-space: nowrap; /* Prevent text wrapping */
+  max-width: 600px !important; /* Increase max-width to fit longer messages */
+  width: auto !important; /* Allow width to adjust to content */
+  padding: 10px 20px !important; /* Adjust padding for better appearance */
+  font-size: 0.9rem !important; /* Ensure readable font size */
+  overflow: hidden; /* Hide overflow if necessary */
+  text-overflow: ellipsis; /* Add ellipsis if the text is too long */
+  background-image: none !important; 
 }
 
 
@@ -57,30 +64,24 @@
   font-size: 0.75rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   pointer-events: none;
-  font-weight: normal;
-  /* make sure it's not bold */
-  font-family: sans-serif;
-  /* avoid h3's serif/bold font */
+  font-weight: normal; /* make sure it's not bold */
+  font-family: sans-serif; /* avoid h3's serif/bold font */
 
   opacity: 0;
   visibility: hidden;
 
   transition:
-    opacity 0.2s ease-in-out 0.3s,
-    /* delay opacity */
-    visibility 0s linear 0.5s;
-  /* hide visibility after opacity transition */
+    opacity 0.2s ease-in-out 0.3s, /* delay opacity */
+    visibility 0s linear 0.5s; /* hide visibility after opacity transition */
   z-index: 999;
   line-height: 1.2;
-  /* or even 1 if you want it tighter */
 }
 
 /* Show tooltip on hover */
 .tooltip:hover::after {
   opacity: 1;
   visibility: visible;
-  transition-delay: 0.7s, 0s;
-  /* visibility shows immediately with opacity delay */
+  transition-delay: 0.7s, 0s; /* visibility shows immediately with opacity delay */
 }
 
 .tooltip.not-clickable {

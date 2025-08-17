@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { ProjectMemberDto } from 'src/app/services/project-service/project.service';
-import { User } from 'src/app/services/user-service/user.service';
+import { AppUser } from 'src/app/services/user-service/user1.service';
 
 @Component({
   selector: 'app-avatar',
@@ -8,7 +8,7 @@ import { User } from 'src/app/services/user-service/user.service';
   styleUrls: ['./avatar.component.css']
 })
 export class AvatarComponent {
-  @Input() user!: User | ProjectMemberDto;
+  @Input() user!: AppUser | ProjectMemberDto;
   @Input() size: 'sm' | 'md' | 'lg' | 'header' | 'global-header' = 'md'
 
   get initials(): string {
