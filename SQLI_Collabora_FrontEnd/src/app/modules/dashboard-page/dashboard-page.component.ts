@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
 export class DashboardPageComponent {
   isSidebarOpen = true;
   
-    toggleSidebar() {
+  toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
 }

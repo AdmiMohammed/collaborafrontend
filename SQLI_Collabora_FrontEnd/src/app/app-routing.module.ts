@@ -23,8 +23,7 @@ const routes: Routes = [
       { path: '', component: MainDashComponent },
       { path: 'profile', component: ProfileComponent },
      ]
-    
-    }
+        }
 
 ];
 
