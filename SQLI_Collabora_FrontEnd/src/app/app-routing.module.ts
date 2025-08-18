@@ -9,7 +9,7 @@ import { ForgotPasswordComponent } from './components/auth/forgot-password/forgo
 import { DashboardPageComponent } from './modules/dashboard-page/dashboard-page.component';
 import { ProfileComponent } from './modules/profile/profile.component';
 import { MainDashComponent } from './modules/main-dash/main-dash.component';
-
+import { ProjectPageComponent } from './modules/project-page/project-page.component';
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -22,9 +22,11 @@ const routes: Routes = [
      path : 'dashboard', component: DashboardPageComponent,
      children: [
       { path: '', component: MainDashComponent },
-      { path: 'profile', component: ProfileComponent },
+      { path: 'profile', component: ProfileComponent }
      ]
-    },   
+    
+    },
+    {path: 'projects/:id', component: ProjectPageComponent}
 ];
 
 @NgModule({

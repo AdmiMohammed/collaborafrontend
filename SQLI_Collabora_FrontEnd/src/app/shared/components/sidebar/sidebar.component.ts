@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -63,10 +64,10 @@ menuItems = [
     this.isOpen = !this.isOpen;
   }
 
-  constructor(private authService: AuthService, public router: Router){}
+  constructor(private userService: UserService, public router: Router,){}
 
   onLogout(): void {
-    this.authService.logout();
+    this.userService.logout();
   }
   
   isRouteActive(route: string): boolean {

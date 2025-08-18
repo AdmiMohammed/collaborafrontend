@@ -28,6 +28,12 @@ import { PortalModule } from '@angular/cdk/portal';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ProjectPageComponent } from './modules/project-page/project-page.component';
+import { BoardHeaderComponent } from './components/project/board-header/board-header.component';
+import { ColumnComponent } from './components/project/column/column.component';
+import { TaskCardComponent } from './components/project/task-card/task-card.component';
+import { AvatarComponent } from './shared/components/avatar/avatar.component';
+import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +50,12 @@ import { MatButtonModule } from '@angular/material/button';
     MainDashComponent,
     ProjectCardComponent,
     SortableDirective,
+    ProjectPageComponent,
+    BoardHeaderComponent,
+    ColumnComponent,
+    TaskCardComponent,
+    AddMemberModalComponent,
+    AvatarComponent,
     ProjectWizardComponent,
     ProjectCardSkeletonComponent,
 

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +21,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private userService: UserService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loginForm = this.fb.group({
@@ -72,9 +74,12 @@ export class LoginComponent implements OnInit, OnDestroy {
 
           if(token) {
             localStorage.setItem('token', token);
+             // Met à jour le BehaviorSubject avec le bon utilisateur
+            this.userService.fetchCurrentUser().subscribe({
+            next: () => this.router.navigate(['/dashboard']),
+            error: () => this.router.navigate(['/dashboard']) // même si erreur, on navigue
+          });
           }
-          console.log('Connexion réussie', response);
-          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           console.error('Échec de la connexion', error);

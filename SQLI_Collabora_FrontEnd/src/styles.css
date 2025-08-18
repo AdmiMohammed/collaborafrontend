@@ -36,9 +36,78 @@
   font-size: 0.9rem !important; /* Ensure readable font size */
   overflow: hidden; /* Hide overflow if necessary */
   text-overflow: ellipsis; /* Add ellipsis if the text is too long */
-    background-image: none !important; 
+  background-image: none !important; 
 }
 
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* added tooltip*/
+
+
+/* Tooltip base */
+.tooltip {
+  position: relative;
+  cursor: pointer;
+  display: inline-flex
+}
+
+/* Tooltip text */
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #8432DF;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  font-weight: normal; /* make sure it's not bold */
+  font-family: sans-serif; /* avoid h3's serif/bold font */
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    opacity 0.2s ease-in-out 0.3s, /* delay opacity */
+    visibility 0s linear 0.5s; /* hide visibility after opacity transition */
+  z-index: 999;
+  line-height: 1.2;
+}
+
+/* Show tooltip on hover */
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.7s, 0s; /* visibility shows immediately with opacity delay */
+}
+
+.tooltip.not-clickable {
+  cursor: default;
+}
+
+/* Hide tooltip when element is focused : not a great solution (but better than nothing ---)*/
+.tooltip:focus:hover::after {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition-delay: 0s, 0s !important;
+}
+
+
+/* Tooltip near left edge — shift right */
+.tooltip.left-edge::after {
+  left: 0;
+  transform: translateX(0);
+}
+
+/* Tooltip near right edge — shift left */
+.tooltip.right-edge::after {
+  right: 0;
+  left: auto;
+  transform: translateX(0);
+}

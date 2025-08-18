@@ -32,9 +32,4 @@ export class AuthService {
       responseType: 'text'
     });
   }
-
-  logout(): void {
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
-  }
 }

@@ -2,6 +2,7 @@
    <!-- Sidebar -->
    <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
 
+<<<<<<< HEAD
    <div class="flex-1 bg-background p-4">
       <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
       <main
@@ -10,5 +11,13 @@
          <router-outlet></router-outlet>
       </main>
    </div>
+=======
+  <div class="flex-1 bg-background p-4">
+     <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
+    <main class="flex-1 bg-white h-[calc(100vh-6.8rem)] w-[98%] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background rounded-2xl p-6 m-3">
+        <router-outlet></router-outlet>
+     </main>
+  </div>
+>>>>>>> c28b8e142886e0ffca0eb2fe35a430c94523bd29
 
 </div>
