@@ -27,7 +27,6 @@ const routes: Routes = [
     
     },
     {path: 'projects/:id', component: ProjectPageComponent}
-
 ];
 
 @NgModule({
