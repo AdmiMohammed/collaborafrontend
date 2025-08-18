@@ -31,14 +31,14 @@
   <div class="flex items-center justify-between mb-1">
     <span class="text-xs font-medium text-[#8432df]">Progress</span>
     <span class="text-xs font-medium text-[#8432df]">
-      {{ project.boardCount * 10 }}%
+      {{ project.boardCount * 5 }}%
     </span>
   </div>
 
   <div class="w-full bg-gray-200 rounded-full h-1.5 mb-1">
     <div class="h-1.5 rounded-full" [ngStyle]="{
         background: 'linear-gradient(to right, #FC0FC0, #C020D0, #8432DF)',
-        width: (project.boardCount * 10) + '%'
+        width: (project.boardCount * 5) + '%'
       }"></div>
   </div>
 

@@ -21,8 +21,13 @@ import { MainDashComponent } from './modules/main-dash/main-dash.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ProjectCardComponent } from './shared/components/project-card/project-card.component';
 import { SortableDirective } from './sortable.directive';
-import { ProjectWizardComponent } from './modules/project-wizard/project-wizard/project-wizard.component';
+import { ProjectWizardComponent } from './modules/project-wizard/project-wizard.component';
 import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { PortalModule } from '@angular/cdk/portal';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
@@ -41,6 +46,7 @@ import { ProjectCardSkeletonComponent } from './shared/components/project-card-s
     SortableDirective,
     ProjectWizardComponent,
     ProjectCardSkeletonComponent,
+
   ],
   imports: [
     BrowserModule,
@@ -49,6 +55,11 @@ import { ProjectCardSkeletonComponent } from './shared/components/project-card-s
     ReactiveFormsModule,
     HttpClientModule,
     FormsModule,
+    OverlayModule,
+    PortalModule,
+    MatMenuModule,
+    MatIconModule,
+    MatButtonModule,
     ToastrModule.forRoot({
       timeOut: 5000,
       positionClass: 'toast-top-right',

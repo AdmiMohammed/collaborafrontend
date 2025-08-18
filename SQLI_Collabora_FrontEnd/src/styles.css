@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.cdk-overlay-container { z-index: 9999; }
 
 .sortable-ghost {
   opacity: 0.3;
@@ -38,3 +39,6 @@
     background-image: none !important; 
 }
 
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

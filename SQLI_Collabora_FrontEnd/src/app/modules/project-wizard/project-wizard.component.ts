@@ -14,8 +14,6 @@ import { ProjectService } from 'src/app/services/project-service/project.service
 import { finalize } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 
-
-
 type WizardStep = 0 | 1 | 2;
 
 // Modèle UI (simple) pour l’affichage
@@ -35,7 +33,6 @@ interface CalendarDay {
   selector: 'app-project-wizard',
   templateUrl: './project-wizard.component.html',
 })
-
 export class ProjectWizardComponent implements OnInit {
   @Output() closed = new EventEmitter<void>();
   isSubmitting = false;
@@ -82,6 +79,17 @@ export class ProjectWizardComponent implements OnInit {
     'Décembre',
   ];
 
+  calendarStartOpen = false;
+  calendarDueOpen = false;
+  selectedStartDate: Date | null = null;
+  selectedDueDate: Date | null = null;
+
+  viewYearStart: number = new Date().getFullYear();
+  viewMonthStart: number = new Date().getMonth();
+  viewYearDue: number = new Date().getFullYear();
+  viewMonthDue: number = new Date().getMonth();
+
+  
   constructor(
     private fb: FormBuilder,
     private templatesSvc: TemplatesService,
@@ -90,11 +98,15 @@ export class ProjectWizardComponent implements OnInit {
     private toastr: ToastrService
   ) {
     this.form = this.fb.group({
-      details: this.fb.group({
-        title: ['', Validators.required],
-        description: ['', Validators.required],
-        dueDate: [null], // optionnel
-      }),
+      details: this.fb.group(
+        {
+          title: ['', Validators.required],
+          description: ['', Validators.required],
+          startDate: [null, Validators.required],
+          dueDate: [{ value: null, disabled: true }],
+        },
+        { validators: [this.dueAfterStartValidator()] } // cohérenc
+      ),
       template: this.fb.group({
         templateId: [null, Validators.required],
       }),
@@ -103,8 +115,6 @@ export class ProjectWizardComponent implements OnInit {
         search: [''], // ajout
       }),
     });
-
-
   }
 
   // Getters pratiques
@@ -123,11 +133,31 @@ export class ProjectWizardComponent implements OnInit {
   get fTemplateId(): AbstractControl | null {
     return this.template.get('templateId');
   }
+  get fStart(): AbstractControl | null {
+    return this.details.get('startDate');
+  }
+  get fDue(): AbstractControl | null {
+    return this.details.get('dueDate');
+  }
 
   ngOnInit(): void {
     this.loadTemplates();
     this.loadMembers();
+    // Activer/désactiver dueDate en fonction de startDate
+    this.fStart?.valueChanges.subscribe((iso: string | null) => {
+      const dueCtrl = this.fDue!;
+      if (iso) {
+        dueCtrl.enable({ emitEvent: false });
+      } else {
+        // reset + disable
+        this.selectedDueDate = null;
+        dueCtrl.reset(null, { emitEvent: false });
+        dueCtrl.disable({ emitEvent: false });
+        this.calendarDueOpen = false;
+      }
+    });
   }
+
   private loadMembers() {
     this.user1Service.getOtherUsers().subscribe((users) => {
       this.members = users.map((u) => ({
@@ -159,7 +189,17 @@ export class ProjectWizardComponent implements OnInit {
       },
     });
   }
-
+  // ===== Validation: due >= start
+  private dueAfterStartValidator() {
+    return (group: AbstractControl) => {
+      const startIso = group.get('startDate')?.value as string | null;
+      const dueIso = group.get('dueDate')?.value as string | null;
+      if (!startIso || !dueIso) return null;
+      const s = new Date(startIso);
+      const d = new Date(dueIso);
+      return d >= this.startOfDay(s) ? null : { dueBeforeStart: true };
+    };
+  }
   // === Wizard nav avec validation par étape ===
   next(): void {
     if (this.step === 0) {
@@ -198,36 +238,42 @@ export class ProjectWizardComponent implements OnInit {
 
     const v = this.form.value;
     const templateId: number = v.template.templateId;
-    const tpl = this.templates.find(t => t.id === templateId);
+    const tpl = this.templates.find((t) => t.id === templateId);
     const initialBoardCount = tpl?.columns?.length ?? 0;
 
     const dto = {
       name: v.details.title,
       description: v.details.description,
-      startDate: new Date().toISOString(),                // maintenant
-      estimatedEndDate: v.details.dueDate || null,        // déjà ISO ou null
+      startDate: new Date().toISOString(), // maintenant
+      estimatedEndDate: v.details.dueDate || null, // déjà ISO ou null
       templateId,
       initialBoardCount,
-      memberIds: (v.members.userIds || [])
+      memberIds: v.members.userIds || [],
     } as const;
 
     this.isSubmitting = true;
-    this.projectService.create(dto)
-      .pipe(finalize(() => this.isSubmitting = false))
+    this.projectService
+      .create(dto)
+      .pipe(finalize(() => (this.isSubmitting = false)))
       .subscribe({
         next: (created) => {
           console.log('PROJECT CREATED', created);
-          this.toastr.success('L’opération a été effectuée avec succès !', 'Succès');
-          this.close();            
+          this.toastr.success(
+            'L’opération a été effectuée avec succès !',
+            'Succès'
+          );
+          this.close();
           // ferme le wizard
           // option: émettre un event ou router vers /projects/:id
         },
         error: (err) => {
-          this.submitError = err?.error?.message || err?.message || 'Création du projet impossible.';
-        }
+          this.submitError =
+            err?.error?.message ||
+            err?.message ||
+            'Création du projet impossible.';
+        },
       });
   }
-
 
   // === Sélection template (corrigé pour FormGroup imbriqué) ===
   selectTemplate(t: { id: number }) {
@@ -237,78 +283,152 @@ export class ProjectWizardComponent implements OnInit {
     this.fTemplateId?.markAsTouched();
   }
 
-  // === Datepicker : synchronise la date avec le form ===
-  setDueDate(d: Date) {
-    this.selectedDate = d;
-    this.details.get('dueDate')?.setValue(d.toISOString());
-    this.details.get('dueDate')?.markAsDirty();
-    this.details.get('dueDate')?.markAsTouched();
-    this.calendarOpen = false;
+  // ====== START Datepicker methods
+  toggleCalendarStart() {
+    this.calendarStartOpen = !this.calendarStartOpen;
   }
-
-  clearDueDate(ev?: Event) {
-    ev?.stopPropagation();
-    this.selectedDate = null;
-    this.details.get('dueDate')?.setValue(null);
-    this.details.get('dueDate')?.markAsDirty();
+  closeCalendarStart() {
+    this.calendarStartOpen = false;
   }
-
-  // --- le reste de ton code (calendar, helpers) inchangé ---
-  get daysGrid(): CalendarDay[] {
-    const firstOfMonth = new Date(this.viewYear, this.viewMonth, 1);
+  prevMonthStart() {
+    if (this.viewMonthStart === 0) {
+      this.viewMonthStart = 11;
+      this.viewYearStart--;
+    } else {
+      this.viewMonthStart--;
+    }
+  }
+  nextMonthStart() {
+    if (this.viewMonthStart === 11) {
+      this.viewMonthStart = 0;
+      this.viewYearStart++;
+    } else {
+      this.viewMonthStart++;
+    }
+  }
+  get daysGridStart() {
+    const firstOfMonth = new Date(this.viewYearStart, this.viewMonthStart, 1);
     const startWeekday = (firstOfMonth.getDay() + 6) % 7;
-    const startDate = new Date(this.viewYear, this.viewMonth, 1 - startWeekday);
+    const startDate = new Date(
+      this.viewYearStart,
+      this.viewMonthStart,
+      1 - startWeekday
+    );
     return Array.from({ length: 42 }, (_, i) => {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      return { date, inCurrentMonth: date.getMonth() === this.viewMonth };
+      return { date, inCurrentMonth: date.getMonth() === this.viewMonthStart };
     });
   }
-  minDate = new Date();
+  setStartDate(d: Date) {
+    this.selectedStartDate = this.startOfDay(d);
+    this.fStart?.setValue(this.selectedStartDate.toISOString());
+    this.fStart?.markAsDirty();
+    this.fStart?.markAsTouched();
+    // si due < start → on reset l'échéance
+    if (
+      this.selectedDueDate &&
+      this.startOfDay(this.selectedDueDate) < this.selectedStartDate
+    ) {
+      this.clearDueDate();
+    }
+    this.calendarStartOpen = false;
+  }
+  clearStartDate(ev?: Event) {
+    ev?.stopPropagation();
+    this.selectedStartDate = null;
+    this.fStart?.setValue(null);
+    this.fStart?.markAsDirty();
+    // règle métier: si on supprime start → on supprime et bloque due
+    this.clearDueDate();
+    this.fDue?.disable({ emitEvent: false });
+  }
+  isStartSelected(d: Date) {
+    if (!this.selectedStartDate) return false;
+    const s = this.selectedStartDate;
+    return (
+      d.getFullYear() === s.getFullYear() &&
+      d.getMonth() === s.getMonth() &&
+      d.getDate() === s.getDate()
+    );
+  }
 
+  // ====== DUE Datepicker methods
+  toggleCalendarDue() {
+    if (this.selectedStartDate) this.calendarDueOpen = !this.calendarDueOpen;
+  }
+  closeCalendarDue() {
+    this.calendarDueOpen = false;
+  }
+  prevMonthDue() {
+    if (this.viewMonthDue === 0) {
+      this.viewMonthDue = 11;
+      this.viewYearDue--;
+    } else {
+      this.viewMonthDue--;
+    }
+  }
+  nextMonthDue() {
+    if (this.viewMonthDue === 11) {
+      this.viewMonthDue = 0;
+      this.viewYearDue++;
+    } else {
+      this.viewMonthDue++;
+    }
+  }
+  get daysGridDue() {
+    const firstOfMonth = new Date(this.viewYearDue, this.viewMonthDue, 1);
+    const startWeekday = (firstOfMonth.getDay() + 6) % 7;
+    const startDate = new Date(
+      this.viewYearDue,
+      this.viewMonthDue,
+      1 - startWeekday
+    );
+    return Array.from({ length: 42 }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      return { date, inCurrentMonth: date.getMonth() === this.viewMonthDue };
+    });
+  }
+  setDueDate(d: Date) {
+    if (this.isBeforeStart(d)) return;
+    this.selectedDueDate = this.startOfDay(d);
+    this.fDue?.setValue(this.selectedDueDate.toISOString());
+    this.fDue?.markAsDirty();
+    this.fDue?.markAsTouched();
+    this.calendarDueOpen = false;
+  }
+  clearDueDate(ev?: Event) {
+    ev?.stopPropagation();
+    this.selectedDueDate = null;
+    this.fDue?.setValue(null);
+    this.fDue?.markAsDirty();
+  }
+  isDueSelected(d: Date) {
+    if (!this.selectedDueDate) return false;
+    const s = this.selectedDueDate;
+    return (
+      d.getFullYear() === s.getFullYear() &&
+      d.getMonth() === s.getMonth() &&
+      d.getDate() === s.getDate()
+    );
+  }
+
+  // ===== Helpers dates (réutilise les tiens)
+  minDate = new Date();
   private startOfDay(d: Date) {
     const x = new Date(d);
     x.setHours(0, 0, 0, 0);
     return x;
   }
   isPast(date: Date): boolean {
+    // pour START: bloque le passé (aujourd’hui OK)
     return this.startOfDay(date) < this.startOfDay(this.minDate);
   }
-
-  toggleCalendar(): void {
-    this.calendarOpen = !this.calendarOpen;
-  }
-  closeCalendar(): void {
-    this.calendarOpen = false;
-  }
-  prevMonth(): void {
-    if (this.viewMonth === 0) {
-      this.viewMonth = 11;
-      this.viewYear--;
-    } else {
-      this.viewMonth--;
-    }
-  }
-  nextMonth(): void {
-    if (this.viewMonth === 11) {
-      this.viewMonth = 0;
-      this.viewYear++;
-    } else {
-      this.viewMonth++;
-    }
-  }
-  selectDate(date: Date): void {
-    this.selectedDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-    );
-    this.form.get('details.dueDate')?.setValue(this.selectedDate.toISOString());
-    this.closeCalendar();
-  }
-  onDayClick(date: Date) {
-    if (this.isPast(date)) return; // bloque la sélection
-    this.selectDate(date); // ta méthode existante
+  isBeforeStart(date: Date): boolean {
+    // pour DUE: bloque < start
+    if (!this.selectedStartDate) return true; // bloque tout si pas de start
+    return this.startOfDay(date) < this.selectedStartDate;
   }
   isToday(d: Date) {
     const t = new Date();
@@ -318,22 +438,18 @@ export class ProjectWizardComponent implements OnInit {
       d.getDate() === t.getDate()
     );
   }
-  isSelected(d: Date) {
-    if (!this.selectedDate) return false;
-    const s = this.selectedDate;
-    return (
-      d.getFullYear() === s.getFullYear() &&
-      d.getMonth() === s.getMonth() &&
-      d.getDate() === s.getDate()
-    );
-  }
-  goToday(): void {
+  goTodayStart() {
     const t = new Date();
-    this.viewYear = t.getFullYear();
-    this.viewMonth = t.getMonth();
-    this.selectDate(t);
+    this.viewYearStart = t.getFullYear();
+    this.viewMonthStart = t.getMonth();
+    if (!this.isPast(t)) this.setStartDate(t);
   }
-
+  goTodayDue() {
+    const t = new Date();
+    this.viewYearDue = t.getFullYear();
+    this.viewMonthDue = t.getMonth();
+    if (!this.isBeforeStart(t)) this.setDueDate(t);
+  }
   get progressPercent(): number {
     return (this.step / (this.steps.length - 1)) * 100;
   }

@@ -51,108 +51,178 @@
     <!-- Content -->
     <div class="px-10 py-10">
 
-      <!-- Étape 1: Détails -->
-      <div *ngIf="step === 0" class="" [formGroupName]="'details'">
-        <h3 class="text-lg font-semibold text-[#16306B]">Informations de base</h3>
-        <p class="text-sm text-[#4A5A78]">
-          Saisissez le titre, la description et la date d’échéance de votre projet.
-        </p>
-        <!-- Ligne : Titre + Date d'échéance -->
-        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-          <!-- Champ : Titre -->
-          <div class="flex flex-col gap-1">
-            <label for="title" class="text-xs font-medium text-[#16306B]">Titre du projet *</label>
-            <input id="title" type="text" formControlName="title" placeholder="Ex: Application mobile e-commerce"
-              class="h-10 rounded-lg  border border-gray-200 px-4 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition" />
-              <div *ngIf="fTitle?.touched && fTitle?.invalid" class="mt-1 flex items-center gap-1 text-xs text-red-600 font-medium">
-                <span>Le titre est obligatoire.</span>
-              </div>
+<!-- Étape 1: Détails -->
+<div *ngIf="step === 0" class="" [formGroupName]="'details'">
+  <h3 class="text-lg font-semibold text-[#16306B]">Informations de base</h3>
+  <p class="text-sm text-[#4A5A78]">
+    Saisissez le titre, la description et les dates de votre projet.
+  </p>
+
+  <!-- Ligne 1 : Titre -->
+  <div class="mt-8 grid grid-cols-1 gap-4">
+    <div class="flex flex-col gap-1">
+      <label for="title" class="text-xs font-medium text-[#16306B]">Titre du projet *</label>
+      <input id="title" type="text" formControlName="title" placeholder="Ex: Application mobile e-commerce"
+        class="h-10 rounded-lg border border-gray-200 px-4 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition" />
+      <div *ngIf="fTitle?.touched && fTitle?.invalid" class="mt-1 flex items-center gap-1 text-xs text-red-600 font-medium">
+        <span>Le titre est obligatoire.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ligne 3 : Date de début + Date d’échéance -->
+  <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+
+    <!-- Date de début -->
+    <div class="flex flex-col gap-1 relative">
+      <label for="startDate" class="text-xs font-medium text-[#16306B]">Date de début *</label>
+
+      <!-- Trigger -->
+      <button type="button"
+        class="h-10 w-full flex items-center justify-between rounded-lg border border-gray-200 px-4 text-xs text-[#16306B]
+               focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition"
+        (click)="toggleCalendarStart()">
+        <span>
+          {{ selectedStartDate ? (selectedStartDate | date:'dd/MM/yyyy') : 'Choisir une date de début' }}
+        </span>
+        <span class="flex items-center gap-2">
+          <!-- clear -->
+          <button *ngIf="selectedStartDate" type="button"
+            class="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
+            title="Effacer la date de début" aria-label="Effacer la date de début"
+            (click)="clearStartDate($event)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- calendar icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </span>
+      </button>
+
+      <!-- Popover calendrier START -->
+      <div *ngIf="calendarStartOpen"
+           class="absolute z-10 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div class="flex items-center justify-between px-3 py-2 border-b">
+          <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="prevMonthStart()" aria-label="Mois précédent">‹</button>
+          <div class="text-sm font-semibold text-[#16306B]">
+            {{ monthNames[viewMonthStart] }} {{ viewYearStart }}
           </div>
-          <!-- Champ : Date d'échéance (custom datepicker) -->
-          <div class="flex flex-col gap-1 relative">
-            <label for="dueDate" class="text-xs font-medium text-[#16306B]">Date d'échéance</label>
-
-            <!-- Trigger -->
-            <button type="button" class="h-10 w-full flex items-center justify-between rounded-lg border border-gray-200 px-4 text-xs text-[#16306B]
-                  focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition" (click)="toggleCalendar()">
-              <span>
-                {{ selectedDate ? (selectedDate | date:'dd/MM/yyyy') : 'Choisir une date' }}
-              </span>
-              <span class="flex items-center gap-2">
-                <!-- Bouton effacer (icône X) -->
-                <button *ngIf="selectedDate" type="button"
-                  class="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
-                  title="Effacer la date" aria-label="Effacer la date" (click)="clearDueDate($event)">
-                  <!-- Icône X (SVG) -->
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
-                <!-- Icône calendrier (inchangée) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2
-               2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </span>
-            </button>
-            <!-- Popover calendrier -->
-            <div *ngIf="calendarOpen"
-              class="absolute z-10 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white shadow-xl">
-              <!-- Header mois -->
-              <div class="flex items-center justify-between px-3 py-2 border-b">
-                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="prevMonth()"
-                  aria-label="Mois précédent">‹</button>
-                <div class="text-sm font-semibold text-[#16306B]">
-                  {{ monthNames[viewMonth] }} {{ viewYear }}
-                </div>
-                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="nextMonth()"
-                  aria-label="Mois suivant">›</button>
-              </div>
-
-              <!-- Jours de la semaine -->
-              <div class="grid grid-cols-7 gap-1 px-3 pt-2 text-[11px] text-[#4A5A78]">
-                <div *ngFor="let d of weekDays" class="text-center uppercase tracking-wide">{{ d }}</div>
-              </div>
-
-              <!-- Grille des jours -->
-              <div class="grid grid-cols-7 gap-1 p-3">
-                <button *ngFor="let d of daysGrid" type="button" (click)="!isPast(d.date) && setDueDate(d.date)"
-                  class="h-9 rounded-lg text-sm transition focus:outline-none" [disabled]="isPast(d.date)"
-                  [attr.title]="isPast(d.date) ? 'Choisissez une date future' : null"
-                  [attr.aria-disabled]="isPast(d.date)" [attr.tabindex]="isPast(d.date) ? -1 : 0" [ngClass]="{
-                    'cursor-not-allowed text-gray-400': isPast(d.date),        
-                    'hover:bg-[#F4F6FE]': !isPast(d.date),                       
-                    'opacity-40': !d.inCurrentMonth,
-                    'bg-[#8432DF] text-white': isSelected(d.date),
-                    'ring-1 ring-[#FC0FC0]': isToday(d.date) && !isSelected(d.date)
-                  }">
-                  {{ d.date.getDate() }}
-                </button>
-              </div>
-
-              <!-- Actions -->
-              <div class="flex items-center justify-between px-3 pb-3">
-                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="goToday()">Aujourd’hui</button>
-                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="closeCalendar()">Fermer</button>
-              </div>
-            </div>
-          </div>
-
+          <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="nextMonthStart()" aria-label="Mois suivant">›</button>
         </div>
 
-        <!-- Champ : Description -->
-        <div class="flex flex-col gap-1 mt-4">
-          <label for="description" class="text-xs font-medium text-[#16306B]">Description</label>
-          <textarea id="description" rows="4" formControlName="description" placeholder="Décrivez brièvement le projet..."
-            class="rounded-lg  border border-gray-200 px-4 py-2 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition"></textarea>
-          <div *ngIf="fDescription?.touched && fDescription?.invalid" class="mt-1 flex items-center gap-1 text-xs text-red-600 font-medium">
-            La description est obligatoire.
-          </div>
+        <div class="grid grid-cols-7 gap-1 px-3 pt-2 text-[11px] text-[#4A5A78]">
+          <div *ngFor="let d of weekDays" class="text-center uppercase tracking-wide">{{ d }}</div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 p-3">
+          <button *ngFor="let d of daysGridStart" type="button"
+            (click)="!isPast(d.date) && setStartDate(d.date)"
+            class="h-9 rounded-lg text-sm transition focus:outline-none"
+            [disabled]="isPast(d.date)"
+            [attr.title]="isPast(d.date) ? 'Choisissez une date future ou aujourd’hui' : null"
+            [ngClass]="{
+              'cursor-not-allowed text-gray-400': isPast(d.date),
+              'hover:bg-[#F4F6FE]': !isPast(d.date),
+              'opacity-40': !d.inCurrentMonth,
+              'bg-[#8432DF] text-white': isStartSelected(d.date),
+              'ring-1 ring-[#FC0FC0]': isToday(d.date) && !isStartSelected(d.date)
+            }">
+            {{ d.date.getDate() }}
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between px-3 pb-3">
+          <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="goTodayStart()">Aujourd’hui</button>
+          <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="closeCalendarStart()">Fermer</button>
         </div>
       </div>
+    </div>
+
+    <!-- Date d'échéance -->
+    <div class="flex flex-col gap-1 relative">
+      <label for="dueDate" class="text-xs font-medium text-[#16306B]">Date d'échéance</label>
+
+      <!-- Trigger (désactivé tant qu’il n’y a pas de startDate) -->
+      <button type="button"
+        class="h-10 w-full flex items-center justify-between rounded-lg border border-gray-200 px-4 text-xs text-[#16306B]
+               focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition disabled:opacity-50 disabled:cursor-not-allowed"
+        (click)="toggleCalendarDue()" [disabled]="!selectedStartDate">
+        <span>
+          {{ selectedDueDate ? (selectedDueDate | date:'dd/MM/yyyy') : (selectedStartDate ? 'Choisir une échéance' : 'Choisissez d’abord la date de début') }}
+        </span>
+        <span class="flex items-center gap-2">
+          <!-- clear -->
+          <button *ngIf="selectedDueDate" type="button"
+            class="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
+            title="Effacer la date d'échéance" aria-label="Effacer la date d'échéance"
+            (click)="clearDueDate($event)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <!-- calendar icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </span>
+      </button>
+
+      <!-- Popover calendrier DUE -->
+      <div *ngIf="calendarDueOpen"
+           class="absolute z-10 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div class="flex items-center justify-between px-3 py-2 border-b">
+          <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="prevMonthDue()" aria-label="Mois précédent">‹</button>
+          <div class="text-sm font-semibold text-[#16306B]">
+            {{ monthNames[viewMonthDue] }} {{ viewYearDue }}
+          </div>
+          <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="nextMonthDue()" aria-label="Mois suivant">›</button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 px-3 pt-2 text-[11px] text-[#4A5A78]">
+          <div *ngFor="let d of weekDays" class="text-center uppercase tracking-wide">{{ d }}</div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 p-3">
+          <button *ngFor="let d of daysGridDue" type="button"
+            (click)="!isBeforeStart(d.date) && setDueDate(d.date)"
+            class="h-9 rounded-lg text-sm transition focus:outline-none"
+            [disabled]="isBeforeStart(d.date)"
+            [attr.title]="isBeforeStart(d.date) ? 'Échéance après la date de début' : null"
+            [ngClass]="{
+              'cursor-not-allowed text-gray-400': isBeforeStart(d.date),
+              'hover:bg-[#F4F6FE]': !isBeforeStart(d.date),
+              'opacity-40': !d.inCurrentMonth,
+              'bg-[#8432DF] text-white': isDueSelected(d.date),
+              'ring-1 ring-[#FC0FC0]': isToday(d.date) && !isDueSelected(d.date)
+            }">
+            {{ d.date.getDate() }}
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between px-3 pb-3">
+          <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="goTodayDue()">Aujourd’hui</button>
+          <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="closeCalendarDue()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Ligne 2 : Description -->
+  <div class="flex flex-col gap-1 mt-4">
+    <label for="description" class="text-xs font-medium text-[#16306B]">Description</label>
+    <textarea id="description" rows="4" formControlName="description" placeholder="Décrivez brièvement le projet..."
+      class="rounded-lg border border-gray-200 px-4 py-2 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition"></textarea>
+    <div *ngIf="fDescription?.touched && fDescription?.invalid" class="mt-1 flex items-center gap-1 text-xs text-red-600 font-medium">
+      La description est obligatoire.
+    </div>
+  </div>
+</div>
+
 
       <!-- Étape 2: Template -->
       <div *ngIf="step === 1" [formGroupName]="'template'" class="" role="radiogroup" aria-label="Choisir un template">

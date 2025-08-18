@@ -1,6 +1,6 @@
 <div
   [ngClass]="{ 'w-64': isOpen, 'w-20': !isOpen }"
-  class="h-screen bg-white border-r border-slate-200 p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out text-slate-600 shadow-sm"
+  class="h-screen bg-white border-r border-slate-200 p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out text-slate-600 "
 >
   <!-- Haut -->
   <div>
@@ -24,7 +24,7 @@
         <a
           [routerLink]="item.link"
           [routerLinkActiveOptions]="{ exact: true }"
-          routerLinkActive="bg-[#f4f0ff] text-[#6f3ef6] font-semibold shadow-sm"
+          routerLinkActive="bg-[#f4f0ff] text-[#6f3ef6] font-semibold"
           class="relative text-sm flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all duration-200"
           [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-12 h-12': !isOpen }"
         >
