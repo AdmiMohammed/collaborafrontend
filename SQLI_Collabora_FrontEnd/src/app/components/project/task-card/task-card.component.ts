@@ -1,6 +1,6 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Task } from 'src/app/models/project';
+import { Board, Label, Task } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -9,6 +9,8 @@ import { ProjectMemberDto, ProjectService } from 'src/app/services/project-servi
   styleUrls: ['./task-card.component.css']
 })
 export class TaskCardComponent {
+  @Input() projectLabels!: Label[];
+  @Input() columnName!: string;
   @Input() task!: Task;
   @Input() members: ProjectMemberDto[] = [];
 
@@ -46,16 +48,21 @@ export class TaskCardComponent {
     });
   }
 
-  async saveTitle() {
-    if (this.taskTitleDraft.trim()) {
-      const updatedTask = await firstValueFrom(
-        this.projectService.updateTaskName(
-          this.taskTitleDraft.trim(),
-          this.task.id
-        )
-      )
-      this.task = updatedTask;
-    }
+  async saveTitle() { //modified
+    // if (this.taskTitleDraft.trim()) {
+    //   const updatedTask = await firstValueFrom(
+    //     this.projectService.updateTaskName(
+    //       this.taskTitleDraft.trim(),
+    //       this.task.id
+    //     )
+    //   )
+    //   this.task = updatedTask;
+      // console.log(this.task);
+    // }
+    // this.isEditing = false;
+    // console.log(await this.saveChanges());
+    await this.saveChanges();
+    // console.log(this.task);
     this.isEditing = false;
   }
 
@@ -67,4 +74,42 @@ export class TaskCardComponent {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }
+
+isModalOpen = false;
+shallowTaskCopy: Task | null =  null
+openEditModal() {
+  this.shallowTaskCopy = {...this.task}
+  // this.shallowTaskCopy = JSON.parse(JSON.stringify(this.task));
+  this.isModalOpen = true;
+}
+
+closeModal() {
+  this.isModalOpen = false;
+  this.shallowTaskCopy = null;
+}
+
+async saveTask(updatedTask: Task) {
+  const { attachments, ...taskWithoutAttachments } = updatedTask;
+  await this.saveChanges(taskWithoutAttachments);
+  this.task = updatedTask;
+  // this.originalTask = { ...updatedTask };
+  // console.log(this.task);
+  this.isModalOpen = false;
+}
+
+
+originalTask!: Task;
+
+ngOnInit() {
+  this.originalTask = { ...this.task }; // shallow copy or deep copy
+}
+
+async saveChanges(task:Task = this.task) {
+  const updatedTask = await firstValueFrom(
+    this.projectService.updateTask(this.task.id, this.originalTask, task)
+  );
+  return updatedTask;
+  this.task = updatedTask;
+  this.originalTask = { ...updatedTask }; // reset original copy
+}
 }

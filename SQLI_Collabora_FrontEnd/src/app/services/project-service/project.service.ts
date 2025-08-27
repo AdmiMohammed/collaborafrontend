@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap, take } from 'rxjs';
 import { User1Service } from '../user-service/user1.service';
-import { Board, Project, Task } from 'src/app/models/project';
+import { AttachmentDto, Board, Label, Project, Task, TaskLabel } from 'src/app/models/project';
+import * as jsonpatch from 'fast-json-patch';
 
 export interface ProjectMemberDto {
   userId: number;
@@ -45,6 +46,9 @@ export class ProjectService {
   private apiBase = 'http://localhost:5205/api/Projects';
   private boardApiBase = 'http://localhost:5205/api/boards';
   private taskApiBase = 'http://localhost:5205/api/projecttasks';
+  private labelApiBase = 'http://localhost:5205/api/label';
+  private taskLabelApiBase = 'http://localhost:5205/api/taskLabels';
+  private attachmentApiBase = 'http://localhost:5205/api/attachments';
 
   constructor(private http: HttpClient, private user1Service: User1Service) { }
 
@@ -107,6 +111,17 @@ export class ProjectService {
     );
   }
 
+  updateTask(taskId: number, original: any, updated: any): Observable<any> {
+    // Automatically compute the patch
+    const patchPayload = jsonpatch.compare(original, updated);
+
+    return this.http.patch(
+      `${this.taskApiBase}/${taskId}`,
+      patchPayload,
+      { headers: { 'Content-Type': 'application/json-patch+json' } }
+    );
+  }
+
   deleteProject(projectId: number) {
     return this.http.delete<Project>(`${this.apiBase}/${projectId}`)
   }
@@ -119,6 +134,50 @@ export class ProjectService {
   bulkRemoveMembers(projectId: number, userIds: number[]) {
     return this.http.post<ProjectMemberDto>(`${this.apiBase}/${projectId}/members/bulk-remove`, userIds)
   }
+
+  createLabel(labelData: { name: string, color: string, projectId: number }) {
+    return this.http.post<Label>(`${this.labelApiBase}`, labelData);
+  }
+
+  deleteLabel(labelId: number) {
+    return this.http.delete<Label>(`${this.labelApiBase}/${labelId}`)
+  }
+
+  updateLabel(labelId: number, labelData: { name: string, color: string, projectId: number }) {
+    return this.http.put<Label>(`${this.labelApiBase}/${labelId}`, labelData)
+  }
+
+  createTaskLabelMapping(taskId: number, labelId: number) {
+    return this.http.post<TaskLabel>(`${this.taskLabelApiBase}`, { taskId: taskId, labelId: labelId });
+  }
+
+  deleteTaskLabelMapping(taskId: number, labelId: number) {
+    return this.http.delete<TaskLabel>(`${this.taskLabelApiBase}/${taskId}/${labelId}`)
+  }
+
+  //attachments
+  getTaskAttachments(taskId: number): Observable<AttachmentDto[]> {
+    return this.http.get<AttachmentDto[]>(`${this.attachmentApiBase}/task/${taskId}`);
+  }
+
+  uploadAttachment(taskId: number, file: File): Observable<AttachmentDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<AttachmentDto>(`${this.attachmentApiBase}/${taskId}`, formData);
+  }
+
+  deleteAttachment(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.attachmentApiBase}/${id}`);
+  }
+
+  reorderTask(taskId: number, dto: {newBoardId: number, newPosition: number}): Observable<void> {
+    return this.http.post<void>(`${this.taskApiBase}/${taskId}/reorder`, dto);
+  }
+
+  reorderColumn(projectId: number, columnId: number, newPosition: number): Observable<any> {
+    return this.http.post(`${this.boardApiBase}/${projectId}/${columnId}/reorder?newPosition=${newPosition}`, {});
+  }
+
   create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
     return this.user1Service.getCurrentUser().pipe(
       take(1),

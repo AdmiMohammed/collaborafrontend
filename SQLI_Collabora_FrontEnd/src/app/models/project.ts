@@ -10,6 +10,7 @@ export interface Project {
   members: ProjectMemberDto[];
   projectTasks: Task[];
   columns: Board[];
+  labels: Label[];
 }
 
 export interface Board {
@@ -25,10 +26,12 @@ export interface Task {
   description: string;
   assignedTo: number;
   assignedToName: string;
-  deadline: Date;
-  priority: "High" | "Medium" | "Low";
+  createdBy: number;
+  deadline: string;
+  priority: "High" | "Medium" | "Low" | null;
   position: number;
   taskLabels: TaskLabel[];
+  attachments?: AttachmentDto[];
 }
 
 export interface TaskLabel{
@@ -38,6 +41,17 @@ export interface TaskLabel{
 }
 
 export interface Label{
+  id?: number;
   name: string;
   color: string;
+}
+
+export interface AttachmentDto {
+  id: number;
+  fileName: string;
+  fileUrl: string;
+  fileSize?: number;
+  contentType?: string;
+  uploadDate: string;
+  uploadedBy: number;
 }

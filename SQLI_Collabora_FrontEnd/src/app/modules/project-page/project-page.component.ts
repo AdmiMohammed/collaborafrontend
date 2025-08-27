@@ -1,7 +1,7 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Project } from 'src/app/models/project';
+import { Board, Project } from 'src/app/models/project';
 import { ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -69,6 +69,10 @@ export class ProjectPageComponent implements OnInit {
       this.projectService.getProjectDetails(projectId).subscribe({
         next: (data) => {
           this.project = data;
+          //sorted columns
+          if (this.project?.columns) {
+            this.project.columns.sort((a, b) => a.position - b.position);
+          }
           console.log(this.project);
         },
         error: (err) => {
@@ -98,5 +102,47 @@ export class ProjectPageComponent implements OnInit {
     console.log(event)
     const target = event.target as HTMLElement;
     this.openMenuColumnId = null;
+  }
+
+  columnMap: Map<HTMLElement, Board> = new Map();
+  @ViewChildren('columnList', { read: ElementRef }) columnEls!: QueryList<ElementRef>;
+
+  ngAfterViewInit() {
+    this.columnMap = new Map<HTMLElement, Board>();
+    this.columnEls.forEach((elRef, index) => {
+      this.columnMap.set(elRef.nativeElement, this.project.columns[index]);
+    });
+  }
+
+  get sortedColumns() {
+    return this.project.columns.slice().sort((a, b) => a.position - b.position);
+  }
+
+  onColumnsReorder(event: {
+    movedItem: any,
+    oldIndex: number,
+    newIndex: number,
+    fromColumn: any | null,
+    toColumn: any | null,
+    items?: any[]
+  }) {
+    const movedItem = event.movedItem;
+    console.log(movedItem)
+    const newIndex = event.newIndex;
+
+    // Call backend reorder
+    this.projectService
+      .reorderColumn(this.project.id, movedItem.id, newIndex)
+      .subscribe({
+        next: () => {
+          // ✅ update local state (optional since directive already reordered items)
+          this.project.columns = event.items ?? this.project.columns;
+        },
+        error: (err) => {
+          console.error('Reorder failed', err);
+          // ❌ rollback UI if needed
+          this.project.columns = [...this.sortedColumns];
+        }
+      });
   }
 }

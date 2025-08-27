@@ -29,6 +29,7 @@ import { AvatarComponent } from './shared/components/avatar/avatar.component';
 import { ProjectWizardComponent } from './modules/project-wizard/project-wizard/project-wizard.component';
 import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
 import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
+import { TaskModalComponent } from './components/project/task-modal/task-modal.component';
 
 @NgModule({
   declarations: [
@@ -53,6 +54,7 @@ import { AddMemberModalComponent } from './components/project/add-member-modal/a
     AvatarComponent,
     ProjectWizardComponent,
     ProjectCardSkeletonComponent,
+    TaskModalComponent,
   ],
   imports: [
     BrowserModule,
