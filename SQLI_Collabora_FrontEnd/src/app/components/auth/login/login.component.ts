@@ -43,6 +43,29 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
       window.addEventListener('resize', this.onResize);
+
+      // Check for existing token and attempt auto-login
+      const token = localStorage.getItem('token');
+      if (token) {
+        this.authService.validateToken(token).subscribe({
+          next: (isValid) => {
+            if (isValid) {
+              this.userService.fetchCurrentUser().subscribe({
+                next: () => this.router.navigate(['/dashboard']),
+                error: () => {
+                  localStorage.removeItem('token'); // Clear invalid token
+                  this.router.navigate(['/login']);
+                }
+              });
+            } else {
+              localStorage.removeItem('token'); // Clear invalid token
+            }
+          },
+          error: () => {
+            localStorage.removeItem('token'); // Clear token on validation error
+          }
+        });
+      }
     }
   }
 
@@ -71,14 +94,16 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
           const token = response.token;
+          if (token) {
+            // Store token based on "rememberMe" value
+            const storage = this.loginForm.get('rememberMe')?.value ? localStorage : sessionStorage;
+            storage.setItem('token', token);
 
-          if(token) {
-            localStorage.setItem('token', token);
-             // Met à jour le BehaviorSubject avec le bon utilisateur
+            // Fetch user and navigate to dashboard
             this.userService.fetchCurrentUser().subscribe({
-            next: () => this.router.navigate(['/dashboard']),
-            error: () => this.router.navigate(['/dashboard']) // même si erreur, on navigue
-          });
+              next: () => this.router.navigate(['/dashboard']),
+              error: () => this.router.navigate(['/dashboard']) // Navigate even if user fetch fails
+            });
           }
         },
         error: (error) => {
