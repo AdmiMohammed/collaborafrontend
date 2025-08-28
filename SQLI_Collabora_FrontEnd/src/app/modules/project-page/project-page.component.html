@@ -21,7 +21,7 @@
 
           <app-column *ngFor="let column of project.columns" [column]="column" [members]="project.members"
             [projectLabels]="project.labels" [menuOpen]="openMenuColumnId === column.id"
-            (toggleMenu)="toggleMenu(column.id)">
+            (toggleMenu)="toggleMenu(column.id)" (labelsChanged)="onLabelsChanged($event)">
           </app-column>
         </div>
 

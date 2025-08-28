@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Board, Project } from 'src/app/models/project';
+import { Board, Label, Project } from 'src/app/models/project';
 import { ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -145,4 +145,33 @@ export class ProjectPageComponent implements OnInit {
         }
       });
   }
+
+onLabelsChanged(updated: Label[]) {
+  // 1️⃣ Update the project labels
+  this.project.labels = updated;
+
+  // 2️⃣ Create a Set of existing label IDs for quick lookup
+  const existingLabelIds = new Set(updated.map(l => l.id));
+
+  // 3️⃣ Loop through all columns and all tasks
+  this.project.columns.forEach(column => {
+    column.tasks.forEach(task => {
+      // 4️⃣ Remove taskLabels that no longer exist in project
+      task.taskLabels = task.taskLabels!.filter(taskLabel =>
+        existingLabelIds.has(taskLabel.label.id)
+      );
+
+      // 5️⃣ Optionally, sync updated label info (name/color) in tasks
+      task.taskLabels.forEach(taskLabel => {
+        const projectLabel = updated.find(l => l.id === taskLabel.label.id);
+        if (projectLabel) {
+          taskLabel.label.name = projectLabel.name;
+          taskLabel.label.color = projectLabel.color;
+        }
+      });
+    });
+  });
+}
+
+
 }

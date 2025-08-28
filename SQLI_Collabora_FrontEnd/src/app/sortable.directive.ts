@@ -1,4 +1,4 @@
-import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnDestroy, Output, SimpleChange, SimpleChanges } from '@angular/core';
 import Sortable, { SortableEvent } from 'sortablejs';
 import { Task } from 'src/app/models/project';
 
@@ -36,6 +36,8 @@ export class SortableDirective implements AfterViewInit, OnDestroy {
       group: this.group || undefined,
       scroll: true, // Enable scrolling
       forceAutoScrollFallback: true,
+      filter: 'textarea, input, .non-draggable',
+      preventOnFilter: false,
       scrollSensitivity: 180, // Distance from edge to start scrolling
       scrollSpeed: 15, // Speed of scrolling
       scrollFn: (offsetX, offsetY) => {
@@ -49,6 +51,7 @@ export class SortableDirective implements AfterViewInit, OnDestroy {
 
         return "continue"; // needed for SortableJS
       },
+
 
 
       onStart: (evt: SortableEvent) => {

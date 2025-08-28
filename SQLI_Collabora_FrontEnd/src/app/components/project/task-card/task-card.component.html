@@ -3,9 +3,9 @@
   (click)="openEditModal()">
   <!-- Labels -->
   <div class="flex flex-wrap gap-1 mb-2">
-    <span *ngFor="let taskLabel of task.taskLabels" class="px-1.5 py-1.5 text-xs font-medium rounded-lg text-white"
+    <span *ngFor="let taskLabel of task.taskLabels" class="flex items-center justify-center px-1.5 py-[1px] text-xs font-medium rounded-md text-white min-w-12 min-h-4"
       [style.backgroundColor]="taskLabel.label.color">
-      #{{ taskLabel.label.name }}
+      {{ taskLabel.label.name }}
     </span>
   </div>
 
@@ -112,5 +112,5 @@
 
 <!--task modal-->
 <app-task-modal *ngIf="isModalOpen" [task]="shallowTaskCopy!" [columnName]="columnName" (close)="closeModal()" [projectLabels]="projectLabels"
-  [projectMembers]="members" [createdBy]="getMemberById(task.createdBy)" (save)="saveTask($event)">
+  [projectMembers]="members" [createdBy]="getMemberById(task.createdBy)" (save)="saveTask($event)" (labelsChanged)="onLabelsChanged($event)">
 </app-task-modal>

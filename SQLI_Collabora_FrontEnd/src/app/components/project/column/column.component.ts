@@ -285,4 +285,10 @@ get sortedTasks() {
   // getMemberById(userId: number): ProjectMemberDto | undefined {
   //   return this.projectMembers.find(member => member.userId === userId);
   // }
+
+  @Output() labelsChanged = new EventEmitter<Label[]>();
+
+onLabelsChanged(updated: Label[]) {
+  this.labelsChanged.emit(updated);
+}
 }

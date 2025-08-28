@@ -21,7 +21,8 @@ export class TaskModalComponent implements OnInit {
   @Output() archive = new EventEmitter<void>();
   @ViewChild('modalElement') modalElement!: ElementRef;
 
-  showMenu = false;
+  // showMenu = false;
+  activeMenu: 'calendar' | 'showLabel' | 'editLabel' | 'options' | '' = '';
   activeTab: 'comments' | 'attachments' = 'comments';
   assignees: ProjectMemberDto[] = [];
   // deadlineString: string = ''; // For the date input
@@ -48,17 +49,17 @@ export class TaskModalComponent implements OnInit {
 
   //options
   toggleMenu(): void {
-    this.showMenu = !this.showMenu;
+    this.activeMenu = this.activeMenu === 'options' ? '' : 'options';
   }
 
   moveTask(): void {
     this.move.emit();
-    this.showMenu = false;
+    this.activeMenu = '';
   }
 
   archiveTask(): void {
     this.archive.emit();
-    this.showMenu = false;
+    this.activeMenu = '';
   }
 
   //should be implemented
@@ -85,6 +86,8 @@ export class TaskModalComponent implements OnInit {
   saveChanges(): void {
     const updatedTask: Task = {
       ...this.task,
+      title: this.task.title?.trim(),       // remove leading/trailing spaces
+      description: this.task.description?.trim(),
       priority: this.mapPriorityToBackend(this.selectedPriority),
     };
 
@@ -93,7 +96,6 @@ export class TaskModalComponent implements OnInit {
 
 
   //calendar
-  calendarOpen = false;
 
   today = new Date();
   currentMonth = this.today.getMonth();
@@ -108,9 +110,7 @@ export class TaskModalComponent implements OnInit {
   calendarDays: { date: Date; currentMonth: boolean; disabled: boolean }[] = [];
 
   toggleCalendar() {
-    this.calendarOpen = !this.calendarOpen;
-    // this.priorityMenuOpen = false;
-    // this.statusMenuOpen = false; // close other menu
+    this.activeMenu = this.activeMenu === 'calendar' ? '' : 'calendar';
   }
 
   generateCalendar(month: number, year: number) {
@@ -167,7 +167,8 @@ export class TaskModalComponent implements OnInit {
   selectDate(day: { date: Date; disabled: boolean }) {
     if (day.disabled) return;
     this.task.deadline = this.toLocalDateString(day.date);
-    this.calendarOpen = false;
+    // this.calendarOpen = false;
+    this.activeMenu = '';
   }
 
   isSelected(day: { date: Date }) {
@@ -177,7 +178,8 @@ export class TaskModalComponent implements OnInit {
   selectToday() {
     this.task.deadline = this.toLocalDateString(new Date());
     console.log(this.task.deadline)
-    this.calendarOpen = false;
+    // this.calendarOpen = false;
+    this.activeMenu = '';
   }
 
   selectedStatus: string | null = null;
@@ -189,10 +191,12 @@ export class TaskModalComponent implements OnInit {
 
   selectPriority(priority: string) {
     this.selectedPriority = priority;
+    console.log(this.selectedPriority)
   }
 
   getCalendarPosition(): string {
-    if (!this.calendarOpen || !this.modalElement) return '';
+    // if (!this.calendarOpen || !this.modalElement) return '';
+    if (this.activeMenu !== 'calendar' || !this.modalElement) return '';
 
     // Get the position of the calendar icon relative to the modal
     const icon = document.querySelector('#calendarIcon');
@@ -251,6 +255,7 @@ export class TaskModalComponent implements OnInit {
 
   //labels
   // A Trello-like palette
+  @Output() labelsChanged = new EventEmitter<Label[]>
   constructor(private projectService: ProjectService, private route: ActivatedRoute) { }
 
   labelColors: readonly string[] = [
@@ -264,30 +269,39 @@ export class TaskModalComponent implements OnInit {
     '#51E898', // lime
     '#FF78CB', // pink
     '#344563', // navy-ish
-    '#B3BAC5'  // gray
+    '#B3BAC5',  // gray
+
+    '#1E90FF', // Sky Blue
+    '#20C997', // Turquoise
+    '#FF851B', // Bright Orange
+    '#2ECC40', // Lime Green
+    '#FFD93D', // Golden Yellow
+    '#FF4D6D', // Coral Red
+    '#A7C7E7', // Pastel Blue
+    '#A8E6CF', // Mint Green
+    '#FFD6A5', // Peach
+    '#CDB4DB', // Lavender
+    '#FFB5E8', // Soft Pink
+    '#6C757D'  // Slate Gray (neutral)
   ];
 
-  // allLabels: TaskLabel[] = []          // Provided via @Input
-  showLabelMenu = false;
-  labelEditorOpen = false;
   labelForm: Label = { name: '', color: '' };
   editingLabel?: Label;
 
   toggleLabelMenu() {
-    this.showLabelMenu = !this.showLabelMenu;
-    this.labelEditorOpen = false;
+    this.activeMenu = this.activeMenu === 'showLabel' ? '' : 'showLabel';
   }
 
   editLabel(label: Label) {
     this.editingLabel = label;
     this.labelForm = { id: label.id, name: label.name, color: label.color };
-    this.labelEditorOpen = true;
+    this.activeMenu = 'editLabel'
   }
 
   startAddingLabel() {
     this.editingLabel = undefined;
     this.labelForm = { id: 0, name: '', color: this.labelColors[0] };
-    this.labelEditorOpen = true;
+    this.activeMenu = 'editLabel';
   }
 
   saveLabel() {
@@ -302,40 +316,44 @@ export class TaskModalComponent implements OnInit {
       }).subscribe({
         next: (updated) => {
           // update UI in place
-          const idx = this.projectLabels.findIndex(l => l.id === this.labelForm.id);
-          if (idx !== -1) this.projectLabels[idx] = this.labelForm;
+          // const idx = this.projectLabels.findIndex(l => l.id === this.labelForm.id);
+          // if (idx !== -1) this.projectLabels[idx] = this.labelForm;
+          this.projectLabels = this.projectLabels.map(l => l.id === this.labelForm.id ? this.labelForm : l);
+          this.task.taskLabels!.find(tl => tl.labelId === this.labelForm.id)!.label = this.labelForm;
+          this.labelsChanged.emit(this.projectLabels);
           this.cancelLabelEdit();
         },
         error: (err) => console.error('Failed to update label', err)
       });
 
     } else {
-this.projectService.createLabel({
-  name: this.labelForm.name,
-  color: this.labelForm.color,
-  projectId: Number(this.route.snapshot.paramMap.get('id'))
-}).subscribe({
-  next: (created) => {
-    // 1. Update project labels immutably
-    this.projectLabels = [...this.projectLabels, created];
+      this.projectService.createLabel({
+        name: this.labelForm.name,
+        color: this.labelForm.color,
+        projectId: Number(this.route.snapshot.paramMap.get('id'))
+      }).subscribe({
+        next: (created) => {
+          // 1. Update project labels immutably
+          this.projectLabels = [...this.projectLabels, created];
 
-    // 2. Create mapping and hydrate with full label
-    this.projectService.createTaskLabelMapping(this.task.id, created.id!).subscribe({
-      next: (taskLabel) => {
-        this.task.taskLabels = [
-          ...this.task.taskLabels,
-          { ...taskLabel, label: created } // 👈 inject full label
-        ];
+          // 2. Create mapping and hydrate with full label
+          this.projectService.createTaskLabelMapping(this.task.id, created.id!).subscribe({
+            next: (taskLabel) => {
+              this.task.taskLabels = [
+                ...this.task.taskLabels!,
+                { ...taskLabel, label: created } // 👈 inject full label
+              ];
 
-        // 3. Emit to parent so card updates
-        // this.save.emit(this.task);
+              // 3. Emit to parent so card updates
+              // this.save.emit(this.task);
+              this.labelsChanged.emit(this.projectLabels);
 
-        this.cancelLabelEdit();
-      }
-    });
-  },
-  error: (err) => console.error('Failed to create label', err)
-});
+              this.cancelLabelEdit();
+            }
+          });
+        },
+        error: (err) => console.error('Failed to create label', err)
+      });
 
     }
   }
@@ -347,7 +365,8 @@ this.projectService.createLabel({
         next: () => {
           // Remove from UI
           this.projectLabels = this.projectLabels.filter(l => l.id !== this.editingLabel!.id);
-          this.task.taskLabels = this.task.taskLabels.filter(l => l.labelId !== this.editingLabel!.id);
+          this.task.taskLabels = this.task.taskLabels!.filter(l => l.labelId !== this.editingLabel!.id);
+          this.labelsChanged.emit(this.projectLabels);
           this.cancelLabelEdit();
         },
         error: (err) => {
@@ -357,138 +376,136 @@ this.projectService.createLabel({
     }
   }
 
-//   toggleTaskLabel(label: Label, event: Event) {
-//   const checked = (event.target as HTMLInputElement).checked;
-  
-//   if (checked) {
-//     this.projectService.createTaskLabelMapping(this.task.id, label.id!).subscribe({
-//       next: (taskLabel) => this.task.taskLabels.push(taskLabel),
-//       error: (err) => console.error('Failed to add label to task', err)
-//     });
-//   } else {
-//     this.projectService.deleteTaskLabelMapping(this.task.id, label.id!).subscribe({
-//       next: () => {
-//         this.task.taskLabels = this.task.taskLabels.filter(tl => tl.label.id !== label.id);
-//       },
-//       error: (err) => console.error('Failed to remove label from task', err)
-//     });
-//   }
-// }
+  //   toggleTaskLabel(label: Label, event: Event) {
+  //   const checked = (event.target as HTMLInputElement).checked;
 
-// toggleTaskLabel(label: Label, ev: Event) {
-//   ev.stopPropagation();
-//   if (!label?.id) return;
+  //   if (checked) {
+  //     this.projectService.createTaskLabelMapping(this.task.id, label.id!).subscribe({
+  //       next: (taskLabel) => this.task.taskLabels.push(taskLabel),
+  //       error: (err) => console.error('Failed to add label to task', err)
+  //     });
+  //   } else {
+  //     this.projectService.deleteTaskLabelMapping(this.task.id, label.id!).subscribe({
+  //       next: () => {
+  //         this.task.taskLabels = this.task.taskLabels.filter(tl => tl.label.id !== label.id);
+  //       },
+  //       error: (err) => console.error('Failed to remove label from task', err)
+  //     });
+  //   }
+  // }
 
-//   // prevent double-click storms
-//   if (this.processingLabelIds.has(label.id)) return;
-//   this.processingLabelIds.add(label.id);
+  // toggleTaskLabel(label: Label, ev: Event) {
+  //   ev.stopPropagation();
+  //   if (!label?.id) return;
 
-//   const isChecked = this.isTaskLabelChecked(label);
+  //   // prevent double-click storms
+  //   if (this.processingLabelIds.has(label.id)) return;
+  //   this.processingLabelIds.add(label.id);
 
-//   if (!isChecked) {
-//     // ✅ CHECK (add mapping) – optimistic add with full label
-//     this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
-//       next: (mapping) => {
-//         // Ensure we inject the full label object used by the UI
-//         const hydrated = { ...mapping, label } as TaskLabel;
+  //   const isChecked = this.isTaskLabelChecked(label);
 
-//         // If array already contains it (race), skip
-//         const exists = this.task.taskLabels.some(tl => tl.label?.id === label.id);
-//         if (!exists) {
-//           // keep same array ref for the task card (shallow copy)
-//           this.task.taskLabels.push(hydrated);
-//         }
-//       },
-//       error: (err) => {
-//         console.error('Failed to add label to task', err);
-//       },
-//       complete: () => this.processingLabelIds.delete(label.id!)
-//     });
+  //   if (!isChecked) {
+  //     // ✅ CHECK (add mapping) – optimistic add with full label
+  //     this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
+  //       next: (mapping) => {
+  //         // Ensure we inject the full label object used by the UI
+  //         const hydrated = { ...mapping, label } as TaskLabel;
 
-//   } else {
-//     // ❌ UNCHECK (remove mapping) – mutate in place to keep reference shared with card
-//     const idx = this.task.taskLabels.findIndex(tl => tl.label?.id === label.id);
-//     const removed = idx > -1 ? this.task.taskLabels[idx] : undefined;
+  //         // If array already contains it (race), skip
+  //         const exists = this.task.taskLabels.some(tl => tl.label?.id === label.id);
+  //         if (!exists) {
+  //           // keep same array ref for the task card (shallow copy)
+  //           this.task.taskLabels.push(hydrated);
+  //         }
+  //       },
+  //       error: (err) => {
+  //         console.error('Failed to add label to task', err);
+  //       },
+  //       complete: () => this.processingLabelIds.delete(label.id!)
+  //     });
 
-//     if (idx > -1) {
-//       // optimistic remove
-//       this.task.taskLabels.splice(idx, 1);
-//     }
+  //   } else {
+  //     // ❌ UNCHECK (remove mapping) – mutate in place to keep reference shared with card
+  //     const idx = this.task.taskLabels.findIndex(tl => tl.label?.id === label.id);
+  //     const removed = idx > -1 ? this.task.taskLabels[idx] : undefined;
 
-//     this.projectService.deleteTaskLabelMapping(this.task.id, label.id).subscribe({
-//       next: () => {},
-//       error: (err) => {
-//         console.error('Failed to remove label from task', err);
-//         // revert on error
-//         if (removed) {
-//           this.task.taskLabels.splice(idx, 0, removed);
-//         }
-//       },
-//       complete: () => this.processingLabelIds.delete(label.id!)
-//     });
-//   }
-// }
+  //     if (idx > -1) {
+  //       // optimistic remove
+  //       this.task.taskLabels.splice(idx, 1);
+  //     }
+
+  //     this.projectService.deleteTaskLabelMapping(this.task.id, label.id).subscribe({
+  //       next: () => {},
+  //       error: (err) => {
+  //         console.error('Failed to remove label from task', err);
+  //         // revert on error
+  //         if (removed) {
+  //           this.task.taskLabels.splice(idx, 0, removed);
+  //         }
+  //       },
+  //       complete: () => this.processingLabelIds.delete(label.id!)
+  //     });
+  //   }
+  // }
 
 
   cancelLabelEdit() {
-    this.labelEditorOpen = false;
+    this.activeMenu = 'showLabel';
   }
 
   isTaskLabelChecked(label: Label): boolean {
-  return this.task?.taskLabels?.some(tl => tl.label.id === label.id) ?? false;
-}
+    return this.task?.taskLabels?.some(tl => tl.label.id === label.id) ?? false;
+  }
 
-// processingLabelIds = new Set<number>();
-toggleTaskLabel(label: Label, ev: Event) {
-  ev.stopPropagation();
-  if (!label?.id) return;
+  // processingLabelIds = new Set<number>();
+  toggleTaskLabel(label: Label, ev: Event) {
+    ev.stopPropagation();
+    if (!label?.id) return;
 
-  const isChecked = this.isTaskLabelChecked(label);
+    const isChecked = this.isTaskLabelChecked(label);
 
-  if (!isChecked) {
-    // ✅ Add label mapping
-    this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
-      next: (mapping) => {
-        // attach the label if API doesn't return it
-        if (!mapping.label) {
-          mapping.label = label;
-        }
-        // avoid duplicates
-        const exists = this.task.taskLabels.some(tl => tl.label?.id === label.id);
-        if (!exists) {
-          this.task.taskLabels.push(mapping);
-        }
-      },
-      error: (err) => console.error('Failed to add label', err),
-    });
-
-  } else {
-    // ❌ Remove label mapping
-    const idx = this.task.taskLabels.findIndex(tl => tl.label?.id === label.id);
-    if (idx > -1) {
-      // optimistic remove
-      const removed = this.task.taskLabels.splice(idx, 1)[0];
-
-      this.projectService.deleteTaskLabelMapping(this.task.id, label.id).subscribe({
-        error: (err) => {
-          console.error('Failed to remove label', err);
-          // revert if server call fails
-          this.task.taskLabels.splice(idx, 0, removed);
-        }
+    if (!isChecked) {
+      // ✅ Add label mapping
+      this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
+        next: (mapping) => {
+          // attach the label if API doesn't return it
+          if (!mapping.label) {
+            mapping.label = label;
+          }
+          // avoid duplicates
+          const exists = this.task.taskLabels!.some(tl => tl.label?.id === label.id);
+          if (!exists) {
+            this.task.taskLabels!.push(mapping);
+          }
+        },
+        error: (err) => console.error('Failed to add label', err),
       });
+
+    } else {
+      // ❌ Remove label mapping
+      const idx = this.task.taskLabels!.findIndex(tl => tl.label?.id === label.id);
+      if (idx > -1) {
+        // optimistic remove
+        const removed = this.task.taskLabels!.splice(idx, 1)[0];
+
+        this.projectService.deleteTaskLabelMapping(this.task.id, label.id).subscribe({
+          error: (err) => {
+            console.error('Failed to remove label', err);
+            // revert if server call fails
+            this.task.taskLabels!.splice(idx, 0, removed);
+          }
+        });
+      }
     }
   }
-}
 
 
-// trackLabelBy(_: number, label: Label) {
-//   return label.id!;
-// }
-// trackTaskLabelBy(_: number, tl: TaskLabel) {
-//   return tl.label?.id ?? tl.id;
-// }
-
-
+  // trackLabelBy(_: number, label: Label) {
+  //   return label.id!;
+  // }
+  // trackTaskLabelBy(_: number, tl: TaskLabel) {
+  //   return tl.label?.id ?? tl.id;
+  // }
 
 
 
@@ -496,7 +513,9 @@ toggleTaskLabel(label: Label, ev: Event) {
 
 
 
-//attachments
+
+
+  //attachments
   uploading = false;
 
   onFileSelected(event: any) {
@@ -523,4 +542,126 @@ toggleTaskLabel(label: Label, ev: Event) {
     if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
     return (size / (1024 * 1024)).toFixed(1) + ' MB';
   }
+
+  //   getLabelMenuPosition(): string {
+  //   if (!this.showLabelMenu || !this.modalElement) return '';
+
+  //   const trigger = document.querySelector('button[click*="toggleLabelMenu"]');
+  //   if (!trigger) return 'top: 4rem; left: 0;';
+
+  //   const rect = trigger.getBoundingClientRect();
+  //   const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
+
+  //   const top = rect.bottom - modalRect.top + 8;
+  //   const left = rect.left - modalRect.left;
+
+  //   return `top: ${top}px; left: ${left}px;`;
+  // }
+
+  getLabelMenuPosition(): string {
+    // if (!this.calendarOpen || !this.modalElement) return '';
+
+    // Get the position of the calendar icon relative to the modal
+    const icon = this.showLabelToggleBtn?.nativeElement;
+    if (!icon) return 'right: 1rem; bottom: 1rem;';
+
+    const rect = icon.getBoundingClientRect();
+    const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
+
+    // Calculate position relative to modal
+    const top = rect.bottom - modalRect.top + 4; // Adjust the number as needed
+    const left = rect.left - modalRect.left;
+
+    return `top: ${top}px; left: ${left}px;`;
+  }
+
+  @ViewChild('optionsMenu') optionsMenu?: ElementRef;
+  @ViewChild('optionsToggleBtn') optionsToggleBtn?: ElementRef;
+
+  @ViewChild('showLabelMenu') labelMenu?: ElementRef;
+  @ViewChild('showLabelToggleBtn') showLabelToggleBtn?: ElementRef;
+
+  @ViewChild('editLabelMenu') editLabelMenu?: ElementRef;
+
+  @ViewChild('calendarMenu') calendarMenu?: ElementRef;
+  @ViewChild('calendarToggleBtn') calendarToggleBtn?: ElementRef;
+
+  modalMouseDownInside = false;
+
+  onModalMouseDown(event: MouseEvent) {
+    console.log("mouse down called")
+    this.modalMouseDownInside = true;
+  }
+
+  onModalMouseUp(event: MouseEvent) {
+    console.log("mouse up called")
+    this.modalMouseDownInside = false
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if (this.modalMouseDownInside) {
+      console.log(this.modalMouseDownInside)
+      this.modalMouseDownInside = false
+      // Ignore click — it started inside modal
+      return;
+    }
+    this.closeModal();
+  }
+  onModalRootClick(event: MouseEvent) {
+    const t = event.target as Node;
+    const inside = (el?: ElementRef) => el?.nativeElement.contains(t);
+
+    console.log(this.activeMenu)
+
+    const inAnyMenu =
+      inside(this.optionsMenu) ||
+      inside(this.labelMenu) ||
+      inside(this.editLabelMenu) ||
+      inside(this.calendarMenu);
+
+    console.log(inside(this.editLabelMenu))
+
+    const inAnyToggle =
+      inside(this.optionsToggleBtn) ||
+      inside(this.showLabelToggleBtn) ||
+      inside(this.calendarToggleBtn);
+
+    console.log(inAnyToggle)
+
+    // Clicked somewhere inside the modal that is NOT a menu and NOT a toggle → close open menu
+    if (this.activeMenu && !inAnyMenu && !inAnyToggle) {
+      this.activeMenu = '';
+    }
+
+    // keep clicks inside from reaching the backdrop
+    event.stopPropagation();
+  }
+
+  ///resizing on init (title and description)
+
+  @ViewChild('taskTitle') taskTitle!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('taskDesc') taskDesc!: ElementRef<HTMLTextAreaElement>;
+
+  // private resizedForCurrentOpen = false;
+
+  ngAfterViewChecked() {
+    // wait for layout / rendering to settle
+    this.resizeAll();
+  }
+
+  resizeAll() {
+    if (this.taskTitle) this.resize(this.taskTitle.nativeElement);
+    if (this.taskDesc) this.resize(this.taskDesc.nativeElement);
+  }
+
+  resize(el: HTMLTextAreaElement | EventTarget | null) {
+    const textarea = (el instanceof HTMLTextAreaElement) ? el : (el as any)?.nativeElement ?? null;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+
+
+
 }

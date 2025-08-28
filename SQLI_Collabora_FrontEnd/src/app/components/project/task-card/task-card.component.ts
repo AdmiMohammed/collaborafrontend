@@ -89,7 +89,9 @@ closeModal() {
 }
 
 async saveTask(updatedTask: Task) {
-  const { attachments, ...taskWithoutAttachments } = updatedTask;
+  // console.log(updatedTask)
+  const { attachments, taskLabels, ...taskWithoutAttachments } = updatedTask;
+  // console.log(taskWithoutAttachments)
   await this.saveChanges(taskWithoutAttachments);
   this.task = updatedTask;
   // this.originalTask = { ...updatedTask };
@@ -105,11 +107,19 @@ ngOnInit() {
 }
 
 async saveChanges(task:Task = this.task) {
+      console.log(this.originalTask)
+      console.log(task)
   const updatedTask = await firstValueFrom(
     this.projectService.updateTask(this.task.id, this.originalTask, task)
   );
   return updatedTask;
   this.task = updatedTask;
   this.originalTask = { ...updatedTask }; // reset original copy
+}
+
+@Output() labelsChanged = new EventEmitter<Label[]>();
+
+onLabelsChanged(updated: Label[]) {
+  this.labelsChanged.emit(updated);
 }
 }

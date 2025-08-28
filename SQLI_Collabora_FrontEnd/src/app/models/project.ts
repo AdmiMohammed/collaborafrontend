@@ -30,7 +30,7 @@ export interface Task {
   deadline: string;
   priority: "High" | "Medium" | "Low" | null;
   position: number;
-  taskLabels: TaskLabel[];
+  taskLabels?: TaskLabel[];
   attachments?: AttachmentDto[];
 }
 
