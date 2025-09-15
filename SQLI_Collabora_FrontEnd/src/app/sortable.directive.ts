@@ -49,7 +49,7 @@ export class SortableDirective implements AfterViewInit, OnDestroy {
           container.scrollLeft += offsetX * 1.5;
         }
 
-        return "continue"; // needed for SortableJS
+        return "continue";
       },
 
 
@@ -69,7 +69,7 @@ export class SortableDirective implements AfterViewInit, OnDestroy {
       },
 
       onEnd: (evt: SortableEvent) => {
-        // ✅ Task reordering
+        // Task reordering
         if (this.column && this.draggedTask) {
           const fromColumn = (evt.from as any).__columnRef;
           const toColumn = (evt.to as any).__columnRef;
@@ -86,11 +86,10 @@ export class SortableDirective implements AfterViewInit, OnDestroy {
           return;
         }
 
-        // ✅ Project reordering
+        // Project reordering
         if (!this.column) {
           const movedItem = this.items.splice(evt.oldIndex!, 1)[0];
           this.items.splice(evt.newIndex!, 0, movedItem);
-          console.log(this.items)
 
           this.reordered.emit({
             movedItem,

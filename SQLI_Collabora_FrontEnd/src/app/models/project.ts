@@ -23,16 +23,17 @@ export interface Board {
 export interface Task {
   id: number;
   title: string;
-  description: string;
-  assignedTo: number;
-  assignedToName: string;
+  description: string | null;
+  assignedTo: number | null;
+  assignedToName?: string | null;
   createdBy: number;
-  deadline: string;
+  deadline: string | null;
   priority: "High" | "Medium" | "Low" | null;
   position: number;
   taskLabels?: TaskLabel[];
   attachments?: AttachmentDto[];
   comments?: Comment[];
+  isArchived: boolean;
 }
 
 export interface TaskLabel{

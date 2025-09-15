@@ -1,5 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { Component, Input, Output, EventEmitter, OnInit, ElementRef, ViewChild, ViewChildren, QueryList, NgZone } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { take } from 'rxjs';
 import { Task, TaskLabel, Label, AttachmentDto, Comment } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { UserService } from 'src/app/services/user-service/user.service';
@@ -7,10 +9,23 @@ import { UserService } from 'src/app/services/user-service/user.service';
 @Component({
   selector: 'app-task-modal',
   templateUrl: './task-modal.component.html',
-  styleUrls: ['./task-modal.component.css']
+  styleUrls: ['./task-modal.component.css'],
+  animations: [
+    trigger('commentAnim', [
+      transition(':enter', [
+        // Start slightly above
+        style({ opacity: 0, transform: 'translateY(-20px)' }),
+        // Animate down to its place
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        // Fade out and slide up slightly when removed
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class TaskModalComponent implements OnInit {
-  @ViewChild('commentsContainer') commentsContainer!: ElementRef;
   @Input() projectLabels!: Label[];
   @Input() task!: Task;
   @Input() columnName!: string;
@@ -18,21 +33,90 @@ export class TaskModalComponent implements OnInit {
   @Input() createdBy?: ProjectMemberDto;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<Task>();
-  @Output() move = new EventEmitter<void>();
-  @Output() archive = new EventEmitter<void>();
   @Output() commentUpdated = new EventEmitter<Comment[]>(); // New event for comment updates
-  @ViewChild('modalElement') modalElement!: ElementRef;
+  @Output() labelsChanged = new EventEmitter<Label[]>
 
-  // showMenu = false;
-  activeMenu: 'calendar' | 'showLabel' | 'editLabel' | 'options' | '' = '';
+  activeMenu: 'calendar' | 'showLabel' | 'editLabel' | 'assignee' | '' = '';
   activeTab: 'comments' | 'attachments' = 'comments';
-  assignees: ProjectMemberDto[] = [];
+  assignee: ProjectMemberDto | undefined;
   comments: Comment[] = [];
   newComment: string = '';
   editingCommentId: number | null = null;
   editingCommentContent: string = '';
   loggedInUserId: number = 0;
   showDeleteConfirm: number | null = null;
+  selectedStatus: string | null = null;
+  selectedPriority: string | null = null;
+  editingLabel?: Label;
+  uploading = false;
+  modalMouseDownInside = false;
+  titleError!: boolean;
+
+  @ViewChild('commentsContainer') commentsContainer!: ElementRef;
+  @ViewChild('editCommentInput') editCommentInput!: ElementRef<HTMLTextAreaElement>;
+  @ViewChildren('commentContainers') commentContainers!: QueryList<ElementRef<HTMLDivElement>>;
+  @ViewChild('modalElement') modalElement!: ElementRef;
+
+  @ViewChild('showLabelMenu') labelMenu?: ElementRef;
+  @ViewChild('showLabelToggleBtn') showLabelToggleBtn?: ElementRef;
+  @ViewChild('showLabelToggleBtn2') showLabelToggleBtn2?: ElementRef;
+
+  @ViewChild('editLabelMenu') editLabelMenu?: ElementRef;
+
+  @ViewChild('calendarMenu') calendarMenu?: ElementRef;
+  @ViewChild('calendarToggleBtn') calendarToggleBtn?: ElementRef;
+
+  @ViewChild('assigneeMenu') assigneeMenu?: ElementRef;
+  @ViewChild('assigneeToggleBtn') assigneeToggleBtn?: ElementRef;
+  @ViewChild('assigneeToggleBtn2') assigneeToggleBtn2?: ElementRef;
+
+  @ViewChild('taskTitle') taskTitle!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('taskDesc') taskDesc!: ElementRef<HTMLTextAreaElement>;
+
+  @ViewChild('underline') underline!: ElementRef;
+  @ViewChild('tab1') tab1!: ElementRef;
+  @ViewChild('tab2') tab2!: ElementRef;
+
+
+  today = new Date();
+  currentMonth = this.today.getMonth();
+  currentYear = this.today.getFullYear();
+  months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  calendarDays: { date: Date; currentMonth: boolean; disabled: boolean }[] = [];
+  labelColors: readonly string[] = [
+    '#61BD4F', // green
+    '#F2D600', // yellow
+    '#FF9F1A', // orange
+    '#EB5A46', // red
+    '#C377E0', // purple
+    '#0079BF', // blue
+    '#00C2E0', // sky
+    '#51E898', // lime
+    '#FF78CB', // pink
+    '#344563', // navy-ish
+    '#B3BAC5',  // gray
+
+    '#1E90FF', // Sky Blue
+    '#20C997', // Turquoise
+    '#FF851B', // Bright Orange
+    '#2ECC40', // Lime Green
+    '#FFD93D', // Golden Yellow
+    '#FF4D6D', // Coral Red
+    '#A7C7E7', // Pastel Blue
+    '#A8E6CF', // Mint Green
+    '#FFD6A5', // Peach
+    '#CDB4DB', // Lavender
+    '#FFB5E8', // Soft Pink
+    '#6C757D'  // Slate Gray (neutral)
+  ];
+  labelForm: Label = { name: '', color: '' };
+
+
+  constructor(private projectService: ProjectService, private route: ActivatedRoute, private userService: UserService, private zone: NgZone) { }
 
   ngOnInit(): void {
     this.loadComments();
@@ -40,10 +124,7 @@ export class TaskModalComponent implements OnInit {
     this.selectedPriority = this.mapPriorityToFrontend(this.task.priority);
 
     if (this.task.assignedTo && this.projectMembers.length) {
-      const assignee = this.projectMembers.find(member => member.userId === this.task.assignedTo);
-      if (assignee) {
-        this.assignees = [assignee];
-      }
+      this.assignee = this.projectMembers.find(member => member.userId === this.task.assignedTo);
     }
 
     if (!this.task.comments) {
@@ -61,7 +142,6 @@ export class TaskModalComponent implements OnInit {
     });
   }
 
-
   getCurrentUserId(): number {
     const user = this.userService.getCurrentUserValue();
     return user ? user.id : 0;
@@ -71,57 +151,84 @@ export class TaskModalComponent implements OnInit {
     return this.projectMembers.find(m => m.userId === id);
   }
 
- // Ajoutez cette méthode pour inverser l'ordre des commentaires
-reversedComments(): Comment[] {
-  return [...this.comments].reverse();
-}
+  // Ajoutez cette méthode pour inverser l'ordre des commentaires
+  reversedComments(): Comment[] {
+    return [...this.comments].reverse();
+  }
 
-// La méthode scrollToTop() reste inchangée
-scrollToTop(): void {
-  try {
-    if (this.commentsContainer) {
-      this.commentsContainer.nativeElement.scrollTop = 0;
-    }
-  } catch (err) { }
-}
+  // La méthode scrollToTop() reste inchangée
+  scrollToTop(): void {
+    try {
+      if (this.commentsContainer) {
+        this.commentsContainer.nativeElement.scrollTop = 0;
+      }
+    } catch (err) { }
+  }
 
-// Modifiez la méthode loadComments() pour trier les commentaires du plus ancien au plus récent
-loadComments(): void {
-  this.projectService.getCommentsByTaskId(this.task.id).subscribe({
-    next: (comments: Comment[]) => {
-      // Trier les commentaires du plus ancien au plus récent
-      this.comments = comments.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-      this.task.comments = this.comments;
-      this.commentUpdated.emit(this.comments);
-      setTimeout(() => this.scrollToTop(), 0);
-    },
-    error: (err) => console.error('Failed to load comments', err),
-  });
-}
+  // Modifiez la méthode loadComments() pour trier les commentaires du plus ancien au plus récent
+  loadComments(): void {
+    this.projectService.getCommentsByTaskId(this.task.id).subscribe({
+      next: (comments: Comment[]) => {
+        // Trier les commentaires du plus ancien au plus récent
+        this.comments = comments.sort((a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        this.task.comments = this.comments;
+        this.commentUpdated.emit(this.comments);
+        setTimeout(() => this.scrollToTop(), 0);
+      },
+      error: (err) => console.error('Failed to load comments', err),
+    });
+  }
 
-// Modifiez la méthode addComment() pour ajouter le nouveau commentaire à la fin
-addComment(): void {
-  if (!this.newComment.trim()) return;
+  addComment(): void {
+    const content = this.newComment.trim();
+    if (!content) return;
 
-  this.projectService.createComment({
-    content: this.newComment,
-    taskId: this.task.id,
-    userId: this.getCurrentUserId(),
-  }).subscribe({
-    next: (comment: Comment) => {
-      // Ajouter le nouveau commentaire à la fin du tableau
-      this.comments = [...this.comments, comment];
-      this.task.comments = this.comments;
-      this.newComment = '';
-      this.commentUpdated.emit(this.comments);
-      setTimeout(() => this.scrollToTop(), 0);
-    },
-    
-    error: (err) => console.error('Failed to add comment', err),
-  });
-}
+    // Build a temporary comment for UI
+    const tempId = -Date.now();
+    const user = this.userService.getCurrentUserValue();
+    const tempComment: Comment = {
+      id: tempId, // cast to match your type
+      content,
+      taskId: this.task.id,
+      taskTitle: this.task.title,
+      userId: this.getCurrentUserId(),
+      userFullName: `${user?.firstName} ${user?.lastName}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Optimistic update
+    this.comments = [...this.comments, tempComment];
+    this.task.comments = this.comments;
+    this.newComment = '';
+    this.commentUpdated.emit(this.comments);
+    setTimeout(() => this.scrollToTop(), 0);
+
+    // Send to server
+    this.projectService.createComment({
+      content,
+      taskId: this.task.id,
+      userId: this.getCurrentUserId(),
+    }).subscribe({
+      next: (comment: Comment) => {
+        // Update temp comment in place
+        const temp = this.comments.find(c => c.id === tempId);
+        if (temp) {
+          Object.assign(temp, comment);
+        }
+        this.task.comments = this.comments;
+        this.commentUpdated.emit(this.comments);
+      },
+      error: (err) => {
+        console.error('Failed to add comment', err);
+        // Rollback: remove the temp comment
+        this.comments = this.comments.filter(c => c.id !== tempId);
+        this.task.comments = this.comments;
+        this.commentUpdated.emit(this.comments);
+      }
+    });
+  }
 
   startEditingComment(comment: Comment): void {
     if (this.editingCommentId === comment.id) {
@@ -130,10 +237,24 @@ addComment(): void {
       this.editingCommentId = comment.id;
       this.editingCommentContent = comment.content;
     }
+    setTimeout(() => {
+      if (this.editCommentInput) {
+        const el = this.editCommentInput.nativeElement;
+        el.focus();
+
+        // ✅ trigger auto-resize immediately
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      }
+    });
   }
 
   saveComment(commentId: number): void {
     if (!this.editingCommentContent.trim()) return;
+    //optimistic modifying
+    this.comments = this.comments.map((c) =>
+      c.id === commentId ? { ...c, content: this.editingCommentContent } : c
+    );
 
     this.projectService.updateComment(commentId, { content: this.editingCommentContent }).subscribe({
       next: (updatedComment: Comment) => {
@@ -150,14 +271,21 @@ addComment(): void {
   }
 
   cancelEditingComment(): void {
+    const commentId = this.editingCommentId;
     this.editingCommentId = null;
     this.editingCommentContent = '';
+
+    setTimeout(() => {
+      const el = this.commentContainers.find(c => c.nativeElement.dataset['id'] == commentId?.toString())?.nativeElement;
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   deleteComment(commentId: number): void {
+    //optimistic delete
+    this.comments = this.comments.filter((c) => c.id !== commentId);
     this.projectService.deleteComment(commentId).subscribe({
       next: () => {
-        this.comments = this.comments.filter((c) => c.id !== commentId);
         this.task.comments = this.comments;
         this.commentUpdated.emit(this.comments);
       },
@@ -182,81 +310,73 @@ addComment(): void {
     this.close.emit();
   }
 
-  //options
-  toggleMenu(): void {
-    this.activeMenu = this.activeMenu === 'options' ? '' : 'options';
-  }
-
-  moveTask(): void {
-    this.move.emit();
-    this.activeMenu = '';
-  }
+  //archive
 
   archiveTask(): void {
-    this.archive.emit();
-    this.activeMenu = '';
-  }
-
-  //should be implemented
-  addLabel(): void {
-    // Implementation for adding labels would go here
-    console.log('Add label functionality');
-  }
-  //should be implemented
-  addAssignee(): void {
-    // Implementation for adding assignees would go here
-    console.log('Add assignee functionality');
+    this.task.isArchived = true;
+    this.saveChanges();
   }
 
   //should be implemented correctly
-  removeAssignee(assignee: ProjectMemberDto): void {
-    this.assignees = this.assignees.filter(a => a.userId !== assignee.userId);
-    // Update the task's assignedTo field if needed
-    if (this.assignees.length === 0) {
-      this.task.assignedTo = 0;
-    }
+  removeAssignee(): void {
+    this.task.assignedTo = null;
+    this.assignee = undefined;
   }
 
-  //the most important one
+  openAssigneeMenu() {
+    this.activeMenu = 'assignee';
+  }
+
+  assignTo(member: ProjectMemberDto) {
+    this.task.assignedTo = member.userId;
+    this.assignee = member;
+    this.activeMenu = '';
+  }
+
+  onTitleInput(value: string) {
+    this.titleError = !value.trim();
+  }
+
   saveChanges(): void {
+    const trimmedTitle = this.task.title?.trim() || '';
+
+    // Always require title
+    if (!trimmedTitle) {
+      this.titleError = true;
+      return;
+    }
+
+    // Keep description null if it’s empty or just spaces
+    const trimmedDescription = this.task.description?.trim();
+    const normalizedDescription = trimmedDescription ? trimmedDescription : null;
+
     const updatedTask: Task = {
       ...this.task,
-      title: this.task.title?.trim(),       // remove leading/trailing spaces
-      description: this.task.description?.trim(),
+      title: trimmedTitle,
+      description: normalizedDescription,
       priority: this.mapPriorityToBackend(this.selectedPriority),
     };
 
     this.save.emit(updatedTask);
   }
 
-
   //calendar
-
-  today = new Date();
-  currentMonth = this.today.getMonth();
-  currentYear = this.today.getFullYear();
-
-  months = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-  weekDays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-
-  calendarDays: { date: Date; currentMonth: boolean; disabled: boolean }[] = [];
-
   toggleCalendar() {
     this.activeMenu = this.activeMenu === 'calendar' ? '' : 'calendar';
   }
 
   generateCalendar(month: number, year: number) {
     this.calendarDays = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize
+
     const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
     const startDay = (firstDay === 0 ? 6 : firstDay - 1); // shift to Monday
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const prevMonthDays = new Date(year, month, 0).getDate();
 
-    // Previous month filler
+    // Previous month filler → always disabled
     for (let i = startDay; i > 0; i--) {
       const date = new Date(year, month - 1, prevMonthDays - i + 1);
       this.calendarDays.push({ date, currentMonth: false, disabled: true });
@@ -265,16 +385,17 @@ addComment(): void {
     // Current month days
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
-      const disabled = date < new Date(this.today.setHours(0, 0, 0, 0)); // no past
+      const disabled = date < today; // disable past
       this.calendarDays.push({ date, currentMonth: true, disabled });
     }
 
-    // Next month filler
+    // Next month filler → only disable if before today
     const remaining = 7 - (this.calendarDays.length % 7);
     if (remaining < 7) {
       for (let i = 1; i <= remaining; i++) {
         const date = new Date(year, month + 1, i);
-        this.calendarDays.push({ date, currentMonth: false, disabled: true });
+        const disabled = date < today; // 👈 key change
+        this.calendarDays.push({ date, currentMonth: false, disabled });
       }
     }
   }
@@ -302,7 +423,6 @@ addComment(): void {
   selectDate(day: { date: Date; disabled: boolean }) {
     if (day.disabled) return;
     this.task.deadline = this.toLocalDateString(day.date);
-    // this.calendarOpen = false;
     this.activeMenu = '';
   }
 
@@ -310,15 +430,16 @@ addComment(): void {
     return this.task.deadline &&
       day.date.toDateString() === new Date(this.task.deadline).toDateString();
   }
+
   selectToday() {
     this.task.deadline = this.toLocalDateString(new Date());
-    console.log(this.task.deadline)
-    // this.calendarOpen = false;
     this.activeMenu = '';
   }
 
-  selectedStatus: string | null = null;
-  selectedPriority: string | null = null;
+  clearDeadline(event: MouseEvent) {
+    event.stopPropagation(); // prevent toggleCalendar firing
+    this.task.deadline = null;
+  }
 
   selectStatus(status: string) {
     this.selectedStatus = status;
@@ -326,27 +447,24 @@ addComment(): void {
 
   selectPriority(priority: string) {
     this.selectedPriority = priority;
-    console.log(this.selectedPriority)
   }
 
-  getCalendarPosition(): string {
-    // if (!this.calendarOpen || !this.modalElement) return '';
-    if (this.activeMenu !== 'calendar' || !this.modalElement) return '';
+  getMenuPosition(reference: string): string {
+    if ((this.activeMenu !== 'calendar' && this.activeMenu !== 'assignee') || !this.modalElement) return '';
 
     // Get the position of the calendar icon relative to the modal
-    const icon = document.querySelector('#calendarIcon');
+    const icon = document.querySelector(reference);
     if (!icon) return 'right: 1rem; bottom: 1rem;';
 
     const rect = icon.getBoundingClientRect();
     const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
 
     // Calculate position relative to modal
-    const top = rect.bottom - modalRect.top + 4; // Adjust the number as needed
+    const top = rect.bottom - modalRect.top; // Adjust the number as needed
     const right = modalRect.right - rect.right;
 
     return `top: ${top}px; right: ${right}px;`;
   }
-
 
   toLocalDateString(date: Date): string {
     const year = date.getFullYear();
@@ -354,9 +472,6 @@ addComment(): void {
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
-
-
-
 
   // Map from French (UI) → Backend
   mapPriorityToBackend(priority: string | null) {
@@ -384,47 +499,10 @@ addComment(): void {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
-
-
-
-
   //labels
-  // A Trello-like palette
-  @Output() labelsChanged = new EventEmitter<Label[]>
-  constructor(private projectService: ProjectService, private route: ActivatedRoute, private userService: UserService) { }
-
-  labelColors: readonly string[] = [
-    '#61BD4F', // green
-    '#F2D600', // yellow
-    '#FF9F1A', // orange
-    '#EB5A46', // red
-    '#C377E0', // purple
-    '#0079BF', // blue
-    '#00C2E0', // sky
-    '#51E898', // lime
-    '#FF78CB', // pink
-    '#344563', // navy-ish
-    '#B3BAC5',  // gray
-
-    '#1E90FF', // Sky Blue
-    '#20C997', // Turquoise
-    '#FF851B', // Bright Orange
-    '#2ECC40', // Lime Green
-    '#FFD93D', // Golden Yellow
-    '#FF4D6D', // Coral Red
-    '#A7C7E7', // Pastel Blue
-    '#A8E6CF', // Mint Green
-    '#FFD6A5', // Peach
-    '#CDB4DB', // Lavender
-    '#FFB5E8', // Soft Pink
-    '#6C757D'  // Slate Gray (neutral)
-  ];
-
-  labelForm: Label = { name: '', color: '' };
-  editingLabel?: Label;
 
   toggleLabelMenu() {
-    this.activeMenu = this.activeMenu === 'showLabel' ? '' : 'showLabel';
+    this.activeMenu = this.activeMenu === 'showLabel' || this.activeMenu === 'editLabel' ? '' : 'showLabel';
   }
 
   editLabel(label: Label) {
@@ -440,7 +518,6 @@ addComment(): void {
   }
 
   saveLabel() {
-    // if (!this.labelForm.name.trim()) return;
 
     if (this.editingLabel) {
       // ✅ Update existing label
@@ -450,9 +527,6 @@ addComment(): void {
         projectId: Number(this.route.snapshot.paramMap.get('id'))
       }).subscribe({
         next: (updated) => {
-          // update UI in place
-          // const idx = this.projectLabels.findIndex(l => l.id === this.labelForm.id);
-          // if (idx !== -1) this.projectLabels[idx] = this.labelForm;
           this.projectLabels = this.projectLabels.map(l => l.id === this.labelForm.id ? this.labelForm : l);
           this.task.taskLabels!.find(tl => tl.labelId === this.labelForm.id)!.label = this.labelForm;
           this.labelsChanged.emit(this.projectLabels);
@@ -561,21 +635,27 @@ addComment(): void {
     }
   }
 
-  uploading = false;
-
   onFileSelected(event: any) {
-    const file: File = event.target.files[0];
+    const input = event.target as HTMLInputElement;
+    const file: File | null = input.files && input.files[0] ? input.files[0] : null;
     if (!file) return;
 
     this.uploading = true;
-    this.projectService.uploadAttachment(this.task.id, file).subscribe(att => {
-      this.task.attachments!.push(att);
-      this.uploading = false;
-    }, () => this.uploading = false);
+    this.projectService.uploadAttachment(this.task.id, file).subscribe({
+      next: att => {
+        this.task.attachments!.push(att);
+        this.uploading = false;
+        input.value = ''; // ✅ reset so selecting the same file again works
+      },
+      error: () => {
+        this.uploading = false;
+        input.value = ''; // also reset on error
+      }
+    });
   }
 
+
   deleteAttachment(att: AttachmentDto) {
-    // if (!confirm(`Supprimer "${att.fileName}" ?`)) return;
     this.projectService.deleteAttachment(att.id).subscribe(() => {
       this.task.attachments = this.task.attachments!.filter(a => a.id !== att.id);
     });
@@ -588,27 +668,11 @@ addComment(): void {
     return (size / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  //   getLabelMenuPosition(): string {
-  //   if (!this.showLabelMenu || !this.modalElement) return '';
-
-  //   const trigger = document.querySelector('button[click*="toggleLabelMenu"]');
-  //   if (!trigger) return 'top: 4rem; left: 0;';
-
-  //   const rect = trigger.getBoundingClientRect();
-  //   const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
-
-  //   const top = rect.bottom - modalRect.top + 8;
-  //   const left = rect.left - modalRect.left;
-
-  //   return `top: ${top}px; left: ${left}px;`;
-  // }
-
   getLabelMenuPosition(): string {
-    // if (!this.calendarOpen || !this.modalElement) return '';
 
     // Get the position of the calendar icon relative to the modal
-    const icon = this.showLabelToggleBtn?.nativeElement;
-    if (!icon) return 'right: 1rem; bottom: 1rem;';
+    const icon = this.showLabelToggleBtn?.nativeElement || this.showLabelToggleBtn2?.nativeElement;
+    if (!icon) return 'right: 1rem; bottom: 1rem';
 
     const rect = icon.getBoundingClientRect();
     const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
@@ -620,58 +684,39 @@ addComment(): void {
     return `top: ${top}px; left: ${left}px;`;
   }
 
-  @ViewChild('optionsMenu') optionsMenu?: ElementRef;
-  @ViewChild('optionsToggleBtn') optionsToggleBtn?: ElementRef;
-
-  @ViewChild('showLabelMenu') labelMenu?: ElementRef;
-  @ViewChild('showLabelToggleBtn') showLabelToggleBtn?: ElementRef;
-
-  @ViewChild('editLabelMenu') editLabelMenu?: ElementRef;
-
-  @ViewChild('calendarMenu') calendarMenu?: ElementRef;
-  @ViewChild('calendarToggleBtn') calendarToggleBtn?: ElementRef;
-
-  modalMouseDownInside = false;
-
   onModalMouseDown(event: MouseEvent) {
-    console.log("mouse down called")
     this.modalMouseDownInside = true;
   }
 
   onModalMouseUp(event: MouseEvent) {
-    console.log("mouse up called")
     this.modalMouseDownInside = false
   }
 
   onBackdropClick(event: MouseEvent) {
     if (this.modalMouseDownInside) {
-      console.log(this.modalMouseDownInside)
       this.modalMouseDownInside = false
       // Ignore click — it started inside modal
       return;
     }
-    this.closeModal();
+    this.saveChanges();
   }
+
   onModalRootClick(event: MouseEvent) {
     const t = event.target as Node;
     const inside = (el?: ElementRef) => el?.nativeElement.contains(t);
 
-    console.log(this.activeMenu)
-
     const inAnyMenu =
-      inside(this.optionsMenu) ||
       inside(this.labelMenu) ||
       inside(this.editLabelMenu) ||
-      inside(this.calendarMenu);
-
-    console.log(inside(this.editLabelMenu))
+      inside(this.calendarMenu) ||
+      inside(this.assigneeMenu);
 
     const inAnyToggle =
-      inside(this.optionsToggleBtn) ||
       inside(this.showLabelToggleBtn) ||
-      inside(this.calendarToggleBtn);
-
-    console.log(inAnyToggle)
+      inside(this.showLabelToggleBtn2) ||
+      inside(this.calendarToggleBtn) ||
+      inside(this.assigneeToggleBtn) ||
+      inside(this.assigneeToggleBtn2);
 
     // Clicked somewhere inside the modal that is NOT a menu and NOT a toggle → close open menu
     if (this.activeMenu && !inAnyMenu && !inAnyToggle) {
@@ -684,14 +729,13 @@ addComment(): void {
 
   ///resizing on init (title and description)
 
-  @ViewChild('taskTitle') taskTitle!: ElementRef<HTMLTextAreaElement>;
-  @ViewChild('taskDesc') taskDesc!: ElementRef<HTMLTextAreaElement>;
-
-  // private resizedForCurrentOpen = false;
-
-  ngAfterViewChecked() {
-    // wait for layout / rendering to settle
-    this.resizeAll();
+  ngAfterViewInit() {
+    this.zone.onStable
+      .pipe(take(1)) // only once
+      .subscribe(() => {
+        this.resizeAll();
+        this.updateUnderline();
+      });
   }
 
   resizeAll() {
@@ -707,6 +751,31 @@ addComment(): void {
   }
 
 
+  downloadAttachment(att: AttachmentDto) {
+    fetch(att.fileUrl, { mode: 'cors' })  // fetch the file
+      .then(res => res.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = att.fileName;
+        link.click();
+        window.URL.revokeObjectURL(url); // cleanup
+      })
+      .catch(err => console.error('Download failed', err));
+  }
 
+  selectTab(tab: 'comments' | 'attachments') {
+    this.activeTab = tab;
+    this.updateUnderline();
+  }
+
+  updateUnderline() {
+    const el = this.activeTab === 'comments' ? this.tab1.nativeElement : this.tab2.nativeElement;
+    const underlineEl = this.underline.nativeElement;
+
+    underlineEl.style.width = `${el.offsetWidth}px`
+    underlineEl.style.left = `${el.offsetLeft}px`;
+  }
 
 }

@@ -1,3 +1,4 @@
+import { animate, style, transition, trigger } from '@angular/animations';
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Board, Label, Task, Comment } from 'src/app/models/project';
@@ -14,12 +15,17 @@ export class TaskCardComponent {
   @Input() task!: Task;
   @Input() members: ProjectMemberDto[] = [];
 
-  constructor(private projectService: ProjectService) { }
-
-  isEditing = false;
-  taskTitleDraft = '';
+  @Output() labelsChanged = new EventEmitter<Label[]>();
 
   @ViewChild('titleInput') titleInput!: ElementRef<HTMLTextAreaElement>;
+
+  isModalOpen = false;
+  shallowTaskCopy: Task | null = null
+  isEditing = false;
+  taskTitleDraft = '';
+  originalTask!: Task;
+
+  constructor(private projectService: ProjectService) { }
 
   // --- Helper functions ---
   getMemberById(id: number): ProjectMemberDto | undefined {
@@ -48,21 +54,8 @@ export class TaskCardComponent {
     });
   }
 
-  async saveTitle() { //modified
-    // if (this.taskTitleDraft.trim()) {
-    //   const updatedTask = await firstValueFrom(
-    //     this.projectService.updateTaskName(
-    //       this.taskTitleDraft.trim(),
-    //       this.task.id
-    //     )
-    //   )
-    //   this.task = updatedTask;
-      // console.log(this.task);
-    // }
-    // this.isEditing = false;
-    // console.log(await this.saveChanges());
+  async saveTitle() {
     await this.saveChanges();
-    // console.log(this.task);
     this.isEditing = false;
   }
 
@@ -75,52 +68,33 @@ export class TaskCardComponent {
     el.style.height = el.scrollHeight + 'px';
   }
 
-isModalOpen = false;
-shallowTaskCopy: Task | null =  null
-openEditModal() {
-  this.shallowTaskCopy = {...this.task}
-  // this.shallowTaskCopy = JSON.parse(JSON.stringify(this.task));
-  this.isModalOpen = true;
-}
+  openEditModal() {
+    this.shallowTaskCopy = { ...this.task }
+    this.isModalOpen = true;
+  }
 
-closeModal() {
-  this.isModalOpen = false;
-  this.shallowTaskCopy = null;
-}
-
-async saveTask(updatedTask: Task) {
-    const { attachments, comments, taskLabels, ...taskWithoutAttachments } = updatedTask;
-    await this.saveChanges(taskWithoutAttachments);
-    this.task = { ...updatedTask,}; // Preserve comments
+  closeModal() {
     this.isModalOpen = false;
-}
+    this.shallowTaskCopy = null;
+  }
 
+  async saveTask(updatedTask: Task) {
+    this.isModalOpen = false;
+    const { attachments, comments, taskLabels, ...restOfFields } = updatedTask;
+    await this.saveChanges(restOfFields);
+    this.task = { ...updatedTask, }; // Preserve comments
+  }
 
-originalTask!: Task;
+  ngOnInit() {
+    this.originalTask = { ...this.task }; // shallow copy or deep copy
+    this.loadComments();
+  }
 
-ngOnInit() {
-  this.originalTask = { ...this.task }; // shallow copy or deep copy
-  this.loadComments();
-}
+  onLabelsChanged(updated: Label[]) {
+    this.labelsChanged.emit(updated);
+  }
 
-//my save changes
-
-// async saveChanges(task:Task = this.task) {
-//       console.log(this.originalTask)
-//       console.log(task)
-//   const updatedTask = await firstValueFrom(
-//     this.projectService.updateTask(this.task.id, this.originalTask, task)
-//   );
-//   return updatedTask;
-// }
-
-@Output() labelsChanged = new EventEmitter<Label[]>();
-
-onLabelsChanged(updated: Label[]) {
-  this.labelsChanged.emit(updated);
-}
-
-loadComments(): void {
+  loadComments(): void {
     this.projectService.getCommentsByTaskId(this.task.id).subscribe({
       next: (comments) => {
         this.task.comments = comments;
@@ -128,9 +102,8 @@ loadComments(): void {
       error: (err) => console.error('Failed to load comments', err),
     });
   }
-  
-//admi's save changes
-async saveChanges(task: Task = this.task) {
+
+  async saveChanges(task: Task = this.task) {
     const updatedTask = await firstValueFrom(
       this.projectService.updateTask(this.task.id, this.originalTask, task)
     );

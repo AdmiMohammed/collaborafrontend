@@ -45,8 +45,6 @@ export class BoardHeaderComponent {
 
   ToggleMenu(event: MouseEvent) {
     event.stopPropagation();
-    console.log("clicked")
-    console.log(this.menuOpen)
     if (!this.menuOpen) {
       event.stopPropagation(); // Prevents click from bubbling up
 

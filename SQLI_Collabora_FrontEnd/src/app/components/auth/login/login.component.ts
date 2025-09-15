@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +21,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private userService: UserService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loginForm = this.fb.group({
@@ -50,13 +48,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.validateToken(token).subscribe({
           next: (isValid) => {
             if (isValid) {
-              this.userService.fetchCurrentUser().subscribe({
-                next: () => this.router.navigate(['/dashboard']),
-                error: () => {
-                  localStorage.removeItem('token'); // Clear invalid token
-                  this.router.navigate(['/login']);
-                }
-              });
+              this.router.navigate(['/dashboard']);
             } else {
               localStorage.removeItem('token'); // Clear invalid token
             }
@@ -98,12 +90,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             // Store token based on "rememberMe" value
             const storage = this.loginForm.get('rememberMe')?.value ? localStorage : sessionStorage;
             storage.setItem('token', token);
-
-            // Fetch user and navigate to dashboard
-            this.userService.fetchCurrentUser().subscribe({
-              next: () => this.router.navigate(['/dashboard']),
-              error: () => this.router.navigate(['/dashboard']) // Navigate even if user fetch fails
-            });
+            this.router.navigate(['/dashboard'])
           }
         },
         error: (error) => {

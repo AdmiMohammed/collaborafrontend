@@ -3,10 +3,11 @@ import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-  constructor(private toastr: ToastrService) {}
+  constructor(private toastr: ToastrService, private router: Router) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
@@ -20,7 +21,17 @@ export class ErrorInterceptor implements HttpInterceptor {
           // Server-side error (handle plain text or JSON)
           if (error.status === 0) {
             errorMessage = 'Impossible de se connecter au serveur. Vérifiez votre connexion réseau.';
-          } else {
+          }
+          else if (error.status === 401 && !req.url.includes('/login')) {
+            errorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+            
+            // Clear tokens
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+
+            // Redirect to login
+            this.router.navigate(['/login']);
+          }else {
             errorMessage = typeof error.error === 'string' ? error.error : error.error?.message || `Erreur ${error.status} : ${error.statusText}`;
             if (error.error?.error === 'EmailAlreadyExistsException') {
               errorMessage = "L'email est déjà utilisé.";

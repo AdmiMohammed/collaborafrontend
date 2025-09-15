@@ -73,7 +73,6 @@ export class ProjectPageComponent implements OnInit {
           if (this.project?.columns) {
             this.project.columns.sort((a, b) => a.position - b.position);
           }
-          console.log(this.project);
         },
         error: (err) => {
           console.error('Erreur chargement projets :', err);
@@ -89,7 +88,6 @@ export class ProjectPageComponent implements OnInit {
   //column menu
 
   toggleMenu(columnId: number) {
-    console.log(columnId)
     if (this.openMenuColumnId === columnId) {
       this.openMenuColumnId = null; // close if clicking same column again
     } else {
@@ -99,7 +97,6 @@ export class ProjectPageComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
-    console.log(event)
     const target = event.target as HTMLElement;
     this.openMenuColumnId = null;
   }
@@ -127,7 +124,6 @@ export class ProjectPageComponent implements OnInit {
     items?: any[]
   }) {
     const movedItem = event.movedItem;
-    console.log(movedItem)
     const newIndex = event.newIndex;
 
     // Call backend reorder
@@ -146,32 +142,32 @@ export class ProjectPageComponent implements OnInit {
       });
   }
 
-onLabelsChanged(updated: Label[]) {
-  // 1️⃣ Update the project labels
-  this.project.labels = updated;
+  onLabelsChanged(updated: Label[]) {
+    // 1️⃣ Update the project labels
+    this.project.labels = updated;
 
-  // 2️⃣ Create a Set of existing label IDs for quick lookup
-  const existingLabelIds = new Set(updated.map(l => l.id));
+    // 2️⃣ Create a Set of existing label IDs for quick lookup
+    const existingLabelIds = new Set(updated.map(l => l.id));
 
-  // 3️⃣ Loop through all columns and all tasks
-  this.project.columns.forEach(column => {
-    column.tasks.forEach(task => {
-      // 4️⃣ Remove taskLabels that no longer exist in project
-      task.taskLabels = task.taskLabels!.filter(taskLabel =>
-        existingLabelIds.has(taskLabel.label.id)
-      );
+    // 3️⃣ Loop through all columns and all tasks
+    this.project.columns.forEach(column => {
+      column.tasks.forEach(task => {
+        // 4️⃣ Remove taskLabels that no longer exist in project
+        task.taskLabels = task.taskLabels!.filter(taskLabel =>
+          existingLabelIds.has(taskLabel.label.id)
+        );
 
-      // 5️⃣ Optionally, sync updated label info (name/color) in tasks
-      task.taskLabels.forEach(taskLabel => {
-        const projectLabel = updated.find(l => l.id === taskLabel.label.id);
-        if (projectLabel) {
-          taskLabel.label.name = projectLabel.name;
-          taskLabel.label.color = projectLabel.color;
-        }
+        // 5️⃣ Optionally, sync updated label info (name/color) in tasks
+        task.taskLabels.forEach(taskLabel => {
+          const projectLabel = updated.find(l => l.id === taskLabel.label.id);
+          if (projectLabel) {
+            taskLabel.label.name = projectLabel.name;
+            taskLabel.label.color = projectLabel.color;
+          }
+        });
       });
     });
-  });
-}
+  }
 
 
 }

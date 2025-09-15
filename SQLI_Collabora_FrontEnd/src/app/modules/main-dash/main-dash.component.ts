@@ -139,11 +139,6 @@ export class MainDashComponent implements OnInit {
       });
   }
 
-  // onProjectReorder(updatedProjects: any[]) {
-  //   this.projects = updatedProjects;
-  //   console.log('Projets réorganisés :', this.projects);
-  // }
-
   onProjectReorder(event: {
     movedItem: any,
     oldIndex: number,
@@ -153,7 +148,6 @@ export class MainDashComponent implements OnInit {
     items?: any[]
   }) {
     if(event.items) this.projects = event.items;
-    console.log('Projets réorganisés :', this.projects);
   }
 
   openNewProjectWizard() {
