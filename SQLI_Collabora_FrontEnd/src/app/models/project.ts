@@ -32,6 +32,7 @@ export interface Task {
   position: number;
   taskLabels?: TaskLabel[];
   attachments?: AttachmentDto[];
+  comments?: Comment[];
 }
 
 export interface TaskLabel{
@@ -54,4 +55,15 @@ export interface AttachmentDto {
   contentType?: string;
   uploadDate: string;
   uploadedBy: number;
+}
+
+export interface Comment {
+  id: number;
+  content: string;
+  taskId: number;
+  taskTitle: string;
+  userId: number;
+  userFullName: string;
+  createdAt: string; 
+  modifiedAt?: string | null;
 }

@@ -21,7 +21,6 @@
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden rounded-b-2xl">
       <!-- Left content -->
       <div class="flex-1 px-6 py-4 overflow-y-auto scrollbar-thin flex flex-col">
-
         <!-- Label Menu -->
         <div class="relative mb-4">
           <label class="block text-sm font-medium text-blue-500 mb-2">Étiquettes</label>
@@ -38,8 +37,6 @@
             </button>
           </div>
         </div>
-
-
 
         <!-- Title -->
         <div>
@@ -63,66 +60,198 @@
         </div>
 
         <!-- Tabs -->
-        <div class="mt-6 border-b border-background">
+        <div class="mt-6 border-b border-gray-100">
           <nav class="flex space-x-6">
             <button (click)="activeTab = 'comments'"
-              [class]="activeTab === 'comments' ? 'border-b-2 border-blue-500 text-blue-500 font-medium' : 'text-backgound/80 hover:text-gray-700'"
+              [class]="activeTab === 'comments' ? 'border-b-2 border-primary-mid text-primary-mid font-medium' : 'text-gray-500 hover:text-gray-700'"
               class="pb-3 text-sm">Commentaires</button>
             <button (click)="activeTab = 'attachments'"
-              [class]="activeTab === 'attachments' ? 'border-b-2 border-blue-500 text-blue-500 font-medium' : 'text-backgound/80 hover:text-gray-700'"
+              [class]="activeTab === 'attachments' ? 'border-b-2 border-primary-mid text-primary-mid font-medium' : 'text-gray-500 hover:text-gray-700'"
               class="pb-3 text-sm">Pièces jointes</button>
           </nav>
         </div>
+<!-- Comments Section -->
+<div *ngIf="activeTab === 'comments'" class="py-6 h-full flex flex-col">
+  <!-- Input de commentaire en haut -->
+  <div class="bg-[#F4F6FE] p-4 rounded-lg border border-gray-200 mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Ajouter un commentaire</label>
+    <div class="flex gap-2">
+      <textarea
+        [(ngModel)]="newComment"
+        (keydown.enter)="addComment(); $event.preventDefault()"
+        placeholder="Écrire un commentaire..."
+        class="flex-1 p-3 border border-gray-200 rounded-xl text-sm resize-none outline-none focus:ring-1 focus:ring-[#C020D0]"
+        rows="2"
+        (input)="newCommentInput.style.height='auto';newCommentInput.style.height=newCommentInput.scrollHeight+'px'"
+        #newCommentInput
+      ></textarea>
+      <button
+        (click)="addComment()"
+        class="mt-2 px-4 py-2 text-sm bg-[#C020D0] text-white rounded-md hover:bg-[#a01ab0] transition self-end"
+        [disabled]="!newComment.trim()"
+      >
+        <i class="fas fa-paper-plane icon"></i>
+        Envoyer
+      </button>
+    </div>
+  </div>
 
-        <!-- Comments / Attachments section (won’t shrink) -->
-        <div class="flex-shrink-0 min-h-[200px]">
-          <div *ngIf="activeTab === 'comments'" class="py-6 h-full">
-            <div class="bg-gray-50 p-6 rounded-lg text-center text-sm text-gray-500 h-full">
-              Aucun commentaire pour le moment
-            </div>
-          </div>
-
-
-          <div *ngIf="activeTab === 'attachments'" class="flex flex-col gap-3 py-4 h-full overflow-y-auto">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Pièces jointes</label>
-
-            <!-- Upload input -->
-            <div class="flex items-center gap-2">
-              <input type="file" (change)="onFileSelected($event)" class="hidden" #fileInput />
-              <button (click)="fileInput.click()"
-                class="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                + Ajouter
-              </button>
-              <span *ngIf="uploading" class="text-gray-500 text-sm">Chargement...</span>
-            </div>
-
-            <!-- Attachments list -->
-            <div *ngIf="task.attachments!.length > 0" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div *ngFor="let att of task.attachments"
-                class="flex items-center justify-between bg-gray-50 p-3 rounded-md border border-gray-200 shadow-sm hover:shadow-md transition">
-                <div class="flex-1">
-                  <a [href]="att.fileUrl" target="_blank"
-                    class="text-sm font-medium text-blue-600 hover:underline truncate block">
-                    {{ att.fileName }}
-                  </a>
-                  <p class="text-xs text-gray-500">{{ formatSize(att.fileSize) }} • {{ att.uploadDate |
-                    date:'dd/MM/yyyy' }}</p>
-                </div>
-                <button (click)="deleteAttachment(att)" class="text-red-600 hover:text-red-800 ml-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+  <!-- Zone de commentaires scrollable - MODIFIÉE -->
+  <div class="flex-1 overflow-y-auto" #commentsContainer>
+    <div *ngIf="comments.length === 0" class="bg-gray-50 p-6 rounded-lg text-center text-sm text-gray-500 h-full flex items-center justify-center">
+      Aucun commentaire pour le moment
+    </div>
+    
+    <!-- Afficher les commentaires dans l'ordre inverse (récent en premier) -->
+    <div *ngIf="comments.length > 0" class="space-y-4">
+      <div *ngFor="let comment of reversedComments()" class="p-4 rounded-lg shadow-sm border border-gray-200 relative">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <ng-container *ngIf="getMemberById(comment.userId) as user">
+                <app-avatar [user]="user" size="sm" />
+              </ng-container>
+              <div>
+                <p class="text-sm font-medium text-gray-800">{{ comment.userFullName }}</p>
+                <p class="text-xs text-gray-500">
+                  {{ comment.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  <span *ngIf="comment.modifiedAt"> (modifié {{ comment.modifiedAt | date: 'dd/MM/yyyy HH:mm' }})</span>
+                </p>
               </div>
             </div>
-
-            <div *ngIf="task.attachments!.length === 0"
-              class="py-6 text-center text-gray-500 text-sm bg-gray-50 rounded-lg">
-              Aucune pièce jointe
+            <div *ngIf="editingCommentId !== comment.id; else editCommentMode">
+              <p class="text-sm text-gray-700">{{ comment.content }}</p>
+            </div>
+            <ng-template #editCommentMode>
+              <textarea
+                [(ngModel)]="editingCommentContent"
+                (keydown.enter)="saveComment(comment.id); $event.preventDefault()"
+                (keydown.escape)="cancelEditingComment()"
+                class="w-full p-2 border border-gray-300 rounded-md text-sm resize-none outline-none focus:ring-1 focus:ring-primary-mid"
+                rows="2"
+                (input)="editCommentInput.style.height='auto';editCommentInput.style.height=editCommentInput.scrollHeight+'px';editCommentInput.style.outline='none'"
+                #editCommentInput
+              ></textarea>
+              <div class="flex gap-2 mt-2 justify-end">
+                <button
+                  (click)="cancelEditingComment()"
+                  class="px-3 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  (click)="saveComment(comment.id)"
+                  class="px-3 py-1 bg-[#C020D0] text-white rounded-md hover:bg-[#a01ab0] transition"
+                >
+                  <i class="fas fa-save"></i>
+                  Enregistrer
+                </button>
+              </div>
+            </ng-template>
+          </div>
+          <!-- Icons for edit and delete -->
+          <ng-container *ngIf="comment.userId === loggedInUserId">
+            <div class="flex gap-1 ml-2">
+              <button
+                (click)="startEditingComment(comment)"
+                class="text-gray-500 hover:bg-[#C020D0] hover:text-white transition rounded-md p-1 icon-button"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-4"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+                  />
+                </svg>
+              </button>
+              <button
+                (click)="toggleDeleteConfirm(comment.id)"
+                class="text-gray-500 hover:bg-red-100 hover:text-red-600 transition rounded-md p-1 icon-button"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-4"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                  />
+                </svg>
+              </button>
+            </div>
+          </ng-container>
+        </div>
+        <!-- Delete confirmation overlay -->
+        <div
+          *ngIf="showDeleteConfirm === comment.id"
+          class="absolute inset-0 bg-white/90 flex items-center justify-center z-10 rounded-lg"
+        >
+          <div class="text-center p-4">
+            <p class="text-sm font-medium text-gray-800 mb-4">Supprimer ce commentaire ?</p>
+            <div class="flex gap-3 justify-center">
+              <button
+                (click)="cancelDelete()"
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+              >
+                Non
+              </button>
+              <button
+                (click)="confirmDelete(comment.id)"
+                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+              >
+                Oui
+              </button>
             </div>
           </div>
-
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        <!-- Attachments Section -->
+        <div *ngIf="activeTab === 'attachments'" class="flex flex-col gap-3 py-4 h-full overflow-y-auto">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Pièces jointes</label>
+          <div class="flex items-center gap-2">
+            <input type="file" (change)="onFileSelected($event)" class="hidden" #fileInput />
+            <button (click)="fileInput.click()"
+              class="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+              + Ajouter
+            </button>
+            <span *ngIf="uploading" class="text-gray-500 text-sm">Chargement...</span>
+          </div>
+          <div *ngIf="task.attachments!.length > 0" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div *ngFor="let att of task.attachments"
+              class="flex items-center justify-between bg-gray-50 p-3 rounded-md border border-gray-200 shadow-sm hover:shadow-md transition">
+              <div class="flex-1">
+                <a [href]="att.fileUrl" target="_blank"
+                  class="text-sm font-medium text-blue-600 hover:underline truncate block">
+                  {{ att.fileName }}
+                </a>
+                <p class="text-xs text-gray-500">{{ formatSize(att.fileSize) }} • {{ att.uploadDate | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <button (click)="deleteAttachment(att)" class="text-red-600 hover:text-red-800 ml-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                  stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div *ngIf="task.attachments!.length === 0" class="py-6 text-center text-gray-500 text-sm bg-gray-50 rounded-lg">
+            Aucune pièce jointe
+          </div>
         </div>
       </div>
 
@@ -141,8 +270,7 @@
               </button>
             </div>
           </div>
-
-          <!-- Priority buttons in two rows of two -->
+          <!--Priority-->
           <div class="pt-4">
             <label class="block text-xs font-semibold text-blue-500 mb-2">Priorité</label>
             <div class="grid grid-cols-2 gap-2">
@@ -160,9 +288,6 @@
               </button>
             </div>
           </div>
-
-
-          <!-- Deadline - This is the key section -->
           <div class="relative pt-4">
             <label class="block text-xs font-semibold text-blue-500 mb-1">Échéance</label>
             <div class="flex justify-between items-center cursor-pointer py-1" (click)="toggleCalendar()" #calendarToggleBtn>
@@ -174,8 +299,6 @@
               </svg>
             </div>
           </div>
-
-          <!-- Assignees -->
           <div class="pt-6">
             <label class="block text-xs font-semibold text-blue-500 mb-2">Assignés</label>
             <div class="flex flex-wrap gap-2">
@@ -187,11 +310,10 @@
               </div>
               <button (click)="addAssignee()"
                 class="px-3 py-1.5 border border-dashed border-gray-300 rounded-full text-sm hover:border-primary-mid hover:text-primary-mid">+
-                Ajouter</button>
+                Ajouter
+              </button>
             </div>
           </div>
-
-          <!-- Created by -->
           <div *ngIf="createdBy" class="pt-6">
             <label class="block text-xs font-semibold text-blue-500 mb-2">Créé par</label>
             <div class="flex items-center gap-2">
@@ -199,7 +321,6 @@
               <span class="text-sm text-[#16306B]">{{ createdBy.fullName }}</span>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -207,19 +328,14 @@
     <!-- Calendar positioned relative to the calendar icon -->
     <div *ngIf="activeMenu==='calendar'" #calendarMenu class="absolute z-50" [style]="getCalendarPosition()">
       <div class="w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
-        <!-- Month navigation -->
         <div class="flex items-center justify-between mb-3">
           <button (click)="prevMonth()" class="p-1 rounded hover:bg-gray-100">‹</button>
           <span class="font-medium">{{ months[currentMonth] }} {{ currentYear }}</span>
           <button (click)="nextMonth()" class="p-1 rounded hover:bg-gray-100">›</button>
         </div>
-
-        <!-- Days of week -->
         <div class="grid grid-cols-7 text-xs font-medium text-gray-400 mb-2 text-center">
           <div *ngFor="let day of weekDays">{{ day }}</div>
         </div>
-
-        <!-- Dates grid -->
         <div class="grid grid-cols-7 gap-1 text-sm">
           <div *ngFor="let d of calendarDays" (click)="selectDate(d)" [class.bg-primary-mid]="isSelected(d)"
             [class.text-white]="isSelected(d)" [class.text-gray-300]="!d.currentMonth" [class.opacity-40]="d.disabled"
@@ -227,8 +343,6 @@
             {{ d.date.getDate() }}
           </div>
         </div>
-
-        <!-- Footer -->
         <div class="flex justify-between mt-4 pt-3 border-t border-gray-100">
           <button (click)="selectToday()" class="text-sm text-primary-mid hover:underline">Aujourd'hui</button>
           <button (click)="activeMenu=''" class="text-sm text-gray-500 hover:underline">Fermer</button>

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -31,5 +32,11 @@ export class AuthService {
     return this.http.get(`${this.apiUrl}/confirm-email?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`, {
       responseType: 'text'
     });
+  }
+
+  validateToken(token: string): Observable<boolean> {
+    return this.http.post(`${this.apiUrl}/validate-token`, { token }).pipe(
+      map((response: any) => response.isValid || false)
+    );
   }
 }

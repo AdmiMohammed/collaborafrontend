@@ -1,8 +1,8 @@
-// task-modal.component.ts
-import { Component, Input, Output, EventEmitter, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Task, TaskLabel, Label, AttachmentDto } from 'src/app/models/project';
+import { Task, TaskLabel, Label, AttachmentDto, Comment } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
+import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-task-modal',
@@ -10,6 +10,7 @@ import { ProjectMemberDto, ProjectService } from 'src/app/services/project-servi
   styleUrls: ['./task-modal.component.css']
 })
 export class TaskModalComponent implements OnInit {
+  @ViewChild('commentsContainer') commentsContainer!: ElementRef;
   @Input() projectLabels!: Label[];
   @Input() task!: Task;
   @Input() columnName!: string;
@@ -19,19 +20,25 @@ export class TaskModalComponent implements OnInit {
   @Output() save = new EventEmitter<Task>();
   @Output() move = new EventEmitter<void>();
   @Output() archive = new EventEmitter<void>();
+  @Output() commentUpdated = new EventEmitter<Comment[]>(); // New event for comment updates
   @ViewChild('modalElement') modalElement!: ElementRef;
 
   // showMenu = false;
   activeMenu: 'calendar' | 'showLabel' | 'editLabel' | 'options' | '' = '';
   activeTab: 'comments' | 'attachments' = 'comments';
   assignees: ProjectMemberDto[] = [];
-  // deadlineString: string = ''; // For the date input
+  comments: Comment[] = [];
+  newComment: string = '';
+  editingCommentId: number | null = null;
+  editingCommentContent: string = '';
+  loggedInUserId: number = 0;
+  showDeleteConfirm: number | null = null;
 
   ngOnInit(): void {
+    this.loadComments();
     this.generateCalendar(this.currentMonth, this.currentYear);
-
     this.selectedPriority = this.mapPriorityToFrontend(this.task.priority);
-    // Initialize assignees from the task data
+
     if (this.task.assignedTo && this.projectMembers.length) {
       const assignee = this.projectMembers.find(member => member.userId === this.task.assignedTo);
       if (assignee) {
@@ -39,10 +46,138 @@ export class TaskModalComponent implements OnInit {
       }
     }
 
-    // this.allLabels = this.task.taskLabels; 
+    if (!this.task.comments) {
+      this.task.comments = [];
+    }
+
+    this.userService.fetchCurrentUser().subscribe({
+      next: (user) => {
+        this.loggedInUserId = user.id;
+      },
+      error: (err) => {
+        console.error('Failed to fetch current user', err);
+        this.loggedInUserId = 0;
+      }
+    });
   }
 
-  //don't know if it's going to be needed
+
+  getCurrentUserId(): number {
+    const user = this.userService.getCurrentUserValue();
+    return user ? user.id : 0;
+  }
+
+  getMemberById(id: number): ProjectMemberDto | undefined {
+    return this.projectMembers.find(m => m.userId === id);
+  }
+
+ // Ajoutez cette méthode pour inverser l'ordre des commentaires
+reversedComments(): Comment[] {
+  return [...this.comments].reverse();
+}
+
+// La méthode scrollToTop() reste inchangée
+scrollToTop(): void {
+  try {
+    if (this.commentsContainer) {
+      this.commentsContainer.nativeElement.scrollTop = 0;
+    }
+  } catch (err) { }
+}
+
+// Modifiez la méthode loadComments() pour trier les commentaires du plus ancien au plus récent
+loadComments(): void {
+  this.projectService.getCommentsByTaskId(this.task.id).subscribe({
+    next: (comments: Comment[]) => {
+      // Trier les commentaires du plus ancien au plus récent
+      this.comments = comments.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      this.task.comments = this.comments;
+      this.commentUpdated.emit(this.comments);
+      setTimeout(() => this.scrollToTop(), 0);
+    },
+    error: (err) => console.error('Failed to load comments', err),
+  });
+}
+
+// Modifiez la méthode addComment() pour ajouter le nouveau commentaire à la fin
+addComment(): void {
+  if (!this.newComment.trim()) return;
+
+  this.projectService.createComment({
+    content: this.newComment,
+    taskId: this.task.id,
+    userId: this.getCurrentUserId(),
+  }).subscribe({
+    next: (comment: Comment) => {
+      // Ajouter le nouveau commentaire à la fin du tableau
+      this.comments = [...this.comments, comment];
+      this.task.comments = this.comments;
+      this.newComment = '';
+      this.commentUpdated.emit(this.comments);
+      setTimeout(() => this.scrollToTop(), 0);
+    },
+    
+    error: (err) => console.error('Failed to add comment', err),
+  });
+}
+
+  startEditingComment(comment: Comment): void {
+    if (this.editingCommentId === comment.id) {
+      this.cancelEditingComment();
+    } else {
+      this.editingCommentId = comment.id;
+      this.editingCommentContent = comment.content;
+    }
+  }
+
+  saveComment(commentId: number): void {
+    if (!this.editingCommentContent.trim()) return;
+
+    this.projectService.updateComment(commentId, { content: this.editingCommentContent }).subscribe({
+      next: (updatedComment: Comment) => {
+        this.comments = this.comments.map((c) =>
+          c.id === commentId ? updatedComment : c
+        );
+        this.task.comments = this.comments;
+        this.editingCommentId = null;
+        this.editingCommentContent = '';
+        this.commentUpdated.emit(this.comments);
+      },
+      error: (err) => console.error('Failed to update comment', err),
+    });
+  }
+
+  cancelEditingComment(): void {
+    this.editingCommentId = null;
+    this.editingCommentContent = '';
+  }
+
+  deleteComment(commentId: number): void {
+    this.projectService.deleteComment(commentId).subscribe({
+      next: () => {
+        this.comments = this.comments.filter((c) => c.id !== commentId);
+        this.task.comments = this.comments;
+        this.commentUpdated.emit(this.comments);
+      },
+      error: (err) => console.error('Failed to delete comment', err),
+    });
+  }
+
+  toggleDeleteConfirm(commentId: number): void {
+    this.showDeleteConfirm = this.showDeleteConfirm === commentId ? null : commentId;
+  }
+
+  confirmDelete(commentId: number): void {
+    this.deleteComment(commentId);
+    this.showDeleteConfirm = null;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteConfirm = null;
+  }
+
   closeModal(): void {
     this.close.emit();
   }
@@ -256,7 +391,7 @@ export class TaskModalComponent implements OnInit {
   //labels
   // A Trello-like palette
   @Output() labelsChanged = new EventEmitter<Label[]>
-  constructor(private projectService: ProjectService, private route: ActivatedRoute) { }
+  constructor(private projectService: ProjectService, private route: ActivatedRoute, private userService: UserService) { }
 
   labelColors: readonly string[] = [
     '#61BD4F', // green
@@ -376,79 +511,6 @@ export class TaskModalComponent implements OnInit {
     }
   }
 
-  //   toggleTaskLabel(label: Label, event: Event) {
-  //   const checked = (event.target as HTMLInputElement).checked;
-
-  //   if (checked) {
-  //     this.projectService.createTaskLabelMapping(this.task.id, label.id!).subscribe({
-  //       next: (taskLabel) => this.task.taskLabels.push(taskLabel),
-  //       error: (err) => console.error('Failed to add label to task', err)
-  //     });
-  //   } else {
-  //     this.projectService.deleteTaskLabelMapping(this.task.id, label.id!).subscribe({
-  //       next: () => {
-  //         this.task.taskLabels = this.task.taskLabels.filter(tl => tl.label.id !== label.id);
-  //       },
-  //       error: (err) => console.error('Failed to remove label from task', err)
-  //     });
-  //   }
-  // }
-
-  // toggleTaskLabel(label: Label, ev: Event) {
-  //   ev.stopPropagation();
-  //   if (!label?.id) return;
-
-  //   // prevent double-click storms
-  //   if (this.processingLabelIds.has(label.id)) return;
-  //   this.processingLabelIds.add(label.id);
-
-  //   const isChecked = this.isTaskLabelChecked(label);
-
-  //   if (!isChecked) {
-  //     // ✅ CHECK (add mapping) – optimistic add with full label
-  //     this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
-  //       next: (mapping) => {
-  //         // Ensure we inject the full label object used by the UI
-  //         const hydrated = { ...mapping, label } as TaskLabel;
-
-  //         // If array already contains it (race), skip
-  //         const exists = this.task.taskLabels.some(tl => tl.label?.id === label.id);
-  //         if (!exists) {
-  //           // keep same array ref for the task card (shallow copy)
-  //           this.task.taskLabels.push(hydrated);
-  //         }
-  //       },
-  //       error: (err) => {
-  //         console.error('Failed to add label to task', err);
-  //       },
-  //       complete: () => this.processingLabelIds.delete(label.id!)
-  //     });
-
-  //   } else {
-  //     // ❌ UNCHECK (remove mapping) – mutate in place to keep reference shared with card
-  //     const idx = this.task.taskLabels.findIndex(tl => tl.label?.id === label.id);
-  //     const removed = idx > -1 ? this.task.taskLabels[idx] : undefined;
-
-  //     if (idx > -1) {
-  //       // optimistic remove
-  //       this.task.taskLabels.splice(idx, 1);
-  //     }
-
-  //     this.projectService.deleteTaskLabelMapping(this.task.id, label.id).subscribe({
-  //       next: () => {},
-  //       error: (err) => {
-  //         console.error('Failed to remove label from task', err);
-  //         // revert on error
-  //         if (removed) {
-  //           this.task.taskLabels.splice(idx, 0, removed);
-  //         }
-  //       },
-  //       complete: () => this.processingLabelIds.delete(label.id!)
-  //     });
-  //   }
-  // }
-
-
   cancelLabelEdit() {
     this.activeMenu = 'showLabel';
   }
@@ -499,23 +561,6 @@ export class TaskModalComponent implements OnInit {
     }
   }
 
-
-  // trackLabelBy(_: number, label: Label) {
-  //   return label.id!;
-  // }
-  // trackTaskLabelBy(_: number, tl: TaskLabel) {
-  //   return tl.label?.id ?? tl.id;
-  // }
-
-
-
-
-
-
-
-
-
-  //attachments
   uploading = false;
 
   onFileSelected(event: any) {

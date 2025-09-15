@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Board, Label, Task } from 'src/app/models/project';
+import { Board, Label, Task, Comment } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -89,14 +89,10 @@ closeModal() {
 }
 
 async saveTask(updatedTask: Task) {
-  // console.log(updatedTask)
-  const { attachments, taskLabels, ...taskWithoutAttachments } = updatedTask;
-  // console.log(taskWithoutAttachments)
-  await this.saveChanges(taskWithoutAttachments);
-  this.task = updatedTask;
-  // this.originalTask = { ...updatedTask };
-  // console.log(this.task);
-  this.isModalOpen = false;
+    const { attachments, comments, taskLabels, ...taskWithoutAttachments } = updatedTask;
+    await this.saveChanges(taskWithoutAttachments);
+    this.task = { ...updatedTask,}; // Preserve comments
+    this.isModalOpen = false;
 }
 
 
@@ -104,22 +100,42 @@ originalTask!: Task;
 
 ngOnInit() {
   this.originalTask = { ...this.task }; // shallow copy or deep copy
+  this.loadComments();
 }
 
-async saveChanges(task:Task = this.task) {
-      console.log(this.originalTask)
-      console.log(task)
-  const updatedTask = await firstValueFrom(
-    this.projectService.updateTask(this.task.id, this.originalTask, task)
-  );
-  return updatedTask;
-  this.task = updatedTask;
-  this.originalTask = { ...updatedTask }; // reset original copy
-}
+//my save changes
+
+// async saveChanges(task:Task = this.task) {
+//       console.log(this.originalTask)
+//       console.log(task)
+//   const updatedTask = await firstValueFrom(
+//     this.projectService.updateTask(this.task.id, this.originalTask, task)
+//   );
+//   return updatedTask;
+// }
 
 @Output() labelsChanged = new EventEmitter<Label[]>();
 
 onLabelsChanged(updated: Label[]) {
   this.labelsChanged.emit(updated);
 }
+
+loadComments(): void {
+    this.projectService.getCommentsByTaskId(this.task.id).subscribe({
+      next: (comments) => {
+        this.task.comments = comments;
+      },
+      error: (err) => console.error('Failed to load comments', err),
+    });
+  }
+  
+//admi's save changes
+async saveChanges(task: Task = this.task) {
+    const updatedTask = await firstValueFrom(
+      this.projectService.updateTask(this.task.id, this.originalTask, task)
+    );
+    this.task = { ...updatedTask, comments: this.task.comments }; // Preserve comments
+    this.originalTask = { ...updatedTask, comments: this.task.comments }; // Reset original copy
+    return updatedTask;
+  }
 }

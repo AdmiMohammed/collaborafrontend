@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap, take } from 'rxjs';
 import { User1Service } from '../user-service/user1.service';
-import { AttachmentDto, Board, Label, Project, Task, TaskLabel } from 'src/app/models/project';
+import { AttachmentDto, Board, Label, Project, Task, TaskLabel, Comment } from 'src/app/models/project';
 import * as jsonpatch from 'fast-json-patch';
 
 export interface ProjectMemberDto {
@@ -39,6 +39,17 @@ export interface ProjectCreateDto {
   initialBoardCount: number;
   memberIds: number[];
 }
+
+export interface CreateCommentDto {
+  content: string;
+  taskId: number;
+  userId: number;
+}
+
+export interface UpdateCommentDto {
+  content: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -49,6 +60,7 @@ export class ProjectService {
   private labelApiBase = 'http://localhost:5205/api/label';
   private taskLabelApiBase = 'http://localhost:5205/api/taskLabels';
   private attachmentApiBase = 'http://localhost:5205/api/attachments';
+  private commentApiBase = `http://localhost:5205/api/comments`;
 
   constructor(private http: HttpClient, private user1Service: User1Service) { }
 
@@ -188,5 +200,32 @@ export class ProjectService {
         )
       )
     );
+  }
+
+  // Fetch comments for a task
+  getCommentsByTaskId(taskId: number): Observable<Comment[]> {
+    return this.http.get<Comment[]>(`${this.commentApiBase}/task/${taskId}`);
+  }
+
+  // Create a new comment
+  createComment(commentData: CreateCommentDto): Observable<Comment> {
+    return this.user1Service.getCurrentUser().pipe(
+      switchMap((user) =>
+        this.http.post<Comment>(this.commentApiBase, {
+          ...commentData,
+          userId: user.id,
+        })
+      )
+    );
+  }
+
+  // Update an existing comment
+  updateComment(commentId: number, commentData: UpdateCommentDto): Observable<Comment> {
+    return this.http.put<Comment>(`${this.commentApiBase}/${commentId}`, commentData);
+  }
+
+  // Delete a comment
+  deleteComment(commentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.commentApiBase}/${commentId}`);
   }
 }
