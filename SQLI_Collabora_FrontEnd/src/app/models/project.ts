@@ -17,7 +17,9 @@ export interface Board {
   name: string;
   position: number;
   tasks: Task[];
+  isArchived?: boolean; 
 }
+
 
 export interface Task {
   id: number;
@@ -29,6 +31,8 @@ export interface Task {
   priority: "High" | "Medium" | "Low";
   position: number;
   taskLabels: TaskLabel[];
+  boardId: number;
+  isArchived?: boolean;
 }
 
 export interface TaskLabel{

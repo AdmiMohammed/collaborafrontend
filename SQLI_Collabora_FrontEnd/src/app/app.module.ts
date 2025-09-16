@@ -29,6 +29,13 @@ import { AvatarComponent } from './shared/components/avatar/avatar.component';
 import { ProjectWizardComponent } from './modules/project-wizard/project-wizard/project-wizard.component';
 import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
 import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
+import { ActivityComponent } from './components/project/activity/activity.component';
+import { InitialsPipe } from './pipes/initials.pipe';
+import { HighlightNamePipe } from './pipes/highlight-name.pipe';
+import { SearchBarComponent } from './shared/components/search-bar/search-bar.component';
+import { UserInfoComponent } from './shared/components/user-info/user-info.component';
+import { NotificationsComponent } from './shared/components/notifications/notifications.component';
+import { ArchivedTaskComponent } from './components/project/archived-task/archived-task.component';
 
 @NgModule({
   declarations: [
@@ -53,6 +60,13 @@ import { AddMemberModalComponent } from './components/project/add-member-modal/a
     AvatarComponent,
     ProjectWizardComponent,
     ProjectCardSkeletonComponent,
+    ActivityComponent,
+    InitialsPipe,
+    HighlightNamePipe,
+    SearchBarComponent,
+    UserInfoComponent,
+    NotificationsComponent,
+    ArchivedTaskComponent,
   ],
   imports: [
     BrowserModule,

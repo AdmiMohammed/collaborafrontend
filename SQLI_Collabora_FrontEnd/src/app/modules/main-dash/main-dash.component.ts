@@ -35,14 +35,13 @@ type Deltas = {
   ]
 })
 
-
 export class MainDashComponent implements OnInit {
   projects: ProjectReadDto[] = [];
   isGridView = true;
   openWizard = false;
   stats: Stats = { total: 0, active: 0, upcoming: 0, overdue: 0, completionRate: 0 };
   prevStats: Stats | undefined;
-deltas: Deltas = { totalPct: 0, activePct: 0, upcomingPct: 0, overduePct: 0 };
+  deltas: Deltas = { totalPct: 0, activePct: 0, upcomingPct: 0, overduePct: 0 };
 
   // état de chargement + liste fixe pour le skeleton
   loading = true;

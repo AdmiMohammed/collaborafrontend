@@ -1,0 +1,63 @@
+<!-- Bouton notifications -->
+<div class="relative">
+  <button (click)="onToggle($event)" 
+          aria-label="Notifications"
+          class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 focus:outline-none">
+    <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
+    <span *ngIf="unreadCount > 0" 
+          class="absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
+  </button>
+
+  <!-- Dropdown notifications -->
+  <div *ngIf="isOpen" 
+       class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 notification-dropdown"
+       [@dropdownAnimation]>
+       
+    <!-- Header dropdown -->
+    <div class="flex items-center justify-between px-4 py-2 border-b">
+      <h3 class="font-semibold text-gray-700">Notifications</h3>
+      <button (click)="onMarkAllAsRead()" class="text-sm hover:underline" style="color: #C020D0;">
+        Tout marquer comme lu
+      </button>
+    </div>
+
+    <!-- Liste notifications -->
+    <div class="max-h-64 overflow-y-auto">
+      <ng-container *ngIf="notifications.length > 0; else noNotifications">
+        <div *ngFor="let notif of notifications" 
+             class="flex justify-between items-start px-4 py-3 border-b hover:bg-gray-50 transition notification-item"
+             [@notificationItem]>
+             
+          <div class="flex items-center gap-3 flex-1">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i [class]="getNotificationIcon(notif.notificationType)" 
+                 class="text-sm" 
+                 [style.color]="notif.isRead ? '#9CA3AF' : '#C020D0'"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-800" [class.font-bold]="!notif.isRead">
+                {{ notif.content }}
+              </p>
+              <p class="text-xs text-gray-400 mt-1">
+                {{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+            </div>
+          </div>
+
+          <input 
+            type="checkbox" 
+            [checked]="notif.isRead" 
+            (change)="onHandleAction(notif.id, $event)" 
+            class="circular-checkbox ml-2"
+            title="Marquer comme lu et supprimer"
+          />
+        </div>
+      </ng-container>
+
+      <ng-template #noNotifications>
+        <div class="p-4 text-center text-gray-500 text-sm">Aucune notification</div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+

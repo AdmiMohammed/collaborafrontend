@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from 'src/app/services/auth.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { UserService } from 'src/app/services/user-service/user.service';
 

@@ -12,25 +12,27 @@ export class ColumnComponent {
   @Input() column!: Board;
   @Input() members!: ProjectMemberDto[];
   @Input() menuOpen: boolean = false;
+  @Input() activeColumnId!: number | null;
+
   @Output() toggleMenu = new EventEmitter<number>();
-
-  constructor(private projectService: ProjectService) { }
-
-  addingTask = false;
+  @Output() requestAddTask = new EventEmitter<number | null>();
   newTaskName = '';
-
   menuLeft = 0; // pixels offset from left of viewport
-
   editingName = false;
   editedName = '';
+  @Output() columnArchived = new EventEmitter<number>();
+
+  constructor(private projectService: ProjectService) { }
 
   @ViewChild('taskInput') taskInput!: ElementRef;
   @ViewChild('addTaskContainer') addTaskContainer!: ElementRef;
   @ViewChild('nameInput') nameInput!: ElementRef<HTMLInputElement>;
-
+  
+  get addingTask(): boolean {
+    return this.activeColumnId === this.column.id;
+  }
   startAddingTask(fromHeader: boolean) {
-    this.addingTask = true;
-
+    this.requestAddTask.emit(this.column.id);
     // Wait for DOM render then focus
     setTimeout(() => {
       this.taskInput?.nativeElement.focus();
@@ -39,6 +41,7 @@ export class ColumnComponent {
       }
     });
   }
+  
 
   async confirmAddTask() {
     if (this.newTaskName.trim()) {
@@ -57,12 +60,12 @@ export class ColumnComponent {
       this.column.tasks.push(newTask);
     }
     this.newTaskName = '';
-    this.addingTask = false;
+    this.requestAddTask.emit(null); 
   }
 
   cancelAddTask() {
     this.newTaskName = '';
-    this.addingTask = false;
+    this.requestAddTask.emit(null);
   }
 
   onToggleMenu(event: MouseEvent, columnId: number) {
@@ -129,4 +132,17 @@ export class ColumnComponent {
       this.nameInput.nativeElement.focus();
     }
   }
+
+ async archiveColumn() {
+  try {
+    await firstValueFrom(this.projectService.archiveBoard(this.column.id));
+    this.columnArchived.emit(this.column.id); 
+  } catch (error) {
+    console.error('Erreur lors de l’archivage :', error);
+  }
+}
+onTaskArchived(taskId: number) {
+  this.column.tasks = this.column.tasks.filter(t => t.id !== taskId);
+}
+
 }

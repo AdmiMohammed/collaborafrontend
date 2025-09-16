@@ -1,0 +1,13 @@
+/* Scrollbar minimaliste visible */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 4px; 
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #ebedf3; /* gris semi-transparent */
+  border-radius: 2px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent; 
+}

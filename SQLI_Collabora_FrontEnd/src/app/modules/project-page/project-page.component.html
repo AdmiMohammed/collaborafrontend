@@ -1,63 +1,97 @@
-<div class="flex flex-col h-screen bg-background p-4 sm:overflow-y-hidden">
+<div class="flex flex-col min-h-0 sm:h-screen bg-background p-2
+            overflow-y-auto scrollbar-thin scrollbar-track-transparent
+          scrollbar-thumb-background">
 
-  <!-- Topbar: fixed height for consistent layout -->
-  <app-topbar class="h-16 shrink-0" [inProject]="true"></app-topbar>
+  <app-topbar class="h-14 shrink-0 mb-1 px-4" [inProject]="true"></app-topbar>
+  
+  <ng-container *ngIf="project; else skeletonHeader">
+    <app-board-header [project]="project" (taskRestored)="onTaskRestored($event)" (columnRestored)="onColumnRestored($event)"></app-board-header>
+  </ng-container>
 
-  <!-- Main content fills remaining space, scrollable -->
-  <main
-    class="flex-1 bg-white rounded-2xl px-6 pt-6 flex flex-col overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background sm:overflow-y-hidden">
-
-    <div class="flex flex-col gap-6 min-h-0 flex-1">
-
-      <!-- Project header component -->
-      <app-board-header [project]="project"></app-board-header>
-
-      <!-- Columns container: horizontal scroll on desktop, vertical stack on mobile -->
-      <div class="flex flex-col gap-6 p-4 sm:flex-row min-h-0 min-w-0 flex-1
-               sm:overflow-x-auto sm:overflow-y-visible
-               scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background">
-        <app-column *ngFor="let column of project.columns" [column]="column" [members]="project.members"
-          [menuOpen]="openMenuColumnId === column.id" (toggleMenu)="toggleMenu(column.id)"></app-column>
-
-        <!-- If not adding a column, show button -->
-        <button *ngIf="!addingColumn" class="min-w-[280px] max-w-[320px] h-14 flex items-center justify-center px-4 py-2 rounded-xl border-2 border-dashed border-primary-mid
-         text-primary-mid font-semibold hover:bg-primary-mid hover:text-white transition duration-300 shrink-0"
-          type="button" aria-label="Ajouter une colonne" (click)="openAddColumn()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Ajouter une colonne
-        </button>
-
-        <!-- If adding a column, show input + buttons -->
-        <div *ngIf="addingColumn"
-          class="min-w-[280px] max-w-[320px] flex flex-col gap-3 rounded-xl border-2 border-primary-mid bg-white shadow-md shrink-0 p-3 self-start">
-
-          <input #newColumnInput type="text"
-            class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-mid"
-            placeholder="Nom de la colonne" [(ngModel)]="newColumnName" (keydown.enter)="addColumn()" autofocus />
-
-          <div class="flex gap-4">
-            <button type="button"
-              class="bg-primary-mid text-white px-4 py-2 rounded hover:bg-primary-end transition duration-200 font-semibold"
-              (click)="addColumn()">
-              Ajouter
-            </button>
-
-            <button type="button"
-              class="px-4 py-2 rounded border border-gray-300 hover:border-primary-mid hover:text-primary-mid transition duration-200 font-semibold"
-              (click)="cancelAddColumn()">
-              Annuler
-            </button>
-          </div>
-
-        </div>
-
-
+  <ng-template #skeletonHeader>
+    <div class="flex justify-between items-center bg-white rounded-2xl
+                shadow-md p-4 my-1 mx-5 h-16 space-x-4">
+      <div class="h-6 bg-gray-200 rounded-xl w-32 animate-pulse"></div>
+      <div class="h-6 bg-gray-200 rounded-xl w-20 hidden md:block animate-pulse"></div>
+      <div class="flex -space-x-2">
+        <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+      </div>
+      <div class="flex flex-row gap-4">
+          <div class="h-8 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+          <div class="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
       </div>
     </div>
+  </ng-template>
 
-  </main>
 
+  <div class="flex flex-1 flex-col gap-4 p-4 my-2 mx-4 items-center sm:flex-row
+              sm:items-start overflow-x-auto overflow-y-hidden bg-white
+              rounded-2xl scrollbar-thin scrollbar-track-transparent
+            scrollbar-thumb-background">
+    <ng-container *ngFor="let column of project?.columns">
+      <app-column
+        *ngIf="!column.isArchived"
+        [column]="column"
+        [members]="project.members"
+        [menuOpen]="openMenuColumnId === column.id"
+        [activeColumnId]="activeAddTaskColumnId"
+        (toggleMenu)="toggleMenu(column.id)"
+        (requestAddTask)="setActiveColumn($event)"
+        (columnArchived)="onColumnArchived($event)" 
+      >
+      </app-column>
+    </ng-container>
+
+    <!-- If not adding a column, show button -->
+    <button *ngIf="project && !addingColumn" 
+            class="min-w-[280px] max-w-[300px] h-14 flex items-center
+                   justify-center px-4 py-2 rounded-xl border
+                    border-purple-500 text-purple-500
+                   font-bold hover:bg-purple-100 transition duration-300
+                   shrink-0"
+            type="button" aria-label="Ajouter une colonne"
+            (click)="openAddColumn()">
+      <svg xmlns="http://www.w3.org/2000/svg" 
+           class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"
+           stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 4v16m8-8H4" />
+      </svg>
+      Ajouter une colonne
+    </button>
+
+    <!-- If adding a column, show input + buttons -->
+    <div *ngIf="addingColumn"
+          class="min-w-[300px] max-w-[300px] flex flex-col gap-3
+                 rounded-xl border border-gray-300 bg-white
+                 hover:shadow-sm shrink-0 p-3">
+      <input #newColumnInput type="text"
+             class="border border-gray-200 rounded-lg px-3 py-2
+                    focus:outline-none focus:ring-1
+                  focus-within:ring-purple-500 text-xs"
+             placeholder="Titre de la colonne"
+            [(ngModel)]="newColumnName" (keydown.enter)="addColumn()"
+            autofocus />
+      <div class="flex justify-end gap-4">
+        <button type="button"
+                class="px-3 py-1 rounded-lg text-gray-500 border
+                     border-gray-200 hover:border-primary-start
+                     hover:text-primary-start transition duration-200 
+                     text-sm"
+          (click)="cancelAddColumn()">
+          Annuler
+        </button>
+        <button type="button"
+                class="bg-primary-start text-white px-4 py-2
+                       rounded-lg hover:shadow-md transition
+                       duration-200 text-sm"
+          (click)="addColumn()">
+          Ajouter
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

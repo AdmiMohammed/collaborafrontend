@@ -1,203 +1,95 @@
-<div *ngIf="!inProject" class="flex items-center justify-between p-2">
-  <!-- bouton sidebar + recherche -->
+<!-- <div *ngIf="!inProject" class="flex items-center justify-between p-2">
   <div class="flex items-center gap-3 flex-grow">
     <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
       <i class="fa-solid fa-bars" style="color: #16306b;"></i>
     </button>
+    <app-search-bar></app-search-bar>
+  </div>
 
-    <div
-      class="flex items-center bg-white rounded-full px-4 py-2 w-96 max-w-md mx-2 shadow-sm
-             focus-within:ring-2 focus-within:ring-purple-500 focus-within:bg-white transition-all duration-300"
+  <div class="flex items-center gap-6 mx-2 sm:mx-6 md:mx-10">
+    <app-notifications
+      [notifications]="notifications"
+      [unreadCount]="unreadCount"
+      (markAllAsRead)="markAllNotificationsAsRead()"
+      (handleAction)="handleNotificationAction($event.id, $event.event)"
+    ></app-notifications>
+    <app-user-info [user]="user" [initials]="initials"></app-user-info>
+  </div>
+</div> -->
+
+<!-- ************************************ -->
+<!-- <div *ngIf="inProject" class="flex items-center justify-between relative p-2 gap-2 flex-wrap">
+
+  <button 
+    class="flex items-center gap-2 group transition flex-shrink-0" 
+    aria-label="Aller au tableau de bord" 
+    (click)="goToDashboard()"
+  >
+    <img 
+      src="../../../../assets/images/logo_collabora_icon.svg" 
+      alt="Collabora Logo" 
+      class="w-8 h-8 object-cover transition group-hover:scale-110 group-hover:brightness-110" 
+    />
+    <h1 
+      class="font-bold text-lg text-[#16306B] transition group-hover:text-[#2D4479]"
     >
-      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
-      <input
-        type="text"
-        placeholder="Chercher un projet, une tâche, un utilisateur..."
-        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none"
-      />
-    </div>
+      Collabora
+    </h1>
+  </button>
+
+ 
+  <app-search-bar></app-search-bar>
+
+  <div class="flex items-center gap-3 flex-shrink-0">
+    <app-notifications
+      [notifications]="notifications"
+      [unreadCount]="unreadCount"
+      (markAllAsRead)="markAllNotificationsAsRead()"
+      (handleAction)="handleNotificationAction($event.id, $event.event)"
+    ></app-notifications>
+
+    <app-user-info [user]="user" [initials]="initials"></app-user-info>
   </div>
-
-  <!-- notifications + utilisateur -->
-  <div class="flex items-center gap-6 mx-10">
-    <!-- Container notifications (relative) -->
-    <div class="relative">
-      <!-- Bouton notifications -->
-      <button (click)="toggleDropdown($event)" 
-              class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 focus:outline-none">
-        <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
-        <span *ngIf="unreadCount > 0" 
-              class="absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
-      </button>
-
-      <!-- Dropdown notifications -->
-      <div *ngIf="isOpen" 
-           class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 notification-dropdown"
-           [@dropdownAnimation]>
-        <!-- Header dropdown -->
-        <div class="flex items-center justify-between px-4 py-2 border-b">
-          <h3 class="font-semibold text-gray-700">Notifications</h3>
-          <button (click)="markAllAsRead()" class="text-sm hover:underline" style="color: #C020D0;">Tout marquer comme lu</button>
-        </div>
-
-        <!-- Liste notifications -->
-        <div class="max-h-64 overflow-y-auto">
-          <ng-container *ngIf="notifications.length > 0; else noNotifications">
-            <div *ngFor="let notif of notifications" 
-                 class="flex justify-between items-start px-4 py-3 border-b hover:bg-gray-50 transition notification-item"
-                 [@notificationItem]>
-              <div class="flex items-center gap-3 flex-1">
-                <div class="w-6 h-6 flex items-center justify-center">
-                  <i [class]="getNotificationIcon(notif.notificationType)" 
-                     class="text-sm" 
-                     [style.color]="notif.isRead ? '#9CA3AF' : '#C020D0'"></i>
-                </div>
-                <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-800" [class.font-bold]="!notif.isRead">{{ notif.content }}</p>
-                  <p class="text-xs text-gray-400 mt-1">{{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                [checked]="notif.isRead" 
-                (change)="handleNotificationAction(notif.id, $event)" 
-                class="circular-checkbox ml-2"
-                title="Marquer comme lu et supprimer"
-              />
-            </div>
-          </ng-container>
-
-          <ng-template #noNotifications>
-            <div class="p-4 text-center text-gray-500 text-sm">Aucune notification</div>
-          </ng-template>
-        </div>
-      </div>
-    </div>
-
-    <!-- Utilisateur -->
-    <div class="flex items-center gap-2">
-      <div class="rounded-full w-10 h-10 bg-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm overflow-hidden">
-        <ng-container *ngIf="user?.profilePictureUrl; else showInitials">
-          <img [src]="user?.profilePictureUrl" alt="Avatar" class="w-full h-full object-cover" />
-        </ng-container>
-        <ng-template #showInitials>{{ initials }}</ng-template>
-      </div>
-      <div class="flex flex-col overflow-hidden">
-        <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">{{ user.firstName }} {{ user.lastName }}</p>
-        <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">{{ user.email }}</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!--in project (later i will try to optimize this)-->
-<div *ngIf="inProject" class="flex items-center justify-between relative px-4">
-
-  <!-- Left side: Back button + Logo + App Name -->
-  <div class="flex items-center gap-6 min-w-[250px]">
-
-
-    <!-- Back button -->
-    <button class="flex items-center gap-1 text-gray-500 hover:text-primary-end text-sm font-medium transition tooltip left-edge"
-      data-tooltip="Tableau de bord"
-      aria-label="Retour au tableau de bord" (click)="goToDashboard()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="size-6">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-      </svg>
+</div> -->
+<div class="flex items-center justify-between px-2" [ngClass]="{
+  'py-2': inProject
+}">
+  <ng-container *ngIf="!inProject; else inProjectBlock">
+    <button (click)="toggleSidebar()" class="text-gray-600 hover:text-gray-800 text-xl">
+      <i class="fa-solid fa-bars" style="color: #16306b;"></i>
     </button>
+  </ng-container>
 
-    <!-- Logo + App name -->
-    <div class="flex items-center gap-2">
-      <img src="../../../../assets/images/logo_collabora_icon.svg" alt="Collabora Logo" class="w-8 h-8 object-cover" />
-      <h1 class="font-bold text-lg text-primary-start select-none">Collabora</h1>
-    </div>
-  </div>
+  <ng-template #inProjectBlock>
+    <button 
+      class="flex items-center gap-2 group transition flex-shrink-0" 
+      aria-label="Aller au tableau de bord" 
+      (click)="goToDashboard()"
+    >
+      <img 
+        src="../../../../assets/images/logo_collabora_icon.svg" 
+        alt="Collabora Logo" 
+        class="w-8 h-8 object-cover transition group-hover:scale-110 group-hover:brightness-110" 
+      />
+      <h1 
+        class="font-bold text-lg text-[#16306B] transition group-hover:text-[#2D4479]"
+      >
+        Collabora
+      </h1>
+    </button>
+  </ng-template>
 
-  <!-- Center: Search bar -->
-  <div class="flex-grow max-w-lg px-4 mx-auto">
-    <div
-      class="flex items-center bg-white rounded-full px-4 py-2 shadow-sm border border-gray-300
-             focus-within:ring-2 focus-within:ring-primary-start focus-within:border-primary-start transition duration-300">
-      <i class="fa fa-search text-gray-400 text-sm mr-2"></i>
-      <input type="text" placeholder="Chercher un projet, une tâche, un utilisateur..."
-        class="bg-transparent text-sm placeholder-gray-400 w-full focus:outline-none" />
-    </div>
-  </div>
-
-  <!-- Right side: Icons + User info -->
-  <div class="flex items-center gap-4 min-w-[250px] justify-end">
-    <!-- <button class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition"
-      aria-label="Notifications">
+  <app-search-bar [projects]="projects"></app-search-bar>
 
 
-      <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
-    </button> -->
-    <div class="relative">
-      <!-- Bouton notifications -->
-      <button (click)="toggleDropdown($event)" 
-              class="relative w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 focus:outline-none">
-        <i class="fa-regular fa-bell text-gray-600 text-sm"></i>
-        <span *ngIf="unreadCount > 0" 
-              class="absolute top-1 right-1 w-3 h-3 bg-red-600 rounded-full animate-pulse"></span>
-      </button>
+  <div class="flex items-center gap-6">
+    <app-notifications
+      [notifications]="notifications"
+      [unreadCount]="unreadCount"
+      (markAllAsRead)="markAllNotificationsAsRead()"
+      (handleAction)="handleNotificationAction($event.id, $event.event)"
+    ></app-notifications>
 
-      <!-- Dropdown notifications -->
-      <div *ngIf="isOpen" 
-           class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 notification-dropdown"
-           [@dropdownAnimation]>
-        <!-- Header dropdown -->
-        <div class="flex items-center justify-between px-4 py-2 border-b">
-          <h3 class="font-semibold text-gray-700">Notifications</h3>
-          <button (click)="markAllAsRead()" class="text-sm hover:underline" style="color: #C020D0;">Tout marquer comme lu</button>
-        </div>
-
-        <!-- Liste notifications -->
-        <div class="max-h-64 overflow-y-auto">
-          <ng-container *ngIf="notifications.length > 0; else noNotifications">
-            <div *ngFor="let notif of notifications" 
-                 class="flex justify-between items-start px-4 py-3 border-b hover:bg-gray-50 transition notification-item"
-                 [@notificationItem]>
-              <div class="flex items-center gap-3 flex-1">
-                <div class="w-6 h-6 flex items-center justify-center">
-                  <i [class]="getNotificationIcon(notif.notificationType)" 
-                     class="text-sm" 
-                     [style.color]="notif.isRead ? '#9CA3AF' : '#C020D0'"></i>
-                </div>
-                <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-800" [class.font-bold]="!notif.isRead">{{ notif.content }}</p>
-                  <p class="text-xs text-gray-400 mt-1">{{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                [checked]="notif.isRead" 
-                (change)="handleNotificationAction(notif.id, $event)" 
-                class="circular-checkbox ml-2"
-                title="Marquer comme lu et supprimer"
-              />
-            </div>
-          </ng-container>
-
-          <ng-template #noNotifications>
-            <div class="p-4 text-center text-gray-500 text-sm">Aucune notification</div>
-          </ng-template>
-        </div>
-      </div>
-    </div>
-    <div class="flex items-center gap-3">
-      <app-avatar [user]="user!" size="global-header" />
-      <div class="flex flex-col overflow-hidden">
-        <p class="text-sm font-semibold text-gray-800 truncate" *ngIf="user">
-          {{ user.firstName }} {{ user.lastName }}
-        </p>
-        <p class="text-xs text-gray-500 truncate" [title]="user.email" *ngIf="user">
-          {{ user.email }}
-        </p>
-      </div>
-    </div>
+    <app-user-info [user]="user" [initials]="initials"></app-user-info>
   </div>
 </div>
-

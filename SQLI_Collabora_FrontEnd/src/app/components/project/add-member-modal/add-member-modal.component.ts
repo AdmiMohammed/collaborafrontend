@@ -1,10 +1,23 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ProjectMemberDto } from 'src/app/services/project-service/project.service';
 import { AppUser, User1Service } from 'src/app/services/user-service/user1.service';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-add-member-modal',
   templateUrl: './add-member-modal.component.html',
+  animations: [
+    trigger('overlayAnimation', [
+    state('void', style({ opacity: 0 })),
+    state('*', style({ opacity: 1 })),
+    transition('void <=> *', animate('200ms ease-in-out'))
+  ]),
+  trigger('modalAnimation', [
+    state('void', style({ opacity: 0, transform: 'scale(0.95)' })),
+    state('*', style({ opacity: 1, transform: 'scale(1)' })),
+    transition('void <=> *', animate('200ms ease-in-out')),
+  ])
+    ]
 })
 export class AddMemberModalComponent implements OnInit {
   @Input() existingMembers!: ProjectMemberDto[];
@@ -13,14 +26,12 @@ export class AddMemberModalComponent implements OnInit {
     newMembers: AppUser[];
     removedMembers: ProjectMemberDto[];
   }>();
-
-  // State for search
+  
   searchQuery = '';
   candidateUsers: AppUser[] = [];
   searchResults: AppUser[] = [];
   focusedIndex = -1;
 
-  // Lists
   existingMembersWithStatus: (ProjectMemberDto & { pendingRemoval?: boolean })[] = [];
   newMembers: AppUser[] = [];
 
