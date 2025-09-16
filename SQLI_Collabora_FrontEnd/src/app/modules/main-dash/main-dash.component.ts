@@ -22,7 +22,7 @@ type Deltas = {
   selector: 'app-main-dash',
   templateUrl: './main-dash.component.html',
   styleUrls: ['./main-dash.component.css'],
-    animations: [
+  animations: [
     trigger('wizardAnimation', [
       transition(':enter', [
         style({ opacity: 0, transform: 'scale(0.95)' }),
@@ -48,11 +48,11 @@ export class MainDashComponent implements OnInit {
   skeletonItems = Array.from({ length: 8 }); // ajuste le nombre si besoin
 
   constructor(private projectService: ProjectService) {
-        this.loadProjects();
+    this.loadProjects();
 
   }
 
-  
+
   private loadProjects(): void {
     this.loading = true;
     this.projectService.getAll()
@@ -68,7 +68,7 @@ export class MainDashComponent implements OnInit {
       });
   }
 
-    private computeStats(list: ProjectReadDto[]): void {
+  private computeStats(list: ProjectReadDto[]): void {
     const now = new Date();
 
     const toDate = (s?: string | null) => (s ? new Date(s) : null);
@@ -102,14 +102,14 @@ export class MainDashComponent implements OnInit {
       tasksTotal += p.totalTasks || 0;
       tasksDone += p.completedTasks || 0;
     }
-        const completionRate =
+    const completionRate =
       tasksTotal > 0 ? Math.round((tasksDone / tasksTotal) * 100) : 0;
 
     this.stats = { total, active, upcoming, overdue, completionRate };
   }
 
-  
-  private ratioPct(curr: number, prev: number): number  {
+
+  private ratioPct(curr: number, prev: number): number {
     if (prev === 0 && curr === 0) return 0;     // pas de variation
     if (prev === 0) return 100;                 // convention: +100% quand on passe de 0 à >0
     return Math.round(((curr - prev) / prev) * 100);
@@ -118,9 +118,9 @@ export class MainDashComponent implements OnInit {
   private computeDeltas(curr: Stats, prev: Stats): void {
     if (!prev) { this.deltas = { totalPct: 0, activePct: 0, upcomingPct: 0, overduePct: 0 }; return; }
     this.deltas = {
-      totalPct:   this.ratioPct(curr.total,   prev.total),
-      activePct:  this.ratioPct(curr.active,  prev.active),
-      upcomingPct:this.ratioPct(curr.upcoming,prev.upcoming),
+      totalPct: this.ratioPct(curr.total, prev.total),
+      activePct: this.ratioPct(curr.active, prev.active),
+      upcomingPct: this.ratioPct(curr.upcoming, prev.upcoming),
       overduePct: this.ratioPct(curr.overdue, prev.overdue),
     };
   }
@@ -138,9 +138,15 @@ export class MainDashComponent implements OnInit {
       });
   }
 
-  onProjectReorder(updatedProjects: any[]) {
-    this.projects = updatedProjects;
-    console.log('Projets réorganisés :', this.projects);
+  onProjectReorder(event: {
+    movedItem: any,
+    oldIndex: number,
+    newIndex: number,
+    fromColumn: any | null,
+    toColumn: any | null,
+    items?: any[]
+  }) {
+    if(event.items) this.projects = event.items;
   }
 
   openNewProjectWizard() {

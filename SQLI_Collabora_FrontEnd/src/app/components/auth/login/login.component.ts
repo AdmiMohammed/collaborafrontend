@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
-import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +21,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private userService: UserService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loginForm = this.fb.group({
@@ -43,6 +41,23 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
       window.addEventListener('resize', this.onResize);
+
+      // Check for existing token and attempt auto-login
+      const token = localStorage.getItem('token');
+      if (token) {
+        this.authService.validateToken(token).subscribe({
+          next: (isValid) => {
+            if (isValid) {
+              this.router.navigate(['/dashboard']);
+            } else {
+              localStorage.removeItem('token'); // Clear invalid token
+            }
+          },
+          error: () => {
+            localStorage.removeItem('token'); // Clear token on validation error
+          }
+        });
+      }
     }
   }
 
@@ -71,14 +86,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
           const token = response.token;
-
-          if(token) {
-            localStorage.setItem('token', token);
-             // Met à jour le BehaviorSubject avec le bon utilisateur
-            this.userService.fetchCurrentUser().subscribe({
-            next: () => this.router.navigate(['/dashboard']),
-            error: () => this.router.navigate(['/dashboard']) // même si erreur, on navigue
-          });
+          if (token) {
+            // Store token based on "rememberMe" value
+            const storage = this.loginForm.get('rememberMe')?.value ? localStorage : sessionStorage;
+            storage.setItem('token', token);
+            this.router.navigate(['/dashboard'])
           }
         },
         error: (error) => {

@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Board } from 'src/app/models/project';
+import { Board, Label, Task } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -9,6 +9,7 @@ import { ProjectMemberDto, ProjectService } from 'src/app/services/project-servi
   styleUrls: ['./column.component.css']
 })
 export class ColumnComponent {
+  @Input() projectLabels!: Label[];
   @Input() column!: Board;
   @Input() members!: ProjectMemberDto[];
   @Input() menuOpen: boolean = false;
@@ -69,7 +70,6 @@ export class ColumnComponent {
   }
 
   onToggleMenu(event: MouseEvent, columnId: number) {
-    console.log(this.menuOpen)
     if (!this.menuOpen) {
       event.stopPropagation(); // Prevents click from bubbling up
 
@@ -93,7 +93,6 @@ export class ColumnComponent {
 
       this.menuLeft = overflowRight; // Final left offset inside parent
     }
-    // this.menuOpen = !this.menuOpen; // Toggle menu visibility
     this.toggleMenu.emit(columnId); // notify parent to toggle open/close
   }
 
@@ -133,6 +132,7 @@ export class ColumnComponent {
     }
   }
 
+
  async archiveColumn() {
   try {
     await firstValueFrom(this.projectService.archiveBoard(this.column.id));
@@ -141,8 +141,52 @@ export class ColumnComponent {
     console.error('Erreur lors de l’archivage :', error);
   }
 }
-onTaskArchived(taskId: number) {
-  this.column.tasks = this.column.tasks.filter(t => t.id !== taskId);
-}
+
+  onTasksReordered(event: {
+    movedItem: Task,
+    oldIndex: number,
+    newIndex: number,
+    fromColumn: Board,
+    toColumn: Board
+  }) {
+    const { movedItem, newIndex, fromColumn, toColumn } = event;
+
+    // Persist change to backend
+    this.projectService.reorderTask(movedItem.id, {
+      newBoardId: toColumn.id,
+      newPosition: newIndex
+    }).subscribe();
+
+    // Remove from source column
+    fromColumn.tasks = fromColumn.tasks.filter(t => t.id !== movedItem.id);
+
+    // Insert into target column at new position
+    toColumn.tasks.splice(newIndex, 0, movedItem);
+
+    // Optional: recalc positions
+    toColumn.tasks.forEach((t, i) => t.position = i);
+    fromColumn.tasks.forEach((t, i) => t.position = i);
+  }
+
+
+  trackTaskById(index: number, task: any) {
+    return task.id; // or task whatever unique identifier you have
+  }
+
+
+  get sortedTasks() {
+    return this.column.tasks.slice().sort((a, b) => a.position - b.position);
+  }
+
+
+  @Output() labelsChanged = new EventEmitter<Label[]>();
+
+  onLabelsChanged(updated: Label[]) {
+    this.labelsChanged.emit(updated);
+  }
+
+  onTaskArchived(taskId: number) {
+    this.column.tasks = this.column.tasks.filter(t => t.id !== taskId);
+  }
 
 }

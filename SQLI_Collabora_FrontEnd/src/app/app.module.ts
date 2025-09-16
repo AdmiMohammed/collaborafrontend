@@ -36,6 +36,7 @@ import { SearchBarComponent } from './shared/components/search-bar/search-bar.co
 import { UserInfoComponent } from './shared/components/user-info/user-info.component';
 import { NotificationsComponent } from './shared/components/notifications/notifications.component';
 import { ArchivedTaskComponent } from './components/project/archived-task/archived-task.component';
+import { TaskModalComponent } from './components/project/task-modal/task-modal.component';
 
 @NgModule({
   declarations: [
@@ -67,6 +68,7 @@ import { ArchivedTaskComponent } from './components/project/archived-task/archiv
     UserInfoComponent,
     NotificationsComponent,
     ArchivedTaskComponent,
+    TaskModalComponent,
   ],
   imports: [
     BrowserModule,

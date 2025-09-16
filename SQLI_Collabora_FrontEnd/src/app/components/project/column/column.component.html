@@ -93,10 +93,13 @@
   <!-- Tasks -->
  <div
   class="flex-1 overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background px-4">
-  <div class="space-y-4">
-    <div *ngFor="let task of column.tasks">
-      <app-task-card [task]="task" [members]="members" (taskArchived)="onTaskArchived($event)"></app-task-card>
+  <div class="space-y-4" appSortable [items]="sortedTasks" [column]="column" [group]="'tasksGroup'"
+      (reordered)="onTasksReordered($event)">
+    <div *ngFor="let task of sortedTasks; trackBy: trackTaskById" [attr.data-task-id]="task.id">
+      <app-task-card [task]="task" [members]="members" (taskArchived)="onTaskArchived($event)" [columnName]="column.name"
+      [projectLabels]="projectLabels" (labelsChanged)="onLabelsChanged($event)"></app-task-card>
     </div>
+
     <div *ngIf="addingTask" class="mt-2">
       <input #taskInput type="text"
              [(ngModel)]="newTaskName" placeholder="Titre de la carte"

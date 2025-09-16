@@ -1,7 +1,7 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Project, Task } from 'src/app/models/project';
+import { Project, Task, Board, Label, } from 'src/app/models/project';
 import { ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -65,21 +65,37 @@ export class ProjectPageComponent implements OnInit {
 
 
   
-  async ngOnInit() {
-    const projectId = this.route.snapshot.paramMap.get('id');
-    if (projectId) {
-      this.project = await firstValueFrom(this.projectService.getProjectDetails(Number(projectId)));
+  // async ngOnInit() {
+  //   const projectId = this.route.snapshot.paramMap.get('id');
+  //   if (projectId) {
+  //     this.project = await firstValueFrom(this.projectService.getProjectDetails(Number(projectId)));
 
-      // ✅ filtrer les tasks archivées au chargement
-      this.project.columns.forEach(col => {
-        col.tasks = col.tasks.filter(task => !task.isArchived);
-      });
+  //     // ✅ filtrer les tasks archivées au chargement
+  //     this.project.columns.forEach(col => {
+  //       col.tasks = col.tasks.filter(task => !task.isArchived);
+  //     });
+  //   }
+  // }
+async ngOnInit() {
+  const projectId = this.route.snapshot.paramMap.get('id');
+  if (projectId) {
+    this.project = await firstValueFrom(
+      this.projectService.getProjectDetails(Number(projectId))
+    );
+
+    // ✅ filtrer les tasks archivées au chargement
+    this.project.columns.forEach(col => {
+      col.tasks = col.tasks.filter(task => !task.isArchived);
+    });
+
+    // ✅ trier les colonnes par position
+    if (this.project?.columns) {
+      this.project.columns.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     }
   }
-
+}
   //column menu
   toggleMenu(columnId: number) {
-    console.log(columnId)
     if (this.openMenuColumnId === columnId) {
       this.openMenuColumnId = null; // close if clicking same column again
     } else {
@@ -89,7 +105,6 @@ export class ProjectPageComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
-    console.log(event)
     const target = event.target as HTMLElement;
     this.openMenuColumnId = null;
   }
@@ -136,4 +151,73 @@ onColumnRestored(columnId: number) {
   }
 
 }
+  columnMap: Map<HTMLElement, Board> = new Map();
+  @ViewChildren('columnList', { read: ElementRef }) columnEls!: QueryList<ElementRef>;
+
+  ngAfterViewInit() {
+    this.columnMap = new Map<HTMLElement, Board>();
+    this.columnEls.forEach((elRef, index) => {
+      this.columnMap.set(elRef.nativeElement, this.project.columns[index]);
+    });
+  }
+
+  get sortedColumns() {
+    return this.project.columns.slice().sort((a, b) => a.position - b.position);
+  }
+
+  onColumnsReorder(event: {
+    movedItem: any,
+    oldIndex: number,
+    newIndex: number,
+    fromColumn: any | null,
+    toColumn: any | null,
+    items?: any[]
+  }) {
+    const movedItem = event.movedItem;
+    const newIndex = event.newIndex;
+
+    // Call backend reorder
+    this.projectService
+      .reorderColumn(this.project.id, movedItem.id, newIndex)
+      .subscribe({
+        next: () => {
+          // ✅ update local state (optional since directive already reordered items)
+          this.project.columns = event.items ?? this.project.columns;
+        },
+        error: (err) => {
+          console.error('Reorder failed', err);
+          // ❌ rollback UI if needed
+          this.project.columns = [...this.sortedColumns];
+        }
+      });
+  }
+
+  onLabelsChanged(updated: Label[]) {
+    // 1️⃣ Update the project labels
+    this.project.labels = updated;
+
+    // 2️⃣ Create a Set of existing label IDs for quick lookup
+    const existingLabelIds = new Set(updated.map(l => l.id));
+
+    // 3️⃣ Loop through all columns and all tasks
+    this.project.columns.forEach(column => {
+      column.tasks.forEach(task => {
+        // 4️⃣ Remove taskLabels that no longer exist in project
+        task.taskLabels = task.taskLabels!.filter(taskLabel =>
+          existingLabelIds.has(taskLabel.label.id)
+        );
+
+        // 5️⃣ Optionally, sync updated label info (name/color) in tasks
+        task.taskLabels.forEach(taskLabel => {
+          const projectLabel = updated.find(l => l.id === taskLabel.label.id);
+          if (projectLabel) {
+            taskLabel.label.name = projectLabel.name;
+            taskLabel.label.color = projectLabel.color;
+          }
+        });
+      });
+    });
+  }
+
+
 }

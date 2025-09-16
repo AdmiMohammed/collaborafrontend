@@ -1,0 +1,37 @@
+/* Styles pour les boutons d'icônes */
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s ease;
+}
+
+/* Styles pour les tooltips */
+button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background-color: #C020D0;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  transition-delay: 0.5s;
+}
+
+button[title]:hover::after {
+  opacity: 1;
+}
+
+/* Assurer que le conteneur de commentaires commence en haut */
+#commentsContainer {
+  display: flex;
+  flex-direction: column-reverse;
+}

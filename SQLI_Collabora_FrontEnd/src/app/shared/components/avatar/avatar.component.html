@@ -1,4 +1,4 @@
-<div class="rounded-full flex items-center justify-center overflow-hidden bg-gray-300 text-gray-600 font-semibold"
+<div class="rounded-full flex items-center justify-center overflow-hidden bg-gray-300 text-gray-600 font-semibold" *ngIf="user"
   [ngClass]="sizeClasses">
   <ng-container *ngIf="user.profilePictureUrl; else initialsBlock">
     <img [src]="user.profilePictureUrl" class="w-full h-full object-cover" alt="avatar" />

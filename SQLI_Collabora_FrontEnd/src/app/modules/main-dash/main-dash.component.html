@@ -171,7 +171,7 @@
     appSortable
     [class.pointer-events-none]="loading" 
     [items]="projects"
-    (projectsReordered)="onProjectReorder($event)"
+    (reordered)="onProjectReorder($event)"
     class="flex flex-col gap-4 md:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6"
   >
     <div *ngFor="let project of projects; let i = index; trackBy: trackByIndex">
