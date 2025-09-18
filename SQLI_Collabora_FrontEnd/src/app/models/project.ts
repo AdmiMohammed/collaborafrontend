@@ -32,9 +32,7 @@ export interface Task {
   deadline: string | null;
   priority: "High" | "Medium" | "Low" | null;
   position: number;
-  // taskLabels: TaskLabel[];
   boardId: number;
-  // isArchived?: boolean;
   taskLabels?: TaskLabel[];
   attachments?: AttachmentDto[];
   comments?: Comment[];

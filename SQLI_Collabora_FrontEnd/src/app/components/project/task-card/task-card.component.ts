@@ -1,24 +1,19 @@
-
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Board, Label, Task, Comment } from 'src/app/models/project';
+import { Label, Task } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
   selector: 'app-task-card',
   templateUrl: './task-card.component.html',
-  styleUrls: ['./task-card.component.css']
+  styleUrls: []
 })
 export class TaskCardComponent {
   @Input() projectLabels!: Label[];
   @Input() columnName!: string;
   @Input() task!: Task;
   @Input() members: ProjectMemberDto[] = [];
-  @Output() taskArchived = new EventEmitter<number>();
-
-
   @Output() labelsChanged = new EventEmitter<Label[]>();
-
   @ViewChild('titleInput') titleInput!: ElementRef<HTMLTextAreaElement>;
 
   isModalOpen = false;
@@ -68,15 +63,6 @@ export class TaskCardComponent {
   adjustHeight(el: HTMLTextAreaElement) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
-  }
-
-  async archiveTask() {
-    try {
-      await firstValueFrom(this.projectService.archivedTask(this.task.id));
-      this.taskArchived.emit(this.task.id); // notifie le parent
-    } catch (err) {
-      console.error('Erreur lors de l’archivage de la tâche:', err);
-    }
   }
 
   openEditModal() {

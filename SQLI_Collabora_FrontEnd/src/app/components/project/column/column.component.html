@@ -96,7 +96,7 @@
   <div class="space-y-4" appSortable [items]="sortedTasks" [column]="column" [group]="'tasksGroup'"
       (reordered)="onTasksReordered($event)">
     <div *ngFor="let task of sortedTasks; trackBy: trackTaskById" [attr.data-task-id]="task.id">
-      <app-task-card [task]="task" [members]="members" (taskArchived)="onTaskArchived($event)" [columnName]="column.name"
+      <app-task-card [task]="task" [members]="members" [columnName]="column.name"
       [projectLabels]="projectLabels" (labelsChanged)="onLabelsChanged($event)"></app-task-card>
     </div>
 

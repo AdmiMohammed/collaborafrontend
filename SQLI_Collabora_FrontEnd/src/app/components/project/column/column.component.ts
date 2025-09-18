@@ -6,7 +6,7 @@ import { ProjectMemberDto, ProjectService } from 'src/app/services/project-servi
 @Component({
   selector: 'app-column',
   templateUrl: './column.component.html',
-  styleUrls: ['./column.component.css']
+  styleUrls: []
 })
 export class ColumnComponent {
   @Input() projectLabels!: Label[];
@@ -184,9 +184,4 @@ export class ColumnComponent {
   onLabelsChanged(updated: Label[]) {
     this.labelsChanged.emit(updated);
   }
-
-  onTaskArchived(taskId: number) {
-    this.column.tasks = this.column.tasks.filter(t => t.id !== taskId);
-  }
-
 }
