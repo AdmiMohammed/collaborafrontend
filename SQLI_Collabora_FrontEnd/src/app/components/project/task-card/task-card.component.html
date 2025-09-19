@@ -96,6 +96,6 @@
 
 <!--task modal-->
 <app-task-modal *ngIf="isModalOpen" [task]="shallowTaskCopy!" [columnName]="columnName" (close)="closeModal()"
-  [projectLabels]="projectLabels" [projectMembers]="members" [createdBy]="getMemberById(task.createdBy)"
+  [projectLabels]="projectLabels" [projectMembers]="members" [createdBy]="createdByUser"
   (save)="saveTask($event)" (labelsChanged)="onLabelsChanged($event)">
 </app-task-modal>

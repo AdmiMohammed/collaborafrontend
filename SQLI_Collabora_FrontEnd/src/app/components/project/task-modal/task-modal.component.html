@@ -382,7 +382,7 @@
             <label class="block text-xs font-semibold text-blue-500 mb-5">Créé par</label>
             <div class="flex items-center gap-2">
               <app-avatar [user]="createdBy" size="task-modal" />
-              <span class="text-sm text-[#16306B]">{{ createdBy.fullName }}</span>
+              <span class="text-sm text-[#16306B]">{{ createdBy.firstName }} {{createdBy.lastName}}</span>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { take } from 'rxjs';
 import { Task, TaskLabel, Label, AttachmentDto, Comment } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { UserService } from 'src/app/services/user-service/user.service';
+import { AppUser } from 'src/app/services/user-service/user1.service';
 
 export interface LabelsChangedPayload {
   projectLabels: Label[];
@@ -35,7 +36,7 @@ export class TaskModalComponent implements OnInit {
   @Input() task!: Task;
   @Input() columnName!: string;
   @Input() projectMembers: ProjectMemberDto[] = [];
-  @Input() createdBy?: ProjectMemberDto;
+  @Input() createdBy?: AppUser;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<Task>();
   @Output() commentUpdated = new EventEmitter<Comment[]>(); // New event for comment updates

@@ -1,8 +1,9 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { Label, Task } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { LabelsChangedPayload } from '../task-modal/task-modal.component';
+import { AppUser, User1Service } from 'src/app/services/user-service/user1.service';
 
 @Component({
   selector: 'app-task-card',
@@ -29,12 +30,14 @@ export class TaskCardComponent {
     High: 'Élevée'
   };
 
-  constructor(private projectService: ProjectService) { }
+  constructor(private projectService: ProjectService, private userService: User1Service) { }
 
   // --- Helper functions ---
   getMemberById(id: number): ProjectMemberDto | undefined {
     return this.members.find(m => m.userId === id);
   }
+
+  createdByUser?: AppUser;
 
   isDeadlineClose(deadline: string | Date): boolean {
     if (!deadline) return false;
@@ -93,6 +96,9 @@ export class TaskCardComponent {
   ngOnInit() {
     this.originalTask = { ...this.task }; // shallow copy or deep copy
     this.loadComments();
+    this.userService.getUsers().subscribe(users => {
+      this.createdByUser = users.find(u => u.id === this.task.createdBy) ?? null!;
+    });
   }
 
   onLabelsChanged(updated: LabelsChangedPayload) {
