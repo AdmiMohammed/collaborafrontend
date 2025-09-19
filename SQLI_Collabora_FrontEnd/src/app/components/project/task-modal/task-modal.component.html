@@ -1,0 +1,560 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" (click)="onBackdropClick($event)">
+  <div #modalElement class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col relative"
+    (click)="onModalRootClick($event)" (mousedown)="onModalMouseDown($event)" (mouseup)="onModalMouseUp($event)">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-background bg-slate-50/30 rounded-t-2xl">
+      <h2 class="text-base font-semibold text-[#16306B] truncate">{{ columnName }}</h2>
+      <div class="flex items-center gap-2">
+        <button class="p-2 rounded-full text-[#16306B]/70 hover:text-[#16306B] transition-colors" #optionsToggleBtn
+          (click)="archiveTask()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+          </svg>
+        </button>
+        <button class="p-2 rounded-full text-[#16306B]/70 hover:text-[#16306B]" (click)="saveChanges()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden rounded-b-2xl">
+      <!-- Left content -->
+      <div class="flex-1 px-6 py-4 flex flex-col overflow-y-auto scrollbar-thin">
+        <!-- Label Menu -->
+        <div class="relative mb-4">
+          <label class="block text-sm font-medium text-blue-500 mb-2">Étiquettes</label>
+          <div class="flex flex-wrap gap-2">
+            <span *ngFor="let taskLabel of task.taskLabels" (click)="toggleLabelMenu()" #showLabelToggleBtn
+              class="flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-md text-white cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 min-w-16 min-h-6"
+              [style.backgroundColor]="taskLabel.label.color">
+              {{ taskLabel.label.name | titlecase }}
+            </span>
+            <button #showLabelToggleBtn2
+              class="px-3 py-1 text-xs font-medium bg-white border border-dashed border-primary-start rounded-md text-primary-start hover:text-primary-end hover:border-primary-end transition-colors duration-150"
+              (click)="toggleLabelMenu()">
+              + Ajouter une étiquette
+            </button>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="relative">
+          <textarea [(ngModel)]="task.title" maxlength="100" spellcheck="false"
+            class="p-1 w-full text-xl font-semibold text-[#16306B] bg-transparent outline-none resize-none border-b border-transparent focus:border-blue-500 overflow-hidden pr-8"
+            rows="1" (input)="resize($event.target); onTitleInput(task.title)" #taskTitle
+            placeholder="Titre de la tâche"></textarea>
+
+          <!-- Error icon -->
+          <span *ngIf="titleError" class="absolute right-2 top-2 text-red-500" tooltip data-yo>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+          </span>
+
+          <!-- Error message -->
+          <p *ngIf="titleError" class="text-red-500 text-sm mt-1">
+            Le titre est obligatoire
+          </p>
+        </div>
+
+
+        <!-- Description -->
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-blue-500 mb-1">Description</label>
+          <textarea [(ngModel)]="task.description" maxlength="500" spellcheck="false"
+            class="w-full p-3 border border-blue-500 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-primary-mid focus:border-transparent overflow-hidden text-gray-700"
+            rows="3" (input)="resize($event.target); $event.stopPropagation()" #taskDesc
+            placeholder="Ajouter une description..."></textarea>
+        </div>
+
+
+        <!-- Tabs -->
+        <div class="mt-6 relative">
+          <nav #nav class="flex relative gap-2 border-b border-slate-100">
+            <button #tab1 (click)="selectTab('comments')" class="pr-1 pb-3 text-sm relative"
+              [class]="activeTab === 'comments' ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-slate-700'">
+              Commentaires
+            </button>
+            <button #tab2 (click)="selectTab('attachments')" class="px-1 pb-3 text-sm relative"
+              [class]="activeTab === 'attachments' ? 'text-blue-500 font-medium' : 'text-slate-500 hover:text-slate-700'">
+              Pièces jointes
+            </button>
+            <span #underline class="absolute bottom-0 left-0 h-0.5 bg-blue-500 transition-all duration-300"></span>
+          </nav>
+        </div>
+
+
+
+
+        <!-- Comments Section -->
+        <div *ngIf="activeTab === 'comments'" class="py-6 flex flex-col gap-3 h-full">
+          <!-- Input de commentaire en haut -->
+          <div class="flex items-center gap-2 rounded-xl border border-gray-200 bg-white py-1.5 px-2">
+            <textarea [(ngModel)]="newComment" (keydown.enter)="addComment(); $event.preventDefault()" spellcheck="false"
+              placeholder="Écrire un commentaire..."
+              class="flex-1 bg-transparent resize-none outline-none text-sm p-0 overflow-hidden text-slate-700" rows="1"
+              (input)="newCommentInput.style.height='auto';newCommentInput.style.height=newCommentInput.scrollHeight+'px'"
+              #newCommentInput>
+              </textarea>
+            <button (click)="addComment()"
+              class="px-3 py-3 bg-primary-start text-sm text-white rounded-xl hover:bg-primary-end transition self-end flex items-center justify-center cursor-pointer disabled:bg-primary-start/80 disabled:cursor-not-allowed"
+              [disabled]="!newComment.trim()">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+
+          <!-- Zone de commentaires scrollable - MODIFIÉE -->
+          <div class="flex-1 overflow-y-auto scrollbar-thin pl-2 pr-2 box-content max-h-[150px] rounded-xl"
+            #commentsContainer>
+            <div *ngIf="comments.length === 0"
+              class="bg-slate-50 p-6 rounded-lg text-center text-sm text-[#16306B] h-full flex items-center justify-center">
+              Aucun commentaire pour le moment
+            </div>
+
+            <!-- Afficher les commentaires dans l'ordre inverse (récent en premier) -->
+            <div *ngIf="comments.length > 0" class="space-y-4 divide-y-2 divide-background">
+              <div *ngFor="let comment of reversedComments()" class="relative pt-4" #commentContainers
+                [attr.data-id]="comment.id" @commentAnim>
+                <div class="flex justify-between items-start">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                      <ng-container *ngIf="getMemberById(comment.userId) as user">
+                        <app-avatar [user]="user" size="comment" />
+                      </ng-container>
+                      <div>
+                        <p class="text-sm font-medium text-[#16306B]">{{ comment.userFullName }}</p>
+                        <p class="text-xs text-slate-500">
+                          {{ comment.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                          <span *ngIf="comment.modifiedAt"> (modifié {{ comment.modifiedAt | date: 'dd/MM/yyyy HH:mm'
+                            }})</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div *ngIf="editingCommentId !== comment.id; else editCommentMode">
+                      <p class="text-sm text-slate-700 whitespace-pre-wrap break-words">{{ comment.content }}</p>
+                    </div>
+                    <ng-template #editCommentMode>
+                      <div class="flex items-end gap-2">
+                        <!-- The textarea, styled like plain text -->
+                        <textarea [(ngModel)]="editingCommentContent"
+                          spellcheck="false"
+                          (keydown.enter)="saveComment(comment.id); $event.preventDefault()"
+                          (keydown.escape)="cancelEditingComment()"
+                          class="flex-1 text-sm text-gray-700 bg-transparent resize-none outline-none border-none focus:ring-0 overflow-hidden"
+                          rows="1"
+                          (input)="editCommentInput.style.height='auto'; editCommentInput.style.height=editCommentInput.scrollHeight+'px'"
+                          #editCommentInput></textarea>
+
+                        <!-- Confirm / Cancel icons -->
+                        <div class="flex gap-2 items-center">
+                          <button (click)="saveComment(comment.id)" class="text-green-500 hover:text-green-700">
+                            <!-- Check Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                              stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          </button>
+                          <button (click)="cancelEditingComment()" class="text-red-500 hover:text-red-700">
+                            <!-- X Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                              stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </div>
+                  <!-- Icons for edit and delete -->
+                  <ng-container *ngIf="comment.userId === loggedInUserId && editingCommentId !== comment.id">
+                    <div class="flex gap-1 ml-2">
+                      <button (click)="startEditingComment(comment)"
+                        class="text-[#16306B]/70 hover:bg-[#C020D0] hover:text-white transition rounded-md p-1 icon-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                          stroke="currentColor" class="size-4">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                        </svg>
+                      </button>
+                      <button (click)="toggleDeleteConfirm(comment.id)"
+                        class="text-[#16306B]/70 hover:bg-red-100 hover:text-red-600 transition rounded-md p-1 icon-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                          stroke="currentColor" class="size-4">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
+                  </ng-container>
+                </div>
+                <!-- Delete confirmation overlay -->
+                <div *ngIf="showDeleteConfirm === comment.id"
+                  class="absolute inset-0 bg-white/90 flex items-center justify-center z-10 rounded-lg">
+                  <div class="text-center p-4">
+                    <p class="text-sm font-medium text-[#16306B] mb-4">Supprimer ce commentaire ?</p>
+                    <div class="flex gap-3 justify-center">
+                      <button (click)="cancelDelete()"
+                        class="px-3 py-1 bg-slate-100 text-slate-800 rounded-md hover:bg-slate-200 transition">
+                        Non
+                      </button>
+                      <button (click)="confirmDelete(comment.id)"
+                        class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+                        Oui
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attachments Section -->
+        <div *ngIf="activeTab === 'attachments'" class="flex flex-col gap-1 py-4 px-1 h-full">
+          <div *ngIf="task.attachments!.length > 0"
+            class="grid grid-cols-1 md:grid-cols-1 gap-3 overflow-y-auto scrollbar-thin max-h-[200px] pr-2 box-content py-1">
+            <div *ngFor="let att of task.attachments"
+              class="flex items-center justify-between bg-slate-50/50 p-3 rounded-md border border-slate-200 shadow-sm hover:shadow-md transition">
+
+              <!-- Left side (icon + text) -->
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="px-2 w-9 h-9 bg-slate-100 flex items-center justify-center rounded text-xs font-bold text-[#16306B]">
+                  {{ att.contentType!.split('/')[1].toUpperCase() }}
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <a [href]="att.fileUrl" target="_blank"
+                    class="text-sm font-medium text-[#16306B] hover:underline truncate">
+                    {{ att.fileName }}
+                  </a>
+                  <p class="text-xs text-slate-500">
+                    {{ formatSize(att.fileSize) }} • {{ att.uploadDate | date:'dd/MM/yyyy' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Right side (delete button) -->
+              <div class="flexx-shrink-0 flex gap-2">
+                <button (click)="downloadAttachment(att)" class="text-[#16306B]/70 hover:text-[#16306B] flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                </button>
+
+                <button (click)="deleteAttachment(att)"
+                  class="text-[#16306B]/70 hover:text-[#16306B] flex-shrink-0 ml-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="task.attachments!.length === 0"
+            class="py-6 text-center text-[#16306B] text-sm bg-slate-50 rounded-lg h-full flex items-center justify-center max-h-[200px]">
+            Aucune pièce jointe
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="file" (change)="onFileSelected($event)" class="hidden" #fileInput />
+            <span (click)="fileInput.click()"
+              class="text-sm text-[#16306B]/70 rounded-md hover:text-[#16306B] transition flex gap-2 items-center cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Ajouter un attachement
+            </span>
+            <span *ngIf="uploading" class="text-[#16306B] text-sm">Chargement...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right sidebar -->
+      <div
+        class="w-full md:w-72 border-t md:border-t-0 md:border-l border-background bg-slate-50/30 p-6 overflow-y-auto scrollbar-thin flex flex-col h-full">
+        <div class="flex-1 flex flex-col justify-between divide-y-2 divide-background">
+
+          <!-- Status buttons horizontal -->
+          <div>
+            <label class="block text-xs font-semibold text-blue-500 mb-5">Statut</label>
+            <div class="flex gap-2">
+              <button *ngFor="let s of ['En cours','Terminé']" (click)="selectStatus(s)"
+                [class.bg-primary-mid]="selectedStatus === s" [class.text-white]="selectedStatus === s"
+                class="px-3 py-1 w-1/2 rounded-full text-sm border border-gray-200 transition">
+                {{ s }}
+              </button>
+            </div>
+          </div>
+
+          <!--Priority-->
+          <div class="pt-4">
+            <label class="block text-xs font-semibold text-blue-500 mb-5">Priorité</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button *ngFor="let p of ['Aucune','Basse','Moyenne','Haute']" (click)="selectPriority(p)" [class]="
+                  selectedPriority === 'Aucune' && p === 'Aucune' ? 'bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-100' :
+                  selectedPriority === 'Basse' && p === 'Basse' ? 'bg-[#8432DF] text-white hover:bg-[#8432DF]' :
+                  selectedPriority === 'Moyenne' && p === 'Moyenne' ? 'bg-[#C020D0] text-white hover:bg-[#C020D0]' :
+                  selectedPriority === 'Haute' && p === 'Haute' ? 'bg-[#FC0FC0] text-white hover:bg-[#FC0FC0]' :
+                  'text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
+                " class="w-full px-3 py-1 rounded-full text-sm transition"> {{ p }}
+              </button>
+            </div>
+          </div>
+          <!--deadline-->
+          <div class="relative pt-4">
+            <label class="block text-xs font-semibold text-blue-500 mb-5" id="calendarIcon">Échéance</label>
+            <div class="flex justify-between items-center cursor-pointer py-1" #calendarToggleBtn
+              (click)="toggleCalendar()">
+              <span class="text-sm text-[#16306B]">{{ task.deadline ? (task.deadline | date:'dd/MM/yyyy') : '—'
+                }}</span>
+              <div class="flex items-center gap-2">
+                <button class="text-[#16306B]/70 hover:text-[#16306B]" *ngIf="task.deadline"
+                  (click)="clearDeadline($event)">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <svg class="w-4 h-4 text-[#16306B]/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!--Assignee-->
+          <div class="pt-4">
+            <label class="block text-xs font-semibold text-blue-500 mb-5">Assigné</label>
+            <!-- If task has an assignee -->
+            <div *ngIf="assignee"
+              class="flex items-center justify-between w-full px-3 py-1.5 bg-white shadow-sm rounded-full">
+              <div class="flex-1 flex items-center gap-2">
+                <app-avatar [user]="assignee" size="task-modal" />
+                <span class="text-sm text-[#16306B]">{{ assignee.fullName }}</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <!-- Modify assignee -->
+                <button (click)="openAssigneeMenu()" class="ml-1 text-[#16306B]/70 hover:text-[#16306B]"
+                  #assigneeToggleBtn>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                  </svg>
+                </button>
+
+                <!-- Remove assignee -->
+                <button (click)="removeAssignee()" class="ml-1 text-[#16306B]/70 hover:text-red-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="size-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- If no assignee -->
+            <button *ngIf="!task.assignedTo" (click)="openAssigneeMenu()" #assigneeToggleBtn2
+              class="px-3 py-1.5 border border-dashed border-[#16306B] rounded-full text-sm 
+           text-[#16306B] hover:border-primary-mid hover:text-primary-mid w-full flex items-center justify-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Ajouter
+            </button>
+          </div>
+
+          <!--creator of the task-->
+          <div *ngIf="createdBy" class="pt-4">
+            <label class="block text-xs font-semibold text-blue-500 mb-5">Créé par</label>
+            <div class="flex items-center gap-2">
+              <app-avatar [user]="createdBy" size="task-modal" />
+              <span class="text-sm text-[#16306B]">{{ createdBy.fullName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar positioned relative to the calendar icon -->
+    <div *ngIf="activeMenu==='calendar'" #calendarMenu class="absolute z-50 max-h-[80vh]"
+      [style]="getMenuPosition('#calendarIcon')">
+      <div class="w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <button (click)="prevMonth()" class="p-2 rounded-md hover:bg-slate-100">‹</button>
+          <span class="font-medium text-[#16306B]">{{ months[currentMonth] }} {{ currentYear }}</span>
+          <button (click)="nextMonth()" class="p-2 rounded-md hover:bg-slate-100">›</button>
+        </div>
+        <div class="grid grid-cols-7 text-xs font-medium  mb-2 gap-2">
+          <div *ngFor="let day of weekDays" class="w-9 h-9 flex items-center justify-center text-[#16306B]">{{ day }}
+          </div>
+        </div>
+        <div class="grid grid-cols-7 gap-2 text-sm">
+          <div *ngFor="let d of calendarDays" (click)="!d.disabled && selectDate(d)" [ngClass]="{
+         'h-9 w-9 flex items-center justify-center rounded-lg transition': true,
+         'bg-primary-mid text-white cursor-pointer': isSelected(d),
+         'text-gray-300': !d.currentMonth,
+         'cursor-pointer': !d.disabled,
+         'opacity-40 cursor-not-allowed': d.disabled,
+         'hover:bg-background': !isSelected(d) && !d.disabled,
+         'border-2 border-primary-end': d.date.toDateString() === today.toDateString()
+       }">
+            {{ d.date.getDate() }}
+          </div>
+        </div>
+        <div class="flex justify-between mt-1 pt-3 border-t border-slate-100">
+          <button (click)="selectToday()" class="text-xs text-primary-mid hover:underline">Aujourd'hui</button>
+          <button (click)="activeMenu=''" class="text-xs text-gray-500 hover:underline">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Trello-style Label Dropdown -->
+    <div *ngIf="activeMenu==='showLabel'" #showLabelMenu
+      class="absolute mt-2 w-72 bg-white rounded-md shadow-lg z-30 border border-gray-200 p-3"
+      [style]="getLabelMenuPosition()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-[#16306B] px-1 flex-1">Étiquettes</h3>
+        <button (click)="activeMenu=''" class="text-[#16306B]/70 hover:text-[#16306B]">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-1">
+        <div *ngFor="let label of projectLabels" class="flex items-center justify-between px-1 py-1 rounded gap-2">
+          <label class="flex items-center gap-2 w-full cursor-pointer">
+            <input type="checkbox" [checked]="isTaskLabelChecked(label)" (click)="$event.stopPropagation()"
+              id="checkbox" (change)="toggleTaskLabel(label, $event)"
+              class="form-checkbox h-4 w-4 accent-blue-500 border-[#16306B] rounded focus:ring-0 focus:outline-none cursor-pointer" />
+
+            <div class="flex-1 h-8 rounded flex items-center px-3 font-medium text-white hover:brightness-95"
+              [style.backgroundColor]="label?.color">
+              <span class="text-sm truncate">{{ label?.name }}</span>
+            </div>
+
+          </label>
+          <button (click)="editLabel(label); $event.stopPropagation()"
+            class="hover:bg-slate-200 rounded p-2 text-[#16306B]">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+
+          </button>
+        </div>
+      </div>
+
+      <button (click)="startAddingLabel(); $event.stopPropagation()"
+        class="w-full text-sm font-medium text-primary-start hover:bg-primary-start/10 py-2 px-2 rounded text-center transition-colors duration-150 mt-3">
+        Créer une nouvelle étiquette
+      </button>
+    </div>
+
+    <!-- Trello-style Label Editor Modal -->
+    <div *ngIf="activeMenu==='editLabel'" #editLabelMenu
+      class="absolute mt-2 w-[340px] bg-white rounded-md shadow-lg z-30 border border-gray-200 max-w-sm"
+      [style]="getLabelMenuPosition()">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <h3 class="text-base font-medium text-[#16306B]">
+          {{ editingLabel ? "Modifier l'étiquette" : "Créer une étiquette" }}
+        </h3>
+        <button (click)="cancelLabelEdit(); $event.stopPropagation()" class="text-[#16306B]/70 hover:text-[#16306B]">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="px-4 py-4 space-y-4">
+        <!-- Preview -->
+        <div *ngIf="labelForm.color" class="h-8 rounded text-white font-medium flex items-center justify-center text-sm"
+          [style.backgroundColor]="labelForm.color">
+          {{ labelForm.name || 'Étiquette' }}
+        </div>
+
+        <!-- Title Input -->
+        <div>
+          <label class="block text-sm font-medium text-[#16306B] mb-1">Titre</label>
+          <input [(ngModel)]="labelForm.name" placeholder="Nom de l'étiquette"
+            class="w-full px-3 py-2 text-sm border border-[#16306B] outline-none rounded-md focus:border-blue-500" />
+        </div>
+
+        <!-- Color Picker -->
+        <div>
+          <label class="block text-sm font-medium text-[#16306B] mb-2">Sélectionnez une couleur</label>
+          <div class="grid grid-cols-6 gap-2">
+            <button *ngFor="let c of labelColors" [style.backgroundColor]="c" (click)="labelForm.color = c"
+              class="w-8 h-8 rounded-sm border-2 transition-all duration-150 flex items-center justify-center"
+              [class.border-white]="labelForm.color === c" [class.ring-2]="labelForm.color === c"
+              [class.ring-blue-500]="labelForm.color === c">
+              <svg *ngIf="labelForm.color === c" class="w-3 h-3 text-white" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex justify-between items-center px-4 py-2 border-t border-slate-200">
+        <button *ngIf="editingLabel" (click)="deleteLabel()"
+          class="px-3 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-700 transition-colors duration-150 font-medium">
+          Supprimer
+        </button>
+        <button (click)="saveLabel()"
+          class="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-700 transition-colors duration-150 ml-auto font-medium">
+          {{ editingLabel ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Assignee Menu -->
+    <div *ngIf="activeMenu==='assignee'" #assigneeMenu
+      class="absolute mt-2 w-72 bg-white rounded-xl shadow-lg z-30 border border-gray-200 p-3"
+      [style]="getMenuPosition('#calendarIcon')">
+
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-[#16306B] px-1 flex-1">Sélectionner un membre</h3>
+        <button (click)="activeMenu=''" class="text-[#16306B]/70 hover:text-[#16306B]">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-1 max-h-60 overflow-y-auto scrollbar-thin p-1">
+        <div *ngFor="let member of projectMembers" (click)="assignTo(member)" [ngClass]="{
+          'bg-primary-mid hover:bg-primary-mid text-white': task.assignedTo === member.userId,
+          'hover:bg-slate-100 text-[#16306B]': task.assignedTo !== member.userId
+         }" class="flex items-center gap-2 p-2 rounded cursor-pointer">
+          <app-avatar [user]="member" size="task-modal" />
+          <span class="text-sm">{{ member.fullName }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

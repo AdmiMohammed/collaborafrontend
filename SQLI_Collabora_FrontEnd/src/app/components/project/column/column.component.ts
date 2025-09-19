@@ -1,36 +1,40 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Board, ProjectMemberDto } from 'src/app/models/project';
-import {  ProjectService } from 'src/app/services/project-service/project.service';
+
+import { Board, Label, Task } from 'src/app/models/project';
+import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
   selector: 'app-column',
   templateUrl: './column.component.html',
-  styleUrls: ['./column.component.css']
+  styleUrls: []
 })
 export class ColumnComponent {
+  @Input() projectLabels!: Label[];
   @Input() column!: Board;
   @Input() members!: ProjectMemberDto[];
   @Input() menuOpen: boolean = false;
+  @Input() activeColumnId!: number | null;
+
   @Output() toggleMenu = new EventEmitter<number>();
-
-  constructor(private projectService: ProjectService) { }
-
-  addingTask = false;
+  @Output() requestAddTask = new EventEmitter<number | null>();
   newTaskName = '';
-
   menuLeft = 0; // pixels offset from left of viewport
-
   editingName = false;
   editedName = '';
+  @Output() columnArchived = new EventEmitter<number>();
+
+  constructor(private projectService: ProjectService) { }
 
   @ViewChild('taskInput') taskInput!: ElementRef;
   @ViewChild('addTaskContainer') addTaskContainer!: ElementRef;
   @ViewChild('nameInput') nameInput!: ElementRef<HTMLInputElement>;
-
+  
+  get addingTask(): boolean {
+    return this.activeColumnId === this.column.id;
+  }
   startAddingTask(fromHeader: boolean) {
-    this.addingTask = true;
-
+    this.requestAddTask.emit(this.column.id);
     // Wait for DOM render then focus
     setTimeout(() => {
       this.taskInput?.nativeElement.focus();
@@ -39,6 +43,7 @@ export class ColumnComponent {
       }
     });
   }
+  
 
   async confirmAddTask() {
     if (this.newTaskName.trim()) {
@@ -57,16 +62,15 @@ export class ColumnComponent {
       this.column.tasks.push(newTask);
     }
     this.newTaskName = '';
-    this.addingTask = false;
+    this.requestAddTask.emit(null); 
   }
 
   cancelAddTask() {
     this.newTaskName = '';
-    this.addingTask = false;
+    this.requestAddTask.emit(null);
   }
 
   onToggleMenu(event: MouseEvent, columnId: number) {
-    console.log(this.menuOpen)
     if (!this.menuOpen) {
       event.stopPropagation(); // Prevents click from bubbling up
 
@@ -90,7 +94,6 @@ export class ColumnComponent {
 
       this.menuLeft = overflowRight; // Final left offset inside parent
     }
-    // this.menuOpen = !this.menuOpen; // Toggle menu visibility
     this.toggleMenu.emit(columnId); // notify parent to toggle open/close
   }
 
@@ -128,5 +131,58 @@ export class ColumnComponent {
     if (this.editingName && this.nameInput) {
       this.nameInput.nativeElement.focus();
     }
+  }
+
+
+ async archiveColumn() {
+  try {
+    await firstValueFrom(this.projectService.archiveBoard(this.column.id));
+    this.columnArchived.emit(this.column.id); 
+  } catch (error) {
+    console.error('Erreur lors de l’archivage :', error);
+  }
+}
+
+  onTasksReordered(event: {
+    movedItem: Task,
+    oldIndex: number,
+    newIndex: number,
+    fromColumn: Board,
+    toColumn: Board
+  }) {
+    const { movedItem, newIndex, fromColumn, toColumn } = event;
+
+    // Persist change to backend
+    this.projectService.reorderTask(movedItem.id, {
+      newBoardId: toColumn.id,
+      newPosition: newIndex
+    }).subscribe();
+
+    // Remove from source column
+    fromColumn.tasks = fromColumn.tasks.filter(t => t.id !== movedItem.id);
+
+    // Insert into target column at new position
+    toColumn.tasks.splice(newIndex, 0, movedItem);
+
+    // Optional: recalc positions
+    toColumn.tasks.forEach((t, i) => t.position = i);
+    fromColumn.tasks.forEach((t, i) => t.position = i);
+  }
+
+
+  trackTaskById(index: number, task: any) {
+    return task.id; // or task whatever unique identifier you have
+  }
+
+
+  get sortedTasks() {
+    return this.column.tasks.slice().sort((a, b) => a.position - b.position);
+  }
+
+
+  @Output() labelsChanged = new EventEmitter<Label[]>();
+
+  onLabelsChanged(updated: Label[]) {
+    this.labelsChanged.emit(updated);
   }
 }

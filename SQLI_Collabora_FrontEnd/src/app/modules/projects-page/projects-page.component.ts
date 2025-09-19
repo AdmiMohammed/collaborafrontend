@@ -354,13 +354,16 @@ export class ProjectsPageComponent implements OnInit {
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
+onProjectReorder(updated: ProjectReadDto[]) {
+  const list = (updated ?? []).map((p, i) => ({ ...p, position: i }));
+  this.projects = list;
+  // Si tu veux aussi re-trier l’affichage filtré, ça se fera via le getter.
+  this.prevStats = { ...this.stats };
+  this.computeStats(this.projects);
+  this.computeDeltas(this.stats, this.prevStats);
+  this.computeNextEvent(this.projects);
+}
 
-  onProjectReorder(updatedProjects: any[]) {
-    this.projects = updatedProjects;
-    this.computeStats(this.projects);
-    this.computeDeltas(this.stats, this.prevStats || this.stats);
-    this.computeNextEvent(this.projects);
-  }
 
   openNewProjectWizard() {
     this.openWizard = true;

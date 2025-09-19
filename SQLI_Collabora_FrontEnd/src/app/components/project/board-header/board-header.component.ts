@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom, forkJoin, of, switchMap } from 'rxjs';
-import { Project, ProjectMemberDto } from 'src/app/models/project';
-import {  ProjectService } from 'src/app/services/project-service/project.service';
+import { firstValueFrom, forkJoin, of, Subscription} from 'rxjs';
+import { Project, Task } from 'src/app/models/project';
+import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { AppUser } from 'src/app/services/user-service/user1.service';
 import { User1Service } from 'src/app/services/user-service/user1.service';
 
@@ -13,7 +13,9 @@ import { User1Service } from 'src/app/services/user-service/user1.service';
 })
 export class BoardHeaderComponent {
   @Input() project!: Project;
-
+  currentModal: 'history' | 'archived' | 'addMember' | null = null;
+  menuOpen: boolean = false;
+  private userSub?: Subscription;
   now = new Date();
   options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -21,79 +23,32 @@ export class BoardHeaderComponent {
     month: 'long',
     day: 'numeric',
   };
-
   formattedDate = this.now.toLocaleDateString(undefined, this.options);
-
-  //options menu
-  menuOpen: boolean = false;
-  menuLeft = 0; // pixels offset from left of viewport
-
-  router: Router
-  projectService: ProjectService
-  userService: User1Service
-
-  //modal 
-  showAddMemberModal = false;
-
   currentUserRole!: string | null;
+  isEditingName = false;
+  editedName: string = "";
+  @Output() taskRestored = new EventEmitter<Task>();
+  @Output() columnRestored = new EventEmitter<number>();
+  @ViewChild('projectInput') projectInput!: ElementRef;
+  constructor(private projectService: ProjectService, private router: Router, private userService: User1Service, private elRef: ElementRef) {}
 
-  constructor(projectService: ProjectService, router: Router, userService: User1Service) {
-    this.router = router;
-    this.projectService = projectService;
-    this.userService = userService;
-  }
-
-  ToggleMenu(event: MouseEvent) {
+  toggleMenu(event: MouseEvent) {
     event.stopPropagation();
-    console.log("clicked")
-    console.log(this.menuOpen)
-    if (!this.menuOpen) {
-      event.stopPropagation(); // Prevents click from bubbling up
-
-      const button = event.currentTarget as HTMLElement;
-      const parent = button.parentElement!; // The .relative container
-      const parentRect = parent.getBoundingClientRect(); // Position of parent in viewport
-      const buttonRect = button.getBoundingClientRect(); // Position of button in viewport
-      const screenWidth = window.innerWidth;
-
-      const dropdownWidth = 224; // Tailwind w-56 = 14rem = 224px
-
-      // Initial left offset: how far the button's right edge overflows the parent
-      let overflowRight = buttonRect.right - parentRect.right;
-
-      // If dropdown would overflow the screen, shift it left
-      if (buttonRect.right + dropdownWidth > screenWidth) {
-        overflowRight -= (buttonRect.right + dropdownWidth - screenWidth + 16); // 16px padding
-        if (overflowRight > 0) overflowRight = 0; // Clamp to 0 so it doesn't float too far left
-      }
-
-
-      this.menuLeft = overflowRight; // Final left offset inside parent
-    }
-    this.menuOpen = !this.menuOpen; // Toggle menu visibility
+    this.menuOpen = !this.menuOpen;
   }
 
-
-  // Optional: close on outside click
-  ngOnInit() {
-    document.addEventListener('click', () => {
-      this.menuOpen = false;
-    });
-  }
-
-  async DeleteProject() {
+  async deleteProject() {
     await firstValueFrom(
       this.projectService.deleteProject(this.project.id)
     )
     return this.router.navigate(['/dashboard'])
   }
-
-  openModal() {
-    this.showAddMemberModal = true;
-    // Prevent body scroll and compensate for scrollbar width
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+  openModal(type: 'history' | 'archived' | 'addMember') {
+  this.currentModal = type;
+  this.menuOpen = false;
+}
+  closeModal() {
+    this.currentModal = null;
   }
 
   onMemberChangesConfirmed(event: {
@@ -126,17 +81,66 @@ export class BoardHeaderComponent {
       }
     })
   }
-
+  
   ngOnChanges(changes: SimpleChanges) {
     if (changes['project'] && this.project) {
       this.setCurrentUserRole();
     }
   }
-
   setCurrentUserRole() {
-    this.userService.getCurrentUser().subscribe(user => {
-      const member = this.project.members.find(m => m.userId === user.id);
-      this.currentUserRole = member ? member.role : null;
-    });
+    this.userSub = this.userService.getCurrentUser().subscribe(user => {
+    const member = this.project.members.find(m => m.userId === user.id);
+    this.currentUserRole = member ? member.role : null;
+  });
+  }
+  ngOnDestroy() {
+    this.userSub?.unsubscribe();
+  }
+  renameProjectInline() {
+    this.editedName = this.project.name;
+    this.isEditingName = true;
+    this.focusInput();
+  }
+
+  async saveProjectName() {
+    if (!this.editedName || this.editedName.trim() === this.project.name) {
+      this.isEditingName = false;
+      return;
+    }
+    try {
+      const updatedProject = await firstValueFrom(
+        this.projectService.updateProjectName(
+          this.editedName.trim(),
+          this.project.id
+        )
+      );
+      const trimmed = this.editedName.trim();
+  
+      this.project.name = trimmed;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du nom du projet', error);
+    } finally {
+      this.isEditingName = false;
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this.isEditingName && this.projectInput) {
+      this.focusInput();
+    }
+  }
+  cancelEdit() {
+    this.isEditingName = false;
+    this.editedName = '';
+  }
+  private focusInput() {
+    setTimeout(() => this.projectInput?.nativeElement.focus(), 0);
+  }
+
+ @HostListener('document:mousedown', ['$event'])
+  onClickOutside(event: Event) {
+    if (this.menuOpen && !this.elRef.nativeElement.contains(event.target)) {
+      this.menuOpen = false;
+    }
   }
 }

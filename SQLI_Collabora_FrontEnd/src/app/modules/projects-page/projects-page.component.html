@@ -1,5 +1,5 @@
 <!-- CONTENEUR PRINCIPAL : PROJETS (GAUCHE) + STATS (DROITE) -->
-<div class="grid gap-4 grid-cols-1 lg:grid-cols-[3fr_0.8fr] items-stretch
+<div class="mt-4 grid gap-4 grid-cols-1 lg:grid-cols-[3fr_0.8fr] items-stretch
             h-[calc(100vh-6rem)] m-1 min-h-0 overflow-x-hidden">
   <!-- colonne gauche -->
   <div class="rounded-2xl bg-white w-full h-full flex flex-col border border-slate-200
@@ -71,14 +71,23 @@
       </ng-container>
 
       <ng-template #projectsLoaded>
-        <div appSortable [class.pointer-events-none]="loading" [items]="filteredProjects"
-          (projectsReordered)="onProjectReorder($event)"
-          class="flex flex-col gap-4 md:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-          <div *ngFor="let project of filteredProjects; let i = index; trackBy: trackByIndex">
-            <app-project-card [project]="project" [index]="i" [view]="'list'"
-              [hasUrgent]="urgentProjectIds.has(project.id) "></app-project-card>
-          </div>
-        </div>
+<div
+  appSortable
+  [class.pointer-events-none]="loading"
+  [items]="filteredProjects"
+  (reordered)="onProjectReorder($event?.items ?? [])"
+  class="flex flex-col gap-4 md:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6"
+>
+  <div *ngFor="let project of filteredProjects; let i = index; trackBy: trackByIndex">
+    <app-project-card
+      [project]="project"
+      [index]="i"
+      [view]="'list'"
+      [hasUrgent]="urgentProjectIds.has(project.id)"
+    ></app-project-card>
+  </div>
+</div>
+
       </ng-template>
 
     </div>

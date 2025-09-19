@@ -1,0 +1,49 @@
+<div *ngIf="prepared" class="fixed inset-0 z-[1000] flex items-center justify-center" role="dialog" aria-modal="true">
+  <div 
+    class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+    [ngClass]="{ 'opacity-50': isVisible, 'opacity-0': !isVisible }"
+    (click)="close()">
+  </div>
+
+  <div 
+    class="relative w-full max-w-2xl mx-4 sm:mx-8 rounded-2xl shadow-xl bg-white p-6 sm:p-8 transform transition-all duration-300 ease-in-out"
+    [ngClass]="{ 'opacity-100 scale-100': isVisible, 'opacity-0 scale-95': !isVisible }"
+    style="max-height: 80vh; display: flex; flex-direction: column;"
+  >
+    <div class="flex items-center justify-between mb-4 flex-shrink-0">
+      <h2 class="text-xl font-semibold text-[#16306B]">Activités</h2>
+      <button 
+        class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-200 hover:scale-110 transition transform"
+        (click)="close()" aria-label="Fermer">
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenu scrollable -->
+    <div class="overflow-y-auto flex-1 scroll-smooth scrollbar-custom">
+      
+      <div *ngIf="history.length === 0" class="flex items-center justify-center h-full text-gray-500">
+        Aucune activité.
+      </div>
+
+      <div *ngIf="history.length > 0" class="space-y-2 p-2">
+        <div *ngFor="let h of history; let i = index" 
+             class="border border-gray-300 p-4 rounded-xl transform transition-all duration-300 opacity-0"
+             [ngStyle]="{ 'transition-delay': (i * 50) + 'ms' }"
+             [class.opacity-100]="isVisible"
+             [class.translate-y-0]="isVisible"
+             [class.-translate-y-2]="!isVisible"
+        >
+          <div class="flex items-center gap-3 mb-1">
+            <img class="w-8 h-8 rounded-full" [src]="h.changedBy"/>
+            <span class="text-gray-700" [innerHTML]="h.description | highlightName"></span>
+          </div>
+          <p class="text-gray-500 text-xs ml-11">{{ h.changeDate | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,193 @@
+<!-- En-tête Projets -->
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+  <!-- Titre + Description -->
+  <div>
+    <h3 class="text-xl font-bold text-[#16306B]">Projets</h3>
+    <p class="text-sm mt-1 text-[#16306B]">Gérez vos projets et suivez leur progression</p>
+  </div>
+
+    <!-- Bouton Nouveau Projet -->
+
+    <button
+  class="flex items-center gap-2 bg-primary-start text-white text-sm font-medium px-5 py-3 rounded-xl hover:shadow-lg "
+  (click)="openNewProjectWizard()"
+  >
+  <i class="fa-solid fa-plus"></i>
+  Nouveau projet
+</button>
+
+</div>
+<!-- Bandeau statistiques (refonte) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6" *ngIf="!loading">
+  <!-- === Stat Card (Projets) === -->
+  <div
+    class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 ring-1 ring-black/5"
+    role="region" aria-label="Statistiques: Projets"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-sm"
+              [style.background]="'linear-gradient(135deg, #6D28D9, #FC0FC0)'">
+          <!-- Dossier -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7h4l2 3h10v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+          </svg>
+        </span>
+        <div>
+          <div class="text-[11px] uppercase tracking-wide text-[#4A5A78]">Projets</div>
+          <div class="text-xl font-semibold text-[#16306B] leading-tight">{{ stats.total }}</div>
+        </div>
+      </div>
+
+      <!-- Badge delta (vs période précédente) -->
+      <!-- Projets -->
+      <span *ngIf="deltas"
+            class="text-xs px-2.5 py-1 rounded-lg font-medium"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-700': deltas.totalPct >= 0,
+              'bg-rose-50 text-rose-700': deltas.totalPct < 0
+            }">
+            +70%
+     </span>
+
+    </div>
+  </div>
+
+  <!-- === Stat Card (En cours) === -->
+  <div
+    class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 ring-1 ring-black/5"
+    role="region" aria-label="Statistiques: Projets en cours"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-sm"
+              [style.background]="'linear-gradient(135deg, #2563EB, #7C3AED)'">
+          <!-- Rocket (check) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </span>
+        <div>
+          <div class="text-[11px] uppercase tracking-wide text-[#4A5A78]">En cours</div>
+          <div class="text-xl font-semibold text-[#16306B] leading-tight">{{ stats.active }}</div>
+        </div>
+      </div>
+      <span *ngIf="deltas"
+            class="text-xs px-2.5 py-1 rounded-lg font-medium"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-700': deltas.activePct >= 0,
+              'bg-rose-50 text-rose-700': deltas.activePct < 0
+            }">
+        +20%
+      </span>
+    </div>
+  </div>
+
+  <!-- === Stat Card (À venir) === -->
+  <div
+    class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 ring-1 ring-black/5"
+    role="region" aria-label="Statistiques: Projets à venir"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-sm"
+              [style.background]="'linear-gradient(135deg, #10B981, #22D3EE)'">
+          <!-- Calendrier -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </span>
+        <div>
+          <div class="text-[11px] uppercase tracking-wide text-[#4A5A78]">À venir</div>
+          <div class="text-xl font-semibold text-[#16306B] leading-tight">{{ stats.upcoming }}</div>
+        </div>
+      </div>
+      <span *ngIf="deltas"
+            class="text-xs px-2.5 py-1 rounded-lg font-medium"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-700': deltas.upcomingPct >= 0,
+              'bg-rose-50 text-rose-700': deltas.upcomingPct < 0
+            }">
+        +10%
+      </span>
+    </div>
+  </div>
+
+  <!-- === Stat Card (En retard + progression globale) === -->
+  <div
+    class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 ring-1 ring-black/5"
+    role="region" aria-label="Statistiques: Projets en retard et progression"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-sm"
+              [style.background]="'linear-gradient(135deg, #F97316, #FB923C)'">
+          <!-- Horloge -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3M12 22a10 10 0 110-20 10 10 0 010 20z"/>
+          </svg>
+        </span>
+        <div>
+          <div class="text-[11px] uppercase tracking-wide text-[#4A5A78]">En retard</div>
+          <div class="text-xl font-semibold text-[#16306B] leading-tight">{{ stats.overdue }}</div>
+        </div>
+      </div>
+        <span *ngIf="deltas"
+              class="text-xs px-2.5 py-1 rounded-lg font-medium"
+              [ngClass]="{
+                'bg-emerald-50 text-emerald-700': deltas.overduePct <= 0,
+                'bg-rose-50 text-rose-700': deltas.overduePct > 0
+              }">
+          +5%
+        </span>
+    </div>
+  </div>
+</div>
+
+
+<!-- Vue SKELETON pendant le chargement -->
+<ng-container *ngIf="loading; else projectsView">
+  <div
+    [ngClass]="{
+      'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6': isGridView,
+      'flex flex-col gap-4': !isGridView
+    }"
+    aria-busy="true"
+    aria-label="Chargement des projets"
+  >
+    <div *ngFor="let _ of skeletonItems; trackBy: trackByIndex">
+      <app-project-card-skeleton [view]="isGridView ? 'grid' : 'list'"></app-project-card-skeleton>
+    </div>
+  </div>
+</ng-container>
+
+<!-- Vue PROJETS une fois chargés -->
+<!-- Vue PROJETS -->
+<ng-template #projectsView>
+  <div
+    appSortable
+    [class.pointer-events-none]="loading" 
+    [items]="projects"
+    (reordered)="onProjectReorder($event)"
+    class="flex flex-col gap-4 md:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6"
+  >
+    <div *ngFor="let project of projects; let i = index; trackBy: trackByIndex">
+      <app-project-card
+        [project]="project"
+        [index]="i"
+        [view]="'list'">
+      </app-project-card>
+    </div>
+  </div>
+</ng-template>
+
+
+<!-- Modal Wizard -->
+<app-project-wizard
+  *ngIf="openWizard"
+  @wizardAnimation
+  (closed)="handleWizardClose()"
+></app-project-wizard>

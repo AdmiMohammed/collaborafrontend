@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-.cdk-overlay-container { z-index: 9999; }
 
 .sortable-ghost {
   opacity: 0.3;
@@ -113,3 +112,4 @@ body { margin: 0; font-family: poppins, sans-serif; }
   left: auto;
   transform: translateX(0);
 }
+

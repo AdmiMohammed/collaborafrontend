@@ -40,6 +40,14 @@ import { ProjectsDashboardComponent } from './components/dashboard/projects-dash
 import { TasksDashboardComponent } from './components/dashboard/tasks-dashboard/tasks-dashboard.component';
 import { MembersDashboardComponent } from './components/dashboard/members-dashboard/members-dashboard.component';
 import { FilterSelectComponent } from './components/dashboard/filter-select/filter-select.component';
+import { ActivityComponent } from './components/project/activity/activity.component';
+import { InitialsPipe } from './pipes/initials.pipe';
+import { HighlightNamePipe } from './pipes/highlight-name.pipe';
+import { SearchBarComponent } from './shared/components/search-bar/search-bar.component';
+import { UserInfoComponent } from './shared/components/user-info/user-info.component';
+import { NotificationsComponent } from './shared/components/notifications/notifications.component';
+import { ArchivedTaskComponent } from './components/project/archived-task/archived-task.component';
+import { TaskModalComponent } from './components/project/task-modal/task-modal.component';
 
 @NgModule({
   declarations: [
@@ -69,6 +77,14 @@ import { FilterSelectComponent } from './components/dashboard/filter-select/filt
     TasksDashboardComponent,
     MembersDashboardComponent,
     FilterSelectComponent,
+    ActivityComponent,
+    InitialsPipe,
+    HighlightNamePipe,
+    SearchBarComponent,
+    UserInfoComponent,
+    NotificationsComponent,
+    ArchivedTaskComponent,
+    TaskModalComponent,
   ],
   imports: [
     BrowserModule,

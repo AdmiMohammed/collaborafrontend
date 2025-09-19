@@ -37,7 +37,7 @@ const routes: Routes = [
   },
   { path: 'projects/:id', component: ProjectPageComponent }, // /projects/123
   // Fallback
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: 'home' }
 ];
 
 @NgModule({

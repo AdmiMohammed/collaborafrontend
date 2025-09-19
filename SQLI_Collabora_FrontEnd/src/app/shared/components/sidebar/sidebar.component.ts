@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { Router, IsActiveMatchOptions } from '@angular/router';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { UserService } from 'src/app/services/user-service/user.service';
 
 @Component({
