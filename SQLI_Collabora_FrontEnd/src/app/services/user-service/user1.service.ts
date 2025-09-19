@@ -43,4 +43,8 @@ export class User1Service {
       catchError(() => of([]))
     );
   }
+    /** Helper pratique : juste l’ID du courant */
+  getCurrentUserId(): Observable<number> {
+    return this.getCurrentUser().pipe(map(u => u.id));
+  }
 }

@@ -76,8 +76,8 @@ export class LoginComponent implements OnInit, OnDestroy {
             localStorage.setItem('token', token);
              // Met à jour le BehaviorSubject avec le bon utilisateur
             this.userService.fetchCurrentUser().subscribe({
-            next: () => this.router.navigate(['/dashboard']),
-            error: () => this.router.navigate(['/dashboard']) // même si erreur, on navigue
+            next: () => this.router.navigate(['/home']),
+            error: () => this.router.navigate(['/home']) // même si erreur, on navigue
           });
           }
         },

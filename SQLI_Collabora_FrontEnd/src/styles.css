@@ -40,8 +40,9 @@
 }
 
 
+
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: poppins, sans-serif; }
 /* added tooltip*/
 
 
@@ -49,7 +50,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .tooltip {
   position: relative;
   cursor: pointer;
-  display: inline-flex
+  display: inline-flex;
+  z-index: 999;
 }
 
 /* Tooltip text */

@@ -1,0 +1,268 @@
+<!-- projects-dashboard.component.html -->
+<div class="flex-1 flex flex-col space-y-4 overflow-y-auto">
+
+  <!-- KPIs compacts -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 auto-rows-fr">
+    <ng-container *ngFor="let k of kpis">
+      <div
+        class="bg-white rounded-2xl shadow p-3 sm:p-4 flex items-center justify-between hover:shadow-md transition h-full">
+        <div class="min-w-0">
+          <div class="text-base sm:text-base xl:text-base font-semibold text-Text tabular-nums">
+            {{ k.value }}<span *ngIf="k.suffix">{{ k.suffix }}</span>
+          </div>
+          <div class="text-[11px] sm:text-xs text-slate-500 truncate">{{ k.label }}</div>
+        </div>
+
+        <!-- Médaillon violet entouré (compact) -->
+        <div class="relative h-9 w-9 sm:h-10 sm:w-10 shrink-0">
+          <div class="absolute inset-0 rounded-full border border-primary-mid"></div>
+          <div class="absolute inset-[3px] grid place-items-center rounded-full bg-primary-mid text-white">
+            <ng-container [ngSwitch]="k.icon">
+              <!-- Projets actifs -->
+              <svg *ngSwitchCase="'active'" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8">
+                <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                <path d="M8 8h8M8 12h8M8 16h5"></path>
+              </svg>
+              <!-- Progression moyenne -->
+              <svg *ngSwitchCase="'avg'" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8">
+                <path d="M4 19h16"></path>
+                <path d="M6 15l3-3 3 3 6-6"></path>
+                <path d="M14 7h6v6"></path>
+              </svg>
+              <!-- Terminés -->
+              <svg *ngSwitchCase="'done'" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <!-- En retard -->
+              <svg *ngSwitchCase="'late'" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <!-- Échéance ≤ 7j -->
+              <svg *ngSwitchCase="'due7'" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="4" width="18" height="18" rx="3"></rect>
+                <path d="M16 2v4M8 2v4M4 9h16M7 14h6M7 18h8"></path>
+              </svg>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- 1 ligne, 3 cartes : 2 larges + 1 petite -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+    <!-- Carte 1 : Progress (occupe colonnes 1-2) -->
+    <div class="bg-white rounded-2xl shadow p-4 lg:col-span-2">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm sm:text-base font-semibold text-Text">Progression par projet</h3>
+        <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-background text-Text/70">% complété</span>
+      </div>
+      <div class="h-[220px] sm:h-[240px] xl:h-[250px]">
+        <canvas baseChart [type]="'bar'" [data]="barData" [options]="barOptions"></canvas>
+      </div>
+    </div>
+
+    <!-- Carte 2 : Area (occupe colonnes 3-4) -->
+    <div class="bg-white rounded-2xl shadow p-4 lg:col-span-2">
+      <!-- Header carte -->
+      <div class="flex items-center justify-between mb-2 gap-2">
+        <h3 class="text-sm sm:text-base font-semibold text-Text">Évolution du projet</h3>
+
+        <!-- FILTRES -->
+        <div class="flex items-center gap-2">
+
+          <!-- Select Projet (custom look) -->
+          <label class="sr-only" for="projectSelect">Projet</label>
+          <div class="relative">
+            <select id="projectSelect"
+              class="appearance-none text-[11px] sm:text-xs pl-3 pr-7 py-1.5 rounded-xl bg-background text-Text border border-transparent hover:border-primary-start/30 focus:outline-none focus:ring-2 focus:ring-primary-mid/40 focus:border-primary-mid transition"
+              [(ngModel)]="selectedProjectId" (change)="reloadArea()">
+              <option *ngFor="let p of allProjects" [value]="p.id">{{ p.name }}</option>
+            </select>
+            <!-- Chevron -->
+            <span
+              class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-Text/60 text-[10px]">▼</span>
+          </div>
+
+          <!-- Segmented control (range) -->
+          <div
+            class="inline-flex items-center rounded-xl bg-background p-0.5 border border-transparent focus-within:ring-2 focus-within:ring-primary-mid/40">
+            <button type="button" class="px-2.5 py-1 text-[11px] sm:text-xs rounded-lg transition"
+              [ngClass]="range==='auto' ? 'bg-white text-Text shadow-sm' : 'text-Text/70 hover:text-Text'"
+              (click)="range='auto'; reloadArea()">Auto</button>
+            <button type="button" class="px-2.5 py-1 text-[11px] sm:text-xs rounded-lg transition"
+              [ngClass]="range==='12' ? 'bg-white text-Text shadow-sm' : 'text-Text/70 hover:text-Text'"
+              (click)="range='12'; reloadArea()">12m</button>
+            <button type="button" class="px-2.5 py-1 text-[11px] sm:text-xs rounded-lg transition"
+              [ngClass]="range==='6' ? 'bg-white text-Text shadow-sm' : 'text-Text/70 hover:text-Text'"
+              (click)="range='6'; reloadArea()">6m</button>
+            <button type="button" class="px-2.5 py-1 text-[11px] sm:text-xs rounded-lg transition"
+              [ngClass]="range==='3' ? 'bg-white text-Text shadow-sm' : 'text-Text/70 hover:text-Text'"
+              (click)="range='3'; reloadArea()">3m</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="h-[220px] sm:h-[240px] xl:h-[250px]">
+        <canvas baseChart [type]="'line'" [data]="areaData" [options]="areaOptions"
+          [plugins]="[verticalDashesPlugin]"></canvas>
+      </div>
+    </div>
+
+    <!-- Carte Donut -->
+    <div class="bg-white rounded-2xl shadow p-4 flex flex-col lg:col-span-1">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm sm:text-base font-semibold text-Text">Statut des projets</h3>
+        <span class="text-[11px] sm:text-xs text-Text/70">Total: {{ totalProjets }}</span>
+      </div>
+
+      <!-- Contenu principal : donut centré -->
+      <div class="flex-1 flex items-center justify-center">
+        <canvas class="w-24 h-24 sm:w-28 sm:h-28 xl:w-32 xl:h-32" baseChart [type]="'doughnut'" [data]="doughnutData"
+          [options]="doughnutOptions" [plugins]="[centerTextPlugin]">
+        </canvas>
+      </div>
+
+      <!-- Légende collée en bas -->
+      <div class="mt-3 sm:mt-4 grid grid-cols-2 gap-2 text-[11px] sm:text-xs">
+        <!-- À venir -->
+        <div class="flex items-center gap-2 px-2 py-2 rounded-xl bg-background">
+          <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colors.aVenir"></span>
+          <div class="flex-1 flex items-center">
+            <span class="text-Text/80">À venir</span>
+            <span class="ml-auto text-Text/60">
+              {{ (counts.aVenir / totalProjets * 100) | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- En cours -->
+        <div class="flex items-center gap-2 px-2 py-2 rounded-xl bg-background">
+          <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colors.enCours"></span>
+          <div class="flex-1 flex items-center">
+            <span class="text-Text/80">En cours</span>
+            <span class="ml-auto text-Text/60">
+              {{ (counts.enCours / totalProjets * 100) | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Terminé -->
+        <div class="flex items-center gap-2 px-2 py-2 rounded-xl bg-background">
+          <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colors.termine"></span>
+          <div class="flex-1 flex items-center">
+            <span class="text-Text/80">Terminé</span>
+            <span class="ml-auto text-Text/60">
+              {{ (counts.termine / totalProjets * 100) | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- En retard -->
+        <div class="flex items-center gap-2 px-2 py-2 rounded-xl bg-background">
+          <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colors.enRetard"></span>
+          <div class="flex-1 flex items-center">
+            <span class="text-Text/80">En retard</span>
+            <span class="ml-auto text-Text/60">
+              {{ (counts.enRetard / totalProjets * 100) | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloc tableau -->
+  <!-- Carte tableau (prendre toute la largeur) -->
+  <div class="bg-white rounded-2xl shadow p-4 flex flex-col flex-1 min-h-0">
+
+    <!-- Bande scrollable full‑bleed pour ne pas couper la scrollbar -->
+    <div class="relative flex-1">
+      <!-- Le vrai conteneur scroll -->
+      <div
+        class="overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background max-h-[24vh] overscroll-contain px-3 sm:px-4">
+        <table class="w-max min-w-[960px] sm:min-w-full text-xs sm:text-sm border-collapse">
+
+          <!-- HEADER sticky dans le conteneur scrollable -->
+          <thead class="sticky top-0 bg-white z-10 shadow-sm">
+            <tr class="text-center text-Text/90 text-[12px]  font-semibold tracking-wide whitespace-nowrap">
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 w-[20%] text-left ">Projet</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden md:table-cell">Owner</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden lg:table-cell">Début</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4">Échéance</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 text-center hidden sm:table-cell">Tâches</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 w-[92px] sm:w-[110px] text-right">Avancement</th>
+              <th class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden lg:table-cell">Dernière maj</th>
+              <th class="py-2.5 sm:py-3 pr-0">Statut</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let p of rows"
+              class="text-center border-b last:border-0 hover:bg-background/70 transition-colors">
+              <!-- Projet + badge -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full" [ngClass]="dotByStatus(p._status)"></span>
+                  <span class="font-medium text-Text line-clamp-1">{{ p.name }}</span>
+                </div>
+              </td>
+
+              <!-- Owner -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden md:table-cell text-Text/80">
+                <span class="line-clamp-1">{{ p.createdByName || ('#' + p.createdBy) }}</span>
+              </td>
+
+              <!-- Début -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden lg:table-cell text-Text/70 whitespace-nowrap">
+                {{ p.startDate | date:'mediumDate' }}
+              </td>
+
+              <!-- Échéance -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 whitespace-nowrap">
+                <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium" [ngClass]="dueBadge(p)">
+                  {{ p.estimatedEndDate | date:'mediumDate' }}
+                </span>
+              </td>
+
+              <!-- Tâches -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 text-center hidden sm:table-cell text-Text tabular-nums">
+                <span class="font-semibold">{{ p.completedRealTasks }}</span> / {{ p.totalRealTasks }}
+              </td>
+
+              <!-- Avancement -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 text-center">
+                <span class="inline-flex items-center justify-end gap-1 font-semibold text-Text tabular-nums"
+                  title="{{ p._progress }} %">
+                  {{ p._progress }} <span class="text-[10px] sm:text-[11px] text-Text/60">%</span>
+                </span>
+              </td>
+
+              <!-- Dernière maj -->
+              <td class="py-2.5 sm:py-3 pr-3 sm:pr-4 hidden lg:table-cell text-Text/60 whitespace-nowrap">
+                {{ p.lastModifiedAt | date:'short' }}
+              </td>
+
+              <!-- Statut -->
+              <td class="py-2.5 sm:py-3 pr-0">
+                <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium"
+                  [ngClass]="statusBadge(p._status)">
+                  {{ p._status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>

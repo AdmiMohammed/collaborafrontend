@@ -1,0 +1,15 @@
+<!-- Shell -->
+<div class="flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
+
+  <!-- Contenu -->
+  <div class="flex-1 bg-background p-4 flex flex-col min-h-0 min-w-0 overflow-hidden">
+    <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
+
+    <!-- Page -->
+    <div class="flex-1 min-h-0 min-w-0">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

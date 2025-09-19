@@ -1,15 +1,57 @@
-<div class="flex h-screen">
-   <!-- Sidebar -->
-   <app-sidebar [isOpen]="isSidebarOpen"></app-sidebar>
+<!--<div class=" p-2 bg-background">
 
-   <div class="flex-1 bg-background p-4">
-      <app-topbar [isSidebarOpen]="isSidebarOpen" (toggle)="toggleSidebar()"></app-topbar>
-      <main
-         class="">
+  <header class="flex items-center justify-between bg-white rounded-2xl px-6 py-2 mb-4 shadow">
+    <h1 class="text-base font-semibold text-Text">
+      <ng-container [ngSwitch]="tab">
+        <span *ngSwitchCase="'projects'">Rapport des projets</span>
+        <span *ngSwitchCase="'tasks'">Rapport des tâches</span>
+        <span *ngSwitchCase="'members'">Rapport des membres</span>
+      </ng-container>
+    </h1>
 
-         <router-outlet></router-outlet>
-      </main>
-   </div>
+    <nav class="flex items-center gap-2">
+      <button (click)="setTab('projects')" aria-label="Projets"
+        class="grid place-items-center w-8 h-8 rounded-full focus:outline-none transition"
+        [class.scale-105]="tab==='projects'">
+        <div [ngClass]="tab==='projects'
+          ? 'p-[1px] rounded-full bg-gradient-to-br from-primary-start via-primary-mid to-primary-end'
+          : 'rounded-full'">
+          <div class="rounded-full bg-background"
+               [ngClass]="tab==='projects' ? 'h-4 w-4' : 'h-4 w-4 ring-[0.5px] ring-Text/20'"></div>
+        </div>
+      </button>
 
+      <button (click)="setTab('tasks')" aria-label="Tâches"
+        class="grid place-items-center w-8 h-8 rounded-full focus:outline-none transition"
+        [class.scale-105]="tab==='tasks'">
+        <div [ngClass]="tab==='tasks'
+          ? 'p-[1px] rounded-full bg-gradient-to-br from-primary-start via-primary-mid to-primary-end'
+          : 'rounded-full'">
+          <div class="rounded-full bg-background"
+               [ngClass]="tab==='tasks' ? 'h-4 w-4' : 'h-4 w-4 ring-[0.5px] ring-Text/20'"></div>
+        </div>
+      </button>
 
+      <button (click)="setTab('members')" aria-label="Charge membre"
+        class="grid place-items-center w-8 h-8 rounded-full focus:outline-none transition"
+        [class.scale-105]="tab==='members'">
+        <div [ngClass]="tab==='members'
+          ? 'p-[1px] rounded-full bg-gradient-to-br from-primary-start via-primary-mid to-primary-end'
+          : 'rounded-full'">
+          <div class="rounded-full bg-background"
+               [ngClass]="tab==='members' ? 'h-4 w-4' : 'h-4 w-4 ring-[0.5px] ring-Text/20'"></div>
+        </div>
+      </button>
+    </nav>
+  </header>
+
+  <ng-container [ngSwitch]="tab">
+    <app-projects-dashboard *ngSwitchCase="'projects'"></app-projects-dashboard>
+    <app-tasks-dashboard    *ngSwitchCase="'tasks'"></app-tasks-dashboard>
+    <app-members-dashboard  *ngSwitchCase="'members'"></app-members-dashboard>
+  </ng-container>
+
+</div>-->
+<div class=" p-2 bg-background">
+      <app-tasks-dashboard></app-tasks-dashboard>
 </div>

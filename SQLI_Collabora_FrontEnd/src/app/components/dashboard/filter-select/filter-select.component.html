@@ -1,0 +1,57 @@
+<div class="filter-select-root inline-flex flex-col gap-1 min-w-[80px] text-xs">
+
+  <!-- Trigger -->
+  <button type="button"
+    class="group flex items-center justify-between rounded-xl border bg-white transition-all duration-150 focus:outline-none focus:ring-1 focus:ring-indigo-400/50 hover:border-indigo-300"
+    [ngClass]="{ 'h-7 px-3 text-xs': true, 'border-indigo-400 shadow-sm': isOpen }"
+    (click)="toggleOpen()">
+
+    <div class="flex flex-1 items-center gap-2 overflow-hidden">
+      <!-- Tags (multi) -->
+      <ng-container *ngIf="hasMultiSelection">
+        <span *ngFor="let v of selectedArray"
+          class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-xs text-indigo-700">
+          {{ labelFor(v) }}
+          <button type="button" class="ml-1 hover:text-indigo-900" (click)="removeTag(v); $event.stopPropagation()">&times;</button>
+        </span>
+      </ng-container>
+
+      <!-- Placeholder / Single value -->
+      <span class="truncate text-slate-700" *ngIf="!hasMultiSelection">
+        <span class="text-slate-400" *ngIf="!viewLabel(); else filled">{{ placeholder }}</span>
+        <ng-template #filled>{{ viewLabel() }}</ng-template>
+      </span>
+    </div>
+
+    <!-- Icon -->
+    <svg viewBox="0 0 20 20" class="size-4 text-slate-500 transition-transform"
+         [ngClass]="{'rotate-180': isOpen}">
+      <path fill="currentColor" d="M5.5 7.5L10 12l4.5-4.5-1.1-1.1L10 9.8 6.6 6.4z"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown -->
+  <div *ngIf="isOpen" class="relative z-50">
+    <div class="absolute  right-0 mt-2 w-[min(120px,65vw)] rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
+      <!-- Search -->
+      <!--<div class="p-2 border-b border-slate-100 bg-slate-50/60">
+        <input type="text" class="w-full h-8 rounded-lg border border-slate-200 px-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
+               placeholder="Rechercher…" [(ngModel)]="query" />
+      </div>-->
+      <!-- Options -->
+      <div class="overflow-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background py-1 max-h-40">
+        <button *ngFor="let opt of filtered()" type="button"
+          class="w-full flex items-center gap-2 px-3 py-2 text-[13px] hover:bg-indigo-50"
+          [attr.data-selected]="isSelected(opt.value)"
+          (click)="selectOption(opt)">
+          <input [type]="multiple ? 'checkbox' : 'radio'" class="size-3.5 accent-indigo-600"
+                 [checked]="isSelected(opt.value)" />
+          <span class="truncate">{{ opt.label }}</span>
+        </button>
+        <div *ngIf="filtered().length === 0" class="px-3 py-4 text-[12px] text-slate-500">
+          Aucun résultat
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

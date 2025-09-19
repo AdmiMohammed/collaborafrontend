@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { ProjectMemberDto } from 'src/app/services/project-service/project.service';
+import { ProjectMemberDto } from 'src/app/models/project';
 import { AppUser, User1Service } from 'src/app/services/user-service/user1.service';
 
 @Component({

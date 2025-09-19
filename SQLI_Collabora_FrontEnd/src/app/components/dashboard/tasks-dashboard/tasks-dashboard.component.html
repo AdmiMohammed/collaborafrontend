@@ -1,0 +1,308 @@
+<!-- =========================
+     KPIs compacts
+========================= -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 auto-rows-fr">
+    <ng-container *ngFor="let k of kpis; let i = index">
+        <div
+            class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 flex items-center justify-between hover:shadow-sm transition h-full">
+
+            <!-- Valeur + Libellé -->
+            <div class="min-w-0">
+                <div class="text-sm sm:text-base font-semibold text-Text tabular-nums">
+                    {{ k.value }}
+                    <span *ngIf="k.suffix" class="ml-0.5 text-xs font-medium text-slate-500 align-top">{{ k.suffix
+                        }}</span>
+                </div>
+                <div class="mt-0.5 text-[11px] sm:text-xs text-slate-500 truncate">{{ k.label }}</div>
+            </div>
+
+            <!-- Icône simple -->
+            <div class="h-9 w-9 rounded-full flex items-center justify-center shrink-0" [ngClass]="iconBg[k.icon]">
+                <ng-container [ngSwitch]="k.icon">
+
+                    <!-- total -->
+                    <svg *ngSwitchCase="'all'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="4" y="4" width="16" height="16" rx="2" />
+                        <path d="M8 8h8M8 12h8M8 16h8" />
+                    </svg>
+
+                    <!-- actives -->
+                    <svg *ngSwitchCase="'active'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M10 8l6 4-6 4z" />
+                    </svg>
+
+                    <!-- terminées -->
+                    <svg *ngSwitchCase="'done'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9 12l2 2 4-4" />
+                    </svg>
+
+                    <!-- en retard -->
+                    <svg *ngSwitchCase="'late'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 7v5l4 2" />
+                    </svg>
+
+                    <!-- bloquées -->
+                    <svg *ngSwitchCase="'due7'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M15 9L9 15M9 9l6 6" />
+                    </svg>
+
+                    <!-- taux de complétion -->
+                    <svg *ngSwitchCase="'avg'" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 20h16" />
+                        <path d="M4 10l4-4 4 4 8-8" />
+                    </svg>
+
+                </ng-container>
+            </div>
+
+        </div>
+    </ng-container>
+</div>
+
+<!-- =========================
+     CHARTS : 2 + 2 + 1
+========================= -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 mt-3">
+
+    <!-- (1) BAR CHART — 2 colonnes -->
+    <div class="bg-white rounded-2xl shadow p-4 flex flex-col xl:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs sm:text-sm font-semibold text-Text leading-tight">
+                Répartition par priorité (par projet)
+            </h3>
+            <!-- Légende micro -->
+            <div class="hidden md:flex items-center gap-2 text-[10px] text-Text/80">
+                <span class="inline-flex items-center gap-1">
+                    <span class="inline-block h-2 w-2 rounded-sm" [style.background]="colors.highFill"
+                        [style.border]="'1px solid ' + colors.high"></span> Haute
+                </span>
+                <span class="inline-flex items-center gap-1">
+                    <span class="inline-block h-2 w-2 rounded-sm" [style.background]="colors.mediumFill"
+                        [style.border]="'1px solid ' + colors.medium"></span> Moyenne
+                </span>
+                <span class="inline-flex items-center gap-1">
+                    <span class="inline-block h-2 w-2 rounded-sm" [style.background]="colors.lowFill"
+                        [style.border]="'1px solid ' + colors.low"></span> Basse
+                </span>
+            </div>
+        </div>
+
+        <div class="relative h-[220px] sm:h-[240px] xl:h-[250px]">
+            <canvas #barCanvas aria-label="Diagramme barres — priorités par projet"></canvas>
+        </div>
+    </div>
+
+    <!-- (2) AREA — 2 colonnes -->
+    <div class="bg-white rounded-2xl shadow p-4 flex flex-col xl:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs sm:text-sm font-semibold text-Text leading-tight">Tâches terminées par semaine</h3>
+            <div class="flex gap-2 text-[10px] sm:text-xs">
+                <app-filter-select [options]="filterOptions.projects" [value]="selectedProjectForArea"
+                    (valueChange)="onSelectChange('areaProject',$event)" [placeholder]="'Choisir un projet'"
+                    [clearable]="false">
+                </app-filter-select>
+
+                <app-filter-select [options]="filterOptions.range" [value]="selectedRangeArea"
+                    (valueChange)="onSelectChange('areaRange',$event)" [placeholder]="'Choisir une période'"
+                    [clearable]="false">
+                </app-filter-select>
+            </div>
+        </div>
+
+        <div class="relative h-[220px] sm:h-[240px] xl:h-[250px]">
+            <canvas #areaCanvas aria-label="Courbe — tâches terminées par semaine"></canvas>
+        </div>
+    </div>
+
+    <!-- (3) DONUT — 1 colonne -->
+    <div class="bg-white rounded-2xl shadow p-4 flex flex-col xl:col-span-1">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-Text">Statuts des tâches</h3>
+
+            <!-- Filtre projet -->
+            <app-filter-select  [options]="filterOptions.projects" [value]="selectedProject"
+                (valueChange)="onSelectChange('donutProject',$event)" [placeholder]="'Choisir un projet'"
+                [clearable]="false">
+            </app-filter-select>
+        </div>
+
+        <!-- Donut -->
+        <div class="flex-1 flex items-center justify-center p-4">
+            <canvas #donutCanvas class="w-28 h-28" aria-label="Diagramme donut — statuts"></canvas>
+        </div>
+
+        <!-- Légende compacte inline -->
+        <div class="mt-3 sm:mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-Text/80">
+
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colorsDonut.todoBorder"></span>
+                <span>{{ statusLabels['ToDo'] }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block h-2.5 w-2.5 rounded-full"
+                    [style.background]="colorsDonut.inProgBorder"></span>
+                <span>{{ statusLabels['InProgress'] }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block h-2.5 w-2.5 rounded-full"
+                    [style.background]="colorsDonut.reviewBorder"></span>
+                <span>{{ statusLabels['Review'] }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block h-2.5 w-2.5 rounded-full"
+                    [style.background]="colorsDonut.blockedBorder"></span>
+                <span>{{ statusLabels['Blocked'] }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <span class="inline-block h-2.5 w-2.5 rounded-full" [style.background]="colorsDonut.doneBorder"></span>
+                <span>{{ statusLabels['Done'] }}</span>
+            </div>
+
+        </div>
+
+
+
+    </div>
+</div>
+
+<!-- =========================
+     TABLE — Mes tâches
+========================= -->
+<div class="mt-4 bg-white rounded-2xl shadow h-[300px] flex flex-col">
+    <div class="px-3 sm:px-4 py-2 border-b border-slate-100">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+
+            <!-- Statut -->
+            <div class="inline-flex items-center gap-2 mt-1">
+                <span class="text-[11px] sm:text-xs text-slate-500">Statut</span>
+                <app-filter-select [options]="filterOptions.status" [value]="statusSelectValue"
+                    (valueChange)="onSelectChange('status',$event)" [placeholder]="'Tous les statuts'"
+                    [clearable]="false">
+                </app-filter-select>
+            </div>
+
+            <!-- Priorité -->
+            <div class="inline-flex items-center gap-2  mt-1">
+                <span class="text-[11px] sm:text-xs text-slate-500">Priorité</span>
+                <app-filter-select class="w-36 h-8" [options]="filterOptions.priority" [value]="prioritySelectValue"
+                    (valueChange)="onSelectChange('priority',$event)" [placeholder]="'Toutes'" [clearable]="false">
+                </app-filter-select>
+            </div>
+
+            <!-- Projet -->
+            <div class="inline-flex items-center gap-2  mt-1">
+                <span class="text-[11px] sm:text-xs text-slate-500">Projet</span>
+                <app-filter-select class="w-40 h-8" [options]="filterOptions.projects" [value]="tableProjectValue"
+                    (valueChange)="onSelectChange('tableProject',$event)" [placeholder]="'Tous les projets'"
+                    [clearable]="false">
+                </app-filter-select>
+            </div>
+
+            <!-- Deadline -->
+            <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+                <button (click)="onSelectChange('deadlineQuick','all')" class="h-6 px-2 text-xs sm:text-xs"
+                    [ngClass]="deadlineQuick==='all' ? 'bg-slate-50 text-slate-700' : 'hover:bg-slate-50'">
+                    Toutes
+                </button>
+                <button (click)="onSelectChange('deadlineQuick','overdue')"
+                    class="h-6 px-2 text-xs sm:text-xs border-l border-slate-200"
+                    [ngClass]="deadlineQuick==='overdue' ? 'bg-red-50 text-red-700' : 'hover:bg-slate-50'">
+                    En retard
+                </button>
+                <button (click)="onSelectChange('deadlineQuick','dueSoon')"
+                    class="h-6 px-2 text-xs sm:text-xs border-l border-slate-200"
+                    [ngClass]="deadlineQuick==='dueSoon' ? 'bg-amber-50 text-amber-700' : 'hover:bg-slate-50'">
+                    ≤ {{ dueSoonDays }}j
+                </button>
+            </div>
+
+            <button (click)="resetAllFilters()"
+                class="ml-auto h-6 px-3 rounded-lg text-xs sm:text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">
+                Réinitialiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="flex-1 overflow-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background">
+        <table class="min-w-full text-[10px] sm:text-xs">
+            <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur">
+                <tr class="text-center text-slate-500">
+                    <th class="px-3 py-2 text-left font-medium">Titre</th>
+                    <th class="px-3 py-2 font-medium">Projet</th>
+                    <th class="px-3 py-2 font-medium">Colone</th>
+                    <th class="px-3 py-2 font-medium">Statut</th>
+                    <th class="px-3 py-2 font-medium">Priorité</th>
+                    <th class="px-3 py-2 font-medium">Deadline</th>
+                    <th class="px-3 py-2 font-medium">Créée le</th>
+                    <th class="px-3 py-2 font-medium">Commentaires</th>
+                    <th class="px-3 py-2 font-medium">Pièces jointes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let t of displayedTasks"
+                    class="border-t text-center border-slate-100 hover:bg-slate-50/60 transition">
+                    <td class="px-3 py-2 font-medium text-left text-Text">{{ t.title }}</td>
+                    <td class="px-3 py-2 text-Text/80">{{ t.project }}</td>
+                    <td class="px-3 py-2 text-Text/80">{{ t.board }}</td>
+                    <td class="px-3 py-2">
+                        <span class="inline-flex items-center gap-1 text-Text/80">
+                            <span class="h-1.5 w-1.5 rounded-full" [style.background]="
+                t.status==='ToDo'       ? colorsDonut.todoBorder    :
+                t.status==='InProgress' ? colorsDonut.inProgBorder   :
+                t.status==='Review'     ? colorsDonut.reviewBorder   :
+                t.status==='Blocked'    ? colorsDonut.blockedBorder  : colorsDonut.doneBorder">
+                            </span>
+                            {{ statusLabels[t.status] }}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2">
+                        <span [style.color]="
+              t.priority==='High'   ? colors.high   :
+              t.priority==='Medium' ? colors.medium : colors.low">
+                            {{ priorityLabels[t.priority] }}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2">
+                        <ng-container *ngIf="t.deadline as due; else noDue">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] border" [ngClass]="{
+                'bg-red-50 text-red-700 border-red-200':    t.status!=='Done' && (due.getTime() < todayMs),
+                'bg-amber-50 text-amber-700 border-amber-200': t.status!=='Done' && ((due.getTime() - todayMs)/86400000) >= 0 && ((due.getTime() - todayMs)/86400000) <= dueSoonDays
+              }">
+                                {{ due | date:'dd/MM/yyyy' }}
+                            </span>
+                        </ng-container>
+                        <ng-template #noDue>
+                            <span
+                                class="px-2 py-0.5 rounded-full text-[10px] border bg-slate-50 text-slate-600 border-slate-200">—</span>
+                        </ng-template>
+                    </td>
+                    <td class="px-3 py-2 text-Text/80">{{ t.createdAt | date:'dd/MM/yyyy' }}</td>
+                    <td class="px-3 py-2 tabular-nums">{{ t.comments }}</td>
+                    <td class="px-3 py-2 tabular-nums">{{ t.attachments }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

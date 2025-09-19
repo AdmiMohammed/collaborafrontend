@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { ProjectMemberDto } from 'src/app/services/project-service/project.service';
+import { ProjectMemberDto } from 'src/app/models/project';
 import { AppUser } from 'src/app/services/user-service/user1.service';
 
 @Component({

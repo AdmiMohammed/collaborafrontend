@@ -1,0 +1,480 @@
+<!-- Overlay -->
+<div class="fixed inset-0 z-[1000] flex items-center justify-center" role="dialog" aria-modal="true">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60" (click)="close()" @backdropFade></div>
+
+  <!-- Modal Card -->
+  <div class="relative w-full max-w-2xl mx-8 rounded-2xl shadow-xl bg-white" [formGroup]="form" @dialogSlideFade>
+
+    <!-- Header -->
+    <div class="flex items-center justify-end px-3 pt-2">
+      <!-- Close (X) -->
+      <button class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition"
+        (click)="close()" aria-label="Fermer" title="Fermer">
+        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+    </div>
+
+    <!-- STEPPER -->
+    <div class="px-10 select-none">
+      <!-- Bullets + labels -->
+      <div class="flex items-start justify-between">
+        <ng-container *ngFor="let s of steps; let i = index">
+          <div class="flex flex-col items-center gap-2 w-1/3">
+            <!-- Bullet -->
+            <div class="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold
+                    transition-all duration-300 shadow-sm" [ngClass]="{
+                'text-white': step >= i,
+                'text-[#16306B] bg-white ring-2 ring-[#EEF2F7]': step < i
+              }" [style.background]="step >= i ? 'linear-gradient(135deg, #8432DF, #FC0FC0)' : ''">
+              {{ i + 1 }}
+            </div>
+            <!-- Label -->
+            <div class="text-xs font-medium text-center" [style.color]="step === i ? '#16306B' : '#4A5A78'">
+              {{ s.label }}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Progress track -->
+      <div class="mt-4 h-1 rounded-full w-full bg-[#EEF2F7] overflow-hidden">
+        <!-- Filled gradient -->
+        <div class="h-full rounded-full transition-all duration-500" [style.width.%]="progressPercent"
+          [style.background]="'linear-gradient(90deg, #8432DF, #FC0FC0)'"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-10 py-10">
+
+      <!-- Étape 1: Détails -->
+      <div *ngIf="step === 0" class="" [formGroupName]="'details'">
+        <h3 class="text-lg font-semibold text-[#16306B]">Informations de base</h3>
+        <p class="text-sm text-[#4A5A78]">
+          Saisissez le titre, la description et les dates de votre projet.
+        </p>
+
+        <!-- Ligne 1 : Titre -->
+        <div class="mt-8 grid grid-cols-1 gap-4">
+          <div class="flex flex-col gap-1">
+            <label for="title" class="text-xs font-medium text-[#16306B]">Titre du projet *</label>
+
+            <div class="relative">
+              <input id="title" type="text" formControlName="title" placeholder="Ex: Application mobile e-commerce"
+                class="h-10 w-full rounded-lg border px-4 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 transition
+                      border-gray-200 focus:ring-[#8432DF]" [ngClass]="{
+                  'border-red-500 ring-0.5 ring-red-500 focus:border-none focus:ring-red-500 focus:ring-0.5': hasTitleError
+                }" [attr.aria-invalid]="hasTitleError" />
+
+              <!-- Icône + tooltip, centré verticalement -->
+              <span *ngIf="hasTitleError" class="absolute inset-y-0 right-2 flex items-center text-red-500"
+                (mousedown)="$event.preventDefault()">
+                <span class="relative inline-flex items-center group cursor-help">
+                  <!-- icône info -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"
+                    aria-hidden="true">
+                    <path
+                      d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 6.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zM11 11h2v6h-2v-6z" />
+                  </svg>
+
+                  <!-- tooltip (uniquement au survol de l’icône) -->
+                  <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap
+               rounded-md bg-red-50 text-[11px] text-red-700 border border-red-200 px-2 py-1 shadow
+               opacity-0 pointer-events-none group-hover:opacity-100 transition" role="tooltip">
+                    {{ titleErrorMsg }}
+                  </span>
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- Ligne 3 : Date de début + Date d’échéance -->
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+
+          <!-- Date de début -->
+          <div class="flex flex-col gap-1 relative">
+            <label for="startDate" class="text-xs font-medium text-[#16306B]">Date de début *</label>
+
+            <!-- Trigger -->
+            <div class="relative">
+              <button type="button" class="h-10 w-full flex items-center justify-between rounded-lg border px-4  text-xs text-[#16306B]
+           focus:outline-none focus:ring-1 transition
+           border-gray-200 focus:ring-[#8432DF]" (click)="toggleCalendarStart()" [ngClass]="{
+      'border-red-500 ring-0.5  ring-red-500 focus:border-none focus:ring-red-500 focus:ring-0.5': hasStartError || hasRangeError
+    }" [attr.aria-invalid]="hasStartError || hasRangeError">
+                <span>
+                  {{ selectedStartDate ? (selectedStartDate | date:'dd/MM/yyyy') : 'Choisir une date de début' }}
+                </span>
+
+                <span class="flex items-center gap-2">
+                  <!-- clear -->
+                  <button *ngIf="selectedStartDate" type="button"
+                    class="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
+                    title="Effacer la date de début" aria-label="Effacer la date de début"
+                    (click)="clearStartDate($event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  <!-- Icône calendrier (normal) -->
+                  <svg *ngIf="!(hasStartError || hasRangeError)" xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+
+                  <!-- Icône ERREUR + tooltip (remplace le calendrier en erreur) -->
+                  <span *ngIf="hasStartError || hasRangeError"
+                    class="relative inline-flex items-center group cursor-help text-red-500" aria-hidden="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 6.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zM11 11h2v6h-2v-6z" />
+                    </svg>
+                    <!-- tooltip (affiché seulement au survol de l’icône) -->
+                    <span class="absolute right-0 translate-x-6 top-1/2 -translate-y-1/2 whitespace-nowrap
+                 rounded-md bg-red-50 text-[11px] text-red-700 border border-red-200 px-2 py-1 shadow
+                 opacity-0 pointer-events-none group-hover:opacity-100 transition" role="tooltip">
+                      {{ hasRangeError ? rangeErrorMsg : startErrorMsg }}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+
+            <!-- Popover calendrier START -->
+            <div *ngIf="calendarStartOpen"
+              class="absolute z-10 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white shadow-xl">
+              <div class="flex items-center justify-between px-3 py-2 border-b">
+                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="prevMonthStart()"
+                  aria-label="Mois précédent">‹</button>
+                <div class="text-sm font-semibold text-[#16306B]">
+                  {{ monthNames[viewMonthStart] }} {{ viewYearStart }}
+                </div>
+                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="nextMonthStart()"
+                  aria-label="Mois suivant">›</button>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1 px-3 pt-2 text-[11px] text-[#4A5A78]">
+                <div *ngFor="let d of weekDays" class="text-center uppercase tracking-wide">{{ d }}</div>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1 p-3">
+                <button *ngFor="let d of daysGridStart" type="button" (click)="!isPast(d.date) && setStartDate(d.date)"
+                  class="h-9 rounded-lg text-sm transition focus:outline-none" [disabled]="isPast(d.date)"
+                  [attr.title]="isPast(d.date) ? 'Choisissez une date future ou aujourd’hui' : null" [ngClass]="{
+              'cursor-not-allowed text-gray-400': isPast(d.date),
+              'hover:bg-[#F4F6FE]': !isPast(d.date),
+              'opacity-40': !d.inCurrentMonth,
+              'bg-[#8432DF] text-white': isStartSelected(d.date),
+              'ring-1 ring-[#FC0FC0]': isToday(d.date) && !isStartSelected(d.date)
+            }">
+                  {{ d.date.getDate() }}
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between px-3 pb-3">
+                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]"
+                  (click)="goTodayStart()">Aujourd’hui</button>
+                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]"
+                  (click)="closeCalendarStart()">Fermer</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date d'échéance -->
+          <div class="flex flex-col gap-1 relative">
+            <label for="dueDate" class="text-xs font-medium text-[#16306B]">Date d'échéance *</label>
+
+            <!-- Trigger (désactivé tant qu’il n’y a pas de startDate) -->
+            <!-- Trigger DUE -->
+            <div class="relative">
+              <button type="button" class=" h-10 w-full  flex items-center justify-between rounded-lg border px-4 text-xs text-[#16306B]
+           focus:outline-none focus:ring-1 transition
+           border-gray-200 focus:ring-[#8432DF] disabled:opacity-50 disabled:cursor-not-allowed"
+                (click)="toggleCalendarDue()" [disabled]="!selectedStartDate" [ngClass]="{
+      'border-red-500 ring-0.5 ring-red-500 focus:border-none focus:ring-0.5 focus:ring-red-500': (hasDueError || hasRangeError) && selectedStartDate
+    }" [attr.aria-invalid]="(hasDueError || hasRangeError) && selectedStartDate">
+                <!-- Texte -->
+                <span class="block truncate">
+                  {{
+                  selectedDueDate
+                  ? (selectedDueDate | date:'dd/MM/yyyy')
+                  : (selectedStartDate ? 'Choisir une échéance' : 'Choisissez d’abord la date de début')
+                  }}
+                </span>
+
+                <!-- Icônes (droite, position absolue) -->
+                <span class="absolute inset-y-0 right-2 flex items-center gap-2">
+                  <!-- Clear -->
+                  <button *ngIf="selectedDueDate" type="button"
+                    class="h-5 w-5 grid place-items-center rounded hover:bg-gray-100 text-gray-500"
+                    title="Effacer la date d'échéance" aria-label="Effacer la date d'échéance"
+                    (click)="clearDueDate($event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  <!-- Icône calendrier (si PAS d'erreur) -->
+                  <svg *ngIf="!((hasDueError || hasRangeError) && selectedStartDate)" xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+
+                  <!-- Icône ERREUR + tooltip (remplace le calendrier en erreur) -->
+                  <span *ngIf="(hasDueError || hasRangeError) && selectedStartDate"
+                    class="relative inline-flex items-center group cursor-help text-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2zm.75 6.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zM11 11h2v6h-2v-6z" />
+                    </svg>
+                    <!-- Tooltip (au survol de l’icône) -->
+                    <span class="absolute right-full -mr-2 top-1/2 -translate-y-1/2 whitespace-nowrap
+                 rounded-md bg-red-50 text-[11px] text-red-700 border border-red-200 px-2 py-1 shadow
+                 opacity-0 pointer-events-none group-hover:opacity-100 transition" role="tooltip">
+                      {{ hasRangeError ? rangeErrorMsg : 'La date d’échéance est obligatoire.' }}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+
+            <!-- Popover calendrier DUE -->
+            <div *ngIf="calendarDueOpen"
+              class="absolute z-10 mt-2 w-[320px] rounded-xl border border-gray-200 bg-white shadow-xl">
+              <div class="flex items-center justify-between px-3 py-2 border-b">
+                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="prevMonthDue()"
+                  aria-label="Mois précédent">‹</button>
+                <div class="text-sm font-semibold text-[#16306B]">
+                  {{ monthNames[viewMonthDue] }} {{ viewYearDue }}
+                </div>
+                <button class="p-2 rounded-lg hover:bg-[#F4F6FE]" (click)="nextMonthDue()"
+                  aria-label="Mois suivant">›</button>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1 px-3 pt-2 text-[11px] text-[#4A5A78]">
+                <div *ngFor="let d of weekDays" class="text-center uppercase tracking-wide">{{ d }}</div>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1 p-3">
+                <button *ngFor="let d of daysGridDue" type="button"
+                  (click)="!isBeforeStart(d.date) && setDueDate(d.date)"
+                  class="h-9 rounded-lg text-sm transition focus:outline-none" [disabled]="isBeforeStart(d.date)"
+                  [attr.title]="isBeforeStart(d.date) ? 'Échéance après la date de début' : null" [ngClass]="{
+              'cursor-not-allowed text-gray-400': isBeforeStart(d.date),
+              'hover:bg-[#F4F6FE]': !isBeforeStart(d.date),
+              'opacity-40': !d.inCurrentMonth,
+              'bg-[#8432DF] text-white': isDueSelected(d.date),
+              'ring-1 ring-[#FC0FC0]': isToday(d.date) && !isDueSelected(d.date)
+            }">
+                  {{ d.date.getDate() }}
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between px-3 pb-3">
+                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]" (click)="goTodayDue()">Aujourd’hui</button>
+                <button class="text-xs px-2 py-1 rounded hover:bg-[#F4F6FE]"
+                  (click)="closeCalendarDue()">Fermer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ligne 2 : Description -->
+        <div class="flex flex-col gap-1 mt-4">
+          <label for="description" class="text-xs font-medium text-[#16306B]">Description</label>
+          <textarea id="description" rows="4" formControlName="description"
+            placeholder="Décrivez brièvement le projet..."
+            class="rounded-lg border border-gray-200 px-4 py-2 text-xs text-[#16306B] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8432DF] transition"></textarea>
+          <div *ngIf="fDescription?.touched && fDescription?.invalid"
+            class="mt-1 flex items-center gap-1 text-xs text-red-600 font-medium">
+            La description est obligatoire.
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2: Template -->
+      <div *ngIf="step === 1" [formGroupName]="'template'" class="" role="radiogroup" aria-label="Choisir un template">
+
+        <h3 class="text-lg font-semibold text-[#16306B]">Choisir un template</h3>
+        <p class="text-sm text-[#4A5A78]">Sélectionnez un template qui correspond à votre type de projet</p>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+          <div *ngFor="let t of templates" class="h-full">
+            <div class="relative h-full flex flex-col rounded-2xl p-5
+                      border border-gray-200 cursor-pointer focus:outline-none
+                      transition-transform duration-200 ease-in-out hover:shadow-lg hover:scale-[1.02]" [ngClass]="selectedTemplateId === t.id
+                  ? 'ring-1 ring-[#8432DF] bg-[#F4F6FE] ring-offset-1 ring-offset-white'
+                  : 'bg-white'" (click)="selectTemplate(t)" role="radio"
+              [attr.aria-checked]="selectedTemplateId === t.id" tabindex="0">
+
+              <!-- Titre -->
+              <div class="text-sm font-semibold text-[#16306B]">
+                {{ t.name }}
+              </div>
+
+              <!-- Description (hauteur mini pour uniformiser) -->
+              <p class="mt-1 text-xs text-[#4A5A78] min-h-[44px]">
+                {{ t.desc }}
+              </p>
+
+              <div class="flex-1"></div>
+
+              <!-- Tags (hauteur mini pour stabiliser la carte) -->
+              <div *ngIf="t.columns?.length" class="mt-3  flex flex-wrap gap-2 min-h-[40px]">
+                <span *ngFor="let c of t.columns"
+                  class="px-2 py-1 rounded-full text-xs font-medium border border-gray-200" [ngClass]="selectedTemplateId === t.id 
+                      ? 'bg-[#FFFFFF] text-[#16306B]' 
+                      : 'bg-[#F4F6FE] text-[#16306B]'">
+                  {{ c }}
+                </span>
+              </div>
+
+              <!-- Indicateur radio -->
+              <span class="absolute top-4 right-4 h-3 w-3 rounded-full"
+                [ngClass]="selectedTemplateId === t.id ? '' : 'border border-gray-300 bg-white'"
+                [style.background]="selectedTemplateId === t.id ? '#8432DF' : ''"></span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="fTemplateId?.touched && fTemplateId?.invalid"
+          class="mt-2 flex items-center gap-1 text-xs text-red-600 font-medium">
+          Le choix d’un template est obligatoire.
+        </div>
+      </div>
+
+      <!-- Étape 3: Membres -->
+      <div *ngIf="step === 2" [formGroupName]="'members'">
+        <h3 class="text-lg font-semibold text-[#16306B]">Ajouter des membres</h3>
+        <p class="text-sm text-[#4A5A78]">
+          Invitez des membres de votre équipe à collaborer sur ce projet.
+        </p>
+        <div class="space-y-4 mt-8">
+          <!-- Barre de recherche -->
+          <div class="relative">
+            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#16306B]" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor">
+                <circle cx="11" cy="11" r="7" stroke-width="2" />
+                <path d="M20 20l-3.5-3.5" stroke-width="2" />
+              </svg>
+            </div>
+            <input type="text" formControlName="search" placeholder="Rechercher par nom ou email..." class="w-full h-11 rounded-2xl border border-gray-200 pl-10 pr-4 text-xs text-[#16306B] placeholder-gray-400
+                  focus:outline-none focus:ring-1 focus:ring-[#8432DF] bg-white" />
+          </div>
+
+          <!-- Liste scrollable -->
+          <div
+            class="max-h-[224px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background space-y-3 pr-1">
+            <div *ngFor="let m of filteredMembers" (click)="toggleMember(m.id)" class="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3
+                  hover:shadow-sm transition cursor-pointer" role="checkbox"
+              [attr.aria-checked]="isSelectedMember(m.id)" tabindex="0" (keydown.enter)="toggleMember(m.id)"
+              (keydown.space)="toggleMember(m.id)">
+              <div class="flex items-center gap-3 min-w-0">
+
+                <!-- Checkbox rond custom -->
+                <span class="relative h-4 w-4 rounded-full border flex items-center justify-center"
+                  [ngClass]="isSelectedMember(m.id) ? 'border-transparent' : 'border-[#CBD5E1]'"
+                  [style.background]="isSelectedMember(m.id) ? '#8432DF' : 'transparent'">
+                  <svg *ngIf="isSelectedMember(m.id)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    class="h-3 w-3">
+                    <path d="M7.5 13.2 4.8 10.5l-1 1 3.7 3.7L16.2 6.4l-1-1L7.5 13.2z" fill="white" />
+                  </svg>
+                </span>
+
+                <!-- Avatar -->
+                <div
+                  class="h-8 w-8 rounded-full bg-[#F4F6FE] border border-gray-200 overflow-hidden flex items-center justify-center">
+                  <img *ngIf="m.avatarUrl" [src]="m.avatarUrl" alt="" class="h-full w-full object-cover" />
+                  <span *ngIf="!m.avatarUrl" class="text-xs font-semibold text-[#16306B]">
+                    {{ initials(m.name) }}
+                  </span>
+                </div>
+
+                <!-- Nom + email -->
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-[#16306B] truncate">{{ m.name }}</div>
+                  <div class="text-xs text-[#4A5A78] truncate">{{ m.email }}</div>
+                </div>
+              </div>
+
+              <!-- (plus de boutons d’action) -->
+            </div>
+          </div>
+
+          <!-- Membres sélectionnés -->
+          <div class="space-y-2" *ngIf="selectedMembers.length > 0">
+            <p class="text-xs text-[#4A5A78]">Membres sélectionnés ({{ selectedMembers.length }})</p>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let sm of selectedMembers"
+                class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-1.5 py-1 text-xs">
+                <span
+                  class="flex items-center justify-center h-6 w-6 rounded-full bg-[#F4F6FE] border border-gray-200 overflow-hidden">
+                  <img *ngIf="sm.avatarUrl" [src]="sm.avatarUrl" alt="" class="h-full w-full object-cover" />
+                  <span *ngIf="!sm.avatarUrl" class="text-[10px] font-semibold text-[#16306B]">{{ initials(sm.name)
+                    }}</span>
+                </span>
+                <span class="truncate max-w-[180px]">{{ sm.name }}</span>
+                <button type="button" (click)="toggleMember(sm.id)"
+                  class="ml-1 -mr-1 rounded-full p-1 hover:bg-gray-100" [attr.aria-label]="'Retirer ' + sm.name">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor">
+                    <path d="M6 6l12 12M18 6L6 18" stroke-width="2" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer actions -->
+    <div class="px-6 pb-6 flex items-center justify-between border-t pt-4">
+      <!-- Bouton retour -->
+      <button class="text-xs px-4 py-2 rounded-lg border border-[#8432DF] text-[#8432DF] font-medium
+              hover:bg-[#F4F6FE] transition disabled:opacity-50 disabled:cursor-not-allowed" (click)="back()"
+        [disabled]="step === 0">
+        Retour
+      </button>
+
+      <!-- Groupe d'actions à droite -->
+      <div class="flex items-center gap-3">
+        <!-- Bouton annuler -->
+        <button class="text-xs px-4 py-2 rounded-lg border border-gray-300 text-gray-600 font-medium
+                hover:bg-gray-100 transition" (click)="close()">
+          Annuler
+        </button>
+
+        <!-- Bouton suivant -->
+        <button *ngIf="step < 2" class="text-xs font-medium px-4 py-2 rounded-lg text-white
+                hover:shadow-lg transition bg-primary-start" (click)="next()">
+          Suivant
+        </button>
+
+        <!-- Bouton créer -->
+        <button *ngIf="step === 2" class="text-xs font-semibold px-5 py-2 rounded-lg text-white shadow-md
+                hover:shadow-lg transition" [style.background]="'#8432DF'" (click)="submit()">
+          Créer le projet
+        </button>
+      </div>
+    </div>
+
+  </div>

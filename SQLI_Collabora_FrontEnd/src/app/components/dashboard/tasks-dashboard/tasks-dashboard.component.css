@@ -1,0 +1,11 @@
+/* animations légères */
+:host {
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+.filter-select-root .shadow-xl {
+  animation: pop .12s var(--ease);
+}
+@keyframes pop {
+  from { transform: translateY(-4px); opacity: 0 }
+  to   { transform: translateY(0); opacity: 1 }
+}

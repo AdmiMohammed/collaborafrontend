@@ -1,46 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap, take } from 'rxjs';
+import { Observable, switchMap, take, tap } from 'rxjs';
 import { User1Service } from '../user-service/user1.service';
-import { Board, Project, Task } from 'src/app/models/project';
+import { Board, Project, ProjectCreateDto, ProjectMemberDto, ProjectReadDto, ProjectTaskReadDto, Task } from 'src/app/models/project';
 
-export interface ProjectMemberDto {
-  userId: number;
-  fullName: string;
-  email: string;
-  role: string;
-  joinedAt?: string;
-  profilePictureUrl?: string | null;
-}
-export interface ProjectReadDto {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  createdBy: number;
-  startDate: string;          // <-- ajout
-  estimatedEndDate: string | null; // <-- ajout
-  position: number;
-  boardCount: number;
-  attachmentCount: number;
-  totalTasks: number;
-  completedTasks: number;
-  projectMembers: ProjectMemberDto[];
-}
 
-export interface ProjectCreateDto {
-  name: string;
-  description: string;
-  startDate: string;          // ISO
-  createdBy: number;          // rempli côté front via /me
-  estimatedEndDate: string | null; // ISO ou null
-  templateId: number;
-  initialBoardCount: number;
-  memberIds: number[];
-}
 @Injectable({
   providedIn: 'root',
 })
+
 export class ProjectService {
   private apiBase = 'http://localhost:5205/api/Projects';
   private boardApiBase = 'http://localhost:5205/api/boards';
@@ -56,7 +24,16 @@ export class ProjectService {
       })
     );
   }
-
+  getMyAssignedTasksByDeadline(): Observable<ProjectTaskReadDto[]> {
+    return this.user1Service.getCurrentUser().pipe(
+      take(1),
+      switchMap(user =>
+        this.http.get<ProjectTaskReadDto[]>(
+          `${this.taskApiBase}/user/${user.id}/assigned-by-deadline`
+        )
+      )
+    );
+  }
   //added things
   getProjectDetails(projectId: number): Observable<Project> {
     return this.user1Service.getCurrentUser().pipe(
@@ -119,15 +96,15 @@ export class ProjectService {
   bulkRemoveMembers(projectId: number, userIds: number[]) {
     return this.http.post<ProjectMemberDto>(`${this.apiBase}/${projectId}/members/bulk-remove`, userIds)
   }
-  create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
-    return this.user1Service.getCurrentUser().pipe(
-      take(1),
-      switchMap(user =>
-        this.http.post<ProjectReadDto>(
-          this.apiBase,
-          { ...dto, createdBy: user.id },
-        )
-      )
-    );
-  }
+create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
+  return this.user1Service.getCurrentUser().pipe(
+    take(1),
+    switchMap(user => {
+      const body = { ...dto, createdBy: user.id };
+      console.log('[POST /api/projects] payload envoyé =', body); // <-- c’est CE log qui compte
+      return this.http.post<ProjectReadDto>(this.apiBase, body);
+    })
+  );
+}
+
 }

@@ -1,84 +1,84 @@
-<div
-  [ngClass]="{ 'w-64': isOpen, 'w-20': !isOpen }"
-  class="h-screen bg-white border-r border-slate-200 p-4 flex flex-col justify-between transition-[width] duration-300 ease-in-out text-slate-600 "
->
-  
+<div [ngClass]="{ 'w-64': isOpen, 'w-24': !isOpen }" class="h-screen bg-white border-r border-slate-200 p-4 flex flex-col justify-between
+         transition-[width,padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+         will-change-[width,padding]">
+
   <!-- Haut -->
   <div>
     <!-- Logo -->
     <div class="mb-8">
-      <div class="flex items-center" [ngClass]="{ 'gap-3': isOpen, 'justify-center': !isOpen }">
+      <div class="flex items-center" [ngClass]="{ 'gap-6': isOpen, 'justify-center': !isOpen }">
         <img [src]="imgUrl" alt="Collabora" class="w-10 h-10 object-cover" />
-        <h1
-          *ngIf="isOpen"
-          class="font-bold text-xl text-[#16306B] whitespace-nowrap overflow-hidden transition-opacity duration-200"
-        >
+        <h1 *ngIf="isOpen"
+          class="font-bold text-2xl text-[#16306B] whitespace-nowrap overflow-hidden transition-opacity duration-200">
           Collabora
         </h1>
       </div>
       <div class="mt-5 h-px bg-slate-200/70"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="mt-12 space-y-6">
+    <nav class="mt-8 space-y-4" [ngClass]="{'flex flex-col items-center gap-3': !isOpen}">
       <ng-container *ngFor="let item of menuItems">
-        <a
-          [routerLink]="item.link"
-          [routerLinkActiveOptions]="{ exact: true }"
-          routerLinkActive="bg-[#f4f0ff] text-[#6f3ef6] font-semibold"
-          class="relative text-sm flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all duration-200"
-          [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-12 h-12': !isOpen }"
-        >
-          <span
-            *ngIf="isRouteActive(item.link)"
-            class="absolute -left-3 top-2 bottom-2 w-[3px] rounded-full bg-[#6f3ef6]"
-          ></span>
+        <a [routerLink]="item.link" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="font-semibold"
+          class="relative flex transition-all duration-200 rounded-xl overflow-hidden" [ngClass]="{
+    'flex-row items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50': isOpen,
+    'flex-col items-center justify-center w-16 h-16 gap-1 text-[10px] mx-auto shrink-0 px-0': !isOpen
+  }">
+          <div *ngIf="isRouteActive(item.link)" class="absolute inset-0 bg-[#f4f0ff]"></div>
 
-          <img
-            *ngIf="item.iconType === 'img'"
-            [src]="isRouteActive(item.link) ? item.iconActive : item.icon"
-            class="w-5 h-5"
-            [alt]="item.label"
-          />
-          <i
-            *ngIf="item.iconType === 'fa'"
-            [class]="item.icon"
-            [ngClass]="isRouteActive(item.link) ? 'text-[#6f3ef6]' : 'text-[#9fa3ae]'"
-          ></i>
+          <!-- Contenu au-dessus du fond -->
+          <div class="relative flex flex-col items-center justify-center"
+            [ngClass]="{ 'flex-row gap-3': isOpen, 'flex-col gap-1': !isOpen }">
 
-          <span *ngIf="isOpen" class="whitespace-nowrap overflow-hidden transition-opacity duration-200">
-            {{ item.label }}
-          </span>
+            <!-- Icône -->
+            <ng-container *ngIf="item.iconType === 'img'; else faIcon">
+              <img class="w-5 h-5" [src]="isRouteActive(item.link) ? item.iconActive : item.icon" [alt]="item.label" />
+            </ng-container>
+            <ng-template #faIcon>
+              <i [class]="item.icon" [ngClass]="
+              isRouteActive(item.link)
+                ? 'text-[#6f3ef6]'
+                : 'text-[#9fa3ae]'
+            " class="text-base"></i>
+            </ng-template>
+
+            <!-- Label -->
+            <span [ngClass]="
+            isRouteActive(item.link)
+              ? 'text-[#6f3ef6]'
+              : 'text-[#9fa3ae]'
+          " [class.whitespace-nowrap]="isOpen" [class.text-center]="!isOpen">
+              {{ item.label }}
+            </span>
+          </div>
         </a>
       </ng-container>
     </nav>
   </div>
 
   <!-- Bas -->
-  <div>
+  <div [ngClass]="{ '': isOpen, 'flex flex-col items-center ': !isOpen }">
     <!-- Nouveau projet -->
-    <button
-      (click)="openNewProjectWizard()"
+    <button (click)="openNewProjectWizard()"
       class="flex items-center gap-2 bg-primary-start text-white text-xs font-medium rounded-xl hover:shadow-lg transition-all duration-200"
       [ngClass]="{
         'px-5 py-3 w-full justify-center': isOpen,
         'w-10 h-10 justify-center rounded-full': !isOpen
-      }"
-    >
+      }">
       <i class="fa-solid fa-plus"></i>
       <span *ngIf="isOpen">Nouveau projet</span>
     </button>
 
-    <div class="h-px bg-slate-200/70 my-4"></div>
+    <div class="h-px bg-slate-200/70 my-4" [ngClass]="{ 'w-full': isOpen, 'w-16': !isOpen }"></div>
 
     <!-- Déconnexion -->
     <button
       class="relative text-xs flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all duration-200 w-full text-slate-500"
-      [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-10 h-10': !isOpen }"
-      (click)="onLogout()"
-    >
-      <i class="fas fa-sign-out-alt w-4 text-center text-[14px] text-[#9fa3ae]"></i>
-      <span *ngIf="isOpen">Déconnexion</span>
+      [ngClass]="{ 'justify-center px-0 py-2 rounded-full w-10 h-10': !isOpen }" (click)="onLogout()">
+      <i class="fas fa-sign-out-alt w-4 text-center text-base text-[#9fa3ae]"></i>
+      <span class="text-sm text-medium text-[#9fa3ae]" *ngIf="isOpen">Déconnexion</span>
     </button>
   </div>
 </div>
+<!-- Wizard -->
+<app-project-wizard *ngIf="openWizard" [@wizardAnimation]="openWizard" (closed)="handleWizardClose()">
+</app-project-wizard>

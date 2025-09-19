@@ -1,0 +1,139 @@
+<div class="bg-white rounded-2xl shadow p-5 border border-gray-100
+            hover:shadow-xl hover:-translate-y-1 hover:border-primary-mid cursor-pointer"
+  (click)="goToProject(project.id)">
+
+  <!-- Badge -->
+  <div class="inline-block text-xs font-semibold px-3 py-2 rounded-full mb-4"
+    [ngClass]="[ getRandomBadgeColor(index).text, getRandomBadgeColor(index).bg ]">
+    <span class="inline-flex items-center gap-2">
+      <span>{{ project.name }}</span>
+
+      <!-- Pastille urgente (garde ton ping) -->
+      <span *ngIf="hasUrgent" class="relative inline-flex h-2.5 w-2.5 group">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap
+                      rounded-md bg-red-50 text-[11px] text-red-700 border border-red-200 px-2 py-1 shadow
+                      opacity-0 pointer-events-none group-hover:opacity-100 transition" role="tooltip">
+          Ce projet contient des tâches urgentes
+        </span>
+      </span>
+    </span>
+  </div>
+
+  <!-- Description -->
+  <div class="h-[3.8rem] overflow-hidden mb-1">
+    <p class="text-sm font-normal text-gray-600 leading-snug line-clamp-2">
+      {{ project.description }}
+    </p>
+  </div>
+
+  <!-- Dates -->
+  <div class="flex items-center text-xs text-gray-400 mb-3 gap-1">
+    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    <span>
+      {{ project.startDate | date:'dd/MM/yyyy' }} -
+      <ng-container *ngIf="project.estimatedEndDate; else noEnd">
+        {{ project.estimatedEndDate | date:'dd/MM/yyyy' }}
+      </ng-container>
+      <ng-template #noEnd>
+        <span class="italic text-gray-300">En cours</span>
+      </ng-template>
+    </span>
+  </div>
+
+  <!-- Progress (titre + valeur) -->
+  <div class="flex items-center justify-between mb-1">
+    <span class="text-xs font-medium text-[#8432df]"></span>
+    <span class="text-xs font-medium text-[#8432df]">{{ projectProgress(project) }}%</span>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="w-full bg-gray-200 rounded-full h-1.5 mb-1 overflow-hidden">
+    <div class="h-1.5 rounded-full" [ngStyle]="{
+           width: projectProgress(project) + '%',
+           background: 'linear-gradient(to right, #FC0FC0, #C020D0, #8432DF)'
+         }"></div>
+  </div>
+
+  <!-- Tâches -->
+  <div class="text-xs text-gray-500 mb-3 flex items-center gap-1">
+    {{ project.completedRealTasks }}/{{ project.totalRealTasks }} tâches
+
+    <!-- Icône info -->
+    <div class="relative group">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400 cursor-pointer" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+      </svg>
+
+      <!-- Tooltip -->
+      <div class="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2
+                  hidden group-hover:block
+                  bg-[#8432DF] text-white text-[11px] rounded-md px-2 py-1 shadow-lg whitespace-nowrap z-10">
+        ({{ project.completedRealTasks }}/{{ project.totalRealTasks }}) tâches réelles terminées,<br />
+        sur un total de {{ project.totalTasks }} tâches.
+        <span class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-[#8432DF]"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Membres & stats -->
+  <div class="flex items-center justify-between mt-2">
+    <!-- Avatars -->
+    <div class="flex items-center -space-x-2">
+      <ng-container *ngFor="let member of project.projectMembers.slice(0, 5); let i = index">
+        <div class="relative shrink-0 tooltip not-clickable" [ngStyle]="{ 'z-index': 1 + i }"
+          [attr.data-tooltip]="member.fullName + (member.userId === project.createdBy ? ' (Créateur)' : '')">
+        <img *ngIf="member.profilePictureUrl as url; else initialsAvatar"
+      class="w-6 h-6 rounded-full border-2 border-white"
+      [src]="url"
+      (error)="member.profilePictureUrl = null" />
+          <ng-template #initialsAvatar>
+            <div class="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center">
+              <span class="text-[10px] font-semibold text-[#16306B]">{{ getInitials(member.fullName) }}</span>
+            </div>
+          </ng-template>
+
+          <!-- Badge créateur -->
+          <span *ngIf="member.userId === project.createdBy" class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[2px]
+                       pointer-events-none w-2.5 h-2.5 flex items-center justify-center
+                       bg-yellow-400 border border-yellow-500 rounded-full shadow">
+            <svg viewBox="0 0 24 24" fill="white" class="w-2 h-2">
+              <path d="M5 8l3 3 4-6 4 6 3-3v10H5V8z" />
+            </svg>
+          </span>
+        </div>
+      </ng-container>
+
+      <!-- Compteur +X -->
+      <span *ngIf="project.projectMembers.length > 5" class="relative shrink-0 flex items-center justify-center
+                   w-6 h-6 rounded-full bg-gray-200 text-[10px] font-semibold text-[#16306B]
+                   border-2 border-white -ml-1 tooltip not-clickable">
+        +{{ project.projectMembers.length - 5 }}
+      </span>
+    </div>
+
+    <!-- Stats -->
+    <div class="flex gap-3 text-gray-500 text-sm items-center">
+      <div class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21.44 11.05l-8.49 8.49a5.5 5.5 0 01-7.78-7.78l8.49-8.49a3.5 3.5 0 014.95 4.95l-8.49 8.49a1.5 1.5 0 01-2.12-2.12l8.49-8.49" />
+        </svg>
+        {{ project.attachmentCount || 0 }}
+      </div>
+      <div class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15 10l4.553-4.553A1 1 0 0018.553 4H6a2 2 0 00-2 2v14l6-3 6 3V10z" />
+        </svg>
+        {{ project.boardCount || 0 }}
+      </div>
+    </div>
+  </div>
+</div>

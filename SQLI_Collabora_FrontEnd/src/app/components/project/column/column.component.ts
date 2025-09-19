@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Board } from 'src/app/models/project';
-import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
+import { Board, ProjectMemberDto } from 'src/app/models/project';
+import {  ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
   selector: 'app-column',

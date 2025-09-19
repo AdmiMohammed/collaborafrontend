@@ -1,7 +1,7 @@
 
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
-import { ProjectReadDto } from 'src/app/services/project-service/project.service';
+import { ProjectReadDto } from 'src/app/models/project';
 
 @Component({
   selector: 'app-project-card',
@@ -12,6 +12,10 @@ export class ProjectCardComponent {
   @Input() project!: ProjectReadDto;
   @Input() index: number = 0;
   @Input() view: 'grid' | 'list' = 'grid';
+  // project-card.component.ts
+  @Input() hasUrgent: boolean = false;
+  @Input() initialReveal = false;
+
 
   constructor(router: Router) {
     this.router = router
@@ -25,7 +29,11 @@ export class ProjectCardComponent {
     { text: 'text-[#F97316]', bg: 'bg-[#FFF1E6]' }, // orange clair
   ];
 
-
+  projectProgress(p: ProjectReadDto): number {
+    const total = p.totalRealTasks || 0;
+    const done  = p.completedRealTasks || 0;
+    return total > 0 ? Math.round(100 * done / total) : 0;
+  }
   getRandomBadgeColor(index: number) {
     return this.badgeColors[index % this.badgeColors.length];
   }
@@ -33,6 +41,7 @@ export class ProjectCardComponent {
   goToProject(id: number) {
     return this.router.navigate(['/projects', id])
   }
+  
   getInitials(name: string): string {
     if (!name) return '';
     return name

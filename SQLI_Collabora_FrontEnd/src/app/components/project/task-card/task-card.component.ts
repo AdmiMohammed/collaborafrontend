@@ -1,7 +1,7 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Task } from 'src/app/models/project';
-import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
+import { ProjectMemberDto, Task } from 'src/app/models/project';
+import { ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
   selector: 'app-task-card',

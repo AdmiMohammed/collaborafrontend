@@ -1,0 +1,267 @@
+<!-- CONTENEUR PRINCIPAL : PROJETS (GAUCHE) + STATS (DROITE) -->
+<div class="grid gap-4 grid-cols-1 lg:grid-cols-[3fr_0.8fr] items-stretch
+            h-[calc(100vh-6rem)] m-1 min-h-0 overflow-x-hidden">
+  <!-- colonne gauche -->
+  <div class="rounded-2xl bg-white w-full h-full flex flex-col border border-slate-200
+              shadow-sm min-h-0 min-w-0 overflow-hidden">
+    <!-- Header-->
+    <div class="px-6 py-5 border-slate-100">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h3 class="text-xl font-bold text-[#16306B]">Projets</h3>
+          <p class="text-sm mt-1 text-[#16306B]">Gérez vos projets et suivez leur progression</p>
+        </div>
+        <!-- Conteneur: badge filtre + bouton -->
+        <div class="flex items-center gap-3">
+          <!-- Badge de filtre actif -->
+          <ng-container *ngIf="selectedFilter !== 'ALL'">
+            <div
+              class="flex items-center bg-background text-[#16306B]  gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm border">
+              <i class="fa-solid" [ngClass]="{
+           'fa-circle-play': selectedFilter === 'ACTIVE',
+           'fa-calendar-plus': selectedFilter === 'UPCOMING',
+           'fa-clock-rotate-left': selectedFilter === 'OVERDUE'
+         }" class="text-[#16306B]"></i>
+
+              <span>
+                {{
+                selectedFilter === 'ACTIVE'
+                ? 'En cours'
+                : selectedFilter === 'UPCOMING'
+                ? 'À venir'
+                : selectedFilter === 'OVERDUE'
+                ? 'Échus'
+                : ''
+                }}
+              </span>
+
+              <!-- Croix -->
+              <button type="button" class="ml-1 transition" style="color: #16306B;" (click)="clearFilter()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Bouton Nouveau projet -->
+          <button
+            class="flex items-center gap-2 bg-primary-start text-white text-sm font-medium px-5 py-3 rounded-xl hover:shadow-lg"
+            (click)="openNewProjectWizard()">
+            <i class="fa-solid fa-plus"></i>
+            Nouveau projet
+          </button>
+        </div>
+
+
+
+      </div>
+    </div>
+
+    <!-- Body  -->
+    <div
+      class="px-8 py-6 overflow-x-hidden overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-background min-h-0">
+      <ng-container *ngIf="loading; else projectsLoaded">
+        <div [ngClass]="{
+            'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6': isGridView,
+            'flex flex-col gap-4': !isGridView
+          }" aria-busy="true" aria-label="Chargement des projets">
+          <div *ngFor="let _ of skeletonItems; trackBy: trackByIndex">
+            <app-project-card-skeleton [view]="isGridView ? 'grid' : 'list'"></app-project-card-skeleton>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #projectsLoaded>
+        <div appSortable [class.pointer-events-none]="loading" [items]="filteredProjects"
+          (projectsReordered)="onProjectReorder($event)"
+          class="flex flex-col gap-4 md:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+          <div *ngFor="let project of filteredProjects; let i = index; trackBy: trackByIndex">
+            <app-project-card [project]="project" [index]="i" [view]="'list'"
+              [hasUrgent]="urgentProjectIds.has(project.id) "></app-project-card>
+          </div>
+        </div>
+      </ng-template>
+
+    </div>
+  </div>
+
+  <!-- === COLONNE DROITE -->
+  <aside class="hidden lg:block h-full min-h-0 ">
+    <div class="h-full flex flex-col justify-between gap-4 min-h-0">
+
+      <!-- ===== CARTE STATS ===== -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5 flex flex-col flex-grow">
+        <!-- En-tête -->
+        <div class="flex items-center justify-between mb-6
+                  motion-safe:animate-fade-up [animation-delay:120ms]">
+          <div>
+            <div class="text-[11px] uppercase tracking-wide text-slate-500">Vue générale</div>
+            <div class="text-base font-semibold text-[#16306B]">Statistiques projets</div>
+          </div>
+          <span class="h-9 w-9 rounded-xl bg-violet-100 text-violet-700 grid place-items-center
+                     motion-safe:animate-scale-in [animation-delay:150ms]">
+            <i class="fa-solid fa-chart-line text-sm"></i>
+          </span>
+        </div>
+
+        <!-- DONUT -->
+        <div class="flex-1 flex items-center justify-center animate-ring-fill">
+          <div class="relative h-36 w-36" [style.--p]="globalProgress" [style.--r.px]="52" [style.--sw.px]="10"
+            [style.--c]="2 * Math.PI * 52" [style.--offset]="(1 - globalProgress/100) * (2 * Math.PI * 52)">
+            <svg viewBox="0 0 120 120" class="h-full w-full ">
+              <defs>
+                <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#16306b" />
+                  <stop offset="50%" stop-color="#8432df" />
+                  <stop offset="100%" stop-color="#fc0fc0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Anneau de fond -->
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#E9E5FF" style="stroke-width: var(--sw);" />
+
+              <!-- Progress animé -->
+              <!-- Progress animé -->
+              <circle cx="60" cy="60" r="52" fill="none" stroke="url(#g)" stroke-linecap="round"
+                class="animate-ring-fill" style="
+                      stroke-width: var(--sw);
+                      stroke-dasharray: var(--c);
+                      stroke-dashoffset: var(--c);
+                      transform-box: fill-box;
+                      transform-origin: center;
+                      transform: rotate(-90deg);
+              " />
+
+            </svg>
+
+            <!-- Texte au centre -->
+            <div class="absolute inset-0 grid place-items-center">
+              <div class="text-2xl font-bold text-[#16306B]">{{ globalProgress }}%</div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Mini-cartes -->
+        <div class="mt-auto pt-2">
+          <div class="grid grid-cols-2 gap-3">
+
+            <!-- TOTAL -->
+            <button type="button" class="rounded-2xl p-4 bg-sky-50 text-left transition ring-1 ring-transparent hover:ring-sky-200 focus:outline-none focus:ring-1 focus:ring-sky-400
+             motion-safe:animate-fade-up [animation-delay:220ms]" [class.!ring-sky-400]="isFilterActive('ALL')"
+              [attr.aria-pressed]="isFilterActive('ALL')" (click)="setFilter('ALL')">
+              <div class="text-[10px] font-medium uppercase text-slate-500">Total</div>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="inline-block h-5 w-1 rounded-full bg-sky-600"></span>
+                <div class="text-xl font-semibold text-[#111827]">
+                  <!-- Skeleton pendant chargement -->
+                  <ng-container *ngIf="loading; else totalVal">
+                    <span class="inline-block w-6 h-5 bg-slate-200 rounded animate-pulse"></span>
+                  </ng-container>
+                  <ng-template #totalVal>{{ stats.total }}</ng-template>
+                </div>
+              </div>
+            </button>
+
+            <!-- EN COURS -->
+            <button type="button" class="rounded-2xl p-4 bg-amber-50 text-left transition ring-1 ring-transparent hover:ring-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-400
+             motion-safe:animate-fade-up [animation-delay:260ms]" [class.!ring-amber-400]="isFilterActive('ACTIVE')"
+              [attr.aria-pressed]="isFilterActive('ACTIVE')" (click)="setFilter('ACTIVE')">
+              <div class="text-[10px] font-medium uppercase text-slate-500">En cours</div>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="inline-block h-5 w-1 rounded-full bg-amber-600"></span>
+                <div class="text-xl font-semibold text-[#111827]">
+                  <ng-container *ngIf="loading; else activeVal">
+                    <span class="inline-block w-6 h-5 bg-slate-200 rounded animate-pulse"></span>
+                  </ng-container>
+                  <ng-template #activeVal>{{ stats.active }}</ng-template>
+                </div>
+              </div>
+            </button>
+
+            <!-- À VENIR -->
+            <button type="button" class="rounded-2xl p-4 bg-fuchsia-50 text-left transition ring-1 ring-transparent hover:ring-fuchsia-200 focus:outline-none focus:ring-1 focus:ring-fuchsia-400
+             motion-safe:animate-fade-up [animation-delay:300ms]"
+              [class.!ring-fuchsia-400]="isFilterActive('UPCOMING')" [attr.aria-pressed]="isFilterActive('UPCOMING')"
+              (click)="setFilter('UPCOMING')">
+              <div class="text-[10px] font-medium uppercase text-slate-500">À venir</div>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="inline-block h-5 w-1 rounded-full bg-fuchsia-600"></span>
+                <div class="text-xl font-semibold text-[#111827]">
+                  <ng-container *ngIf="loading; else upcomingVal">
+                    <span class="inline-block w-6 h-5 bg-slate-200 rounded animate-pulse"></span>
+                  </ng-container>
+                  <ng-template #upcomingVal>{{ stats.upcoming }}</ng-template>
+                </div>
+              </div>
+            </button>
+
+            <!-- ÉCHUS -->
+            <button type="button" class="rounded-2xl p-4 bg-violet-50 text-left transition ring-1 ring-transparent hover:ring-violet-200 focus:outline-none focus:ring-1 focus:ring-violet-400
+             motion-safe:animate-fade-up [animation-delay:340ms]" [class.!ring-violet-400]="isFilterActive('OVERDUE')"
+              [attr.aria-pressed]="isFilterActive('OVERDUE')" (click)="setFilter('OVERDUE')">
+              <div class="text-[10px] font-medium uppercase text-slate-500">Échus</div>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="inline-block h-5 w-1 rounded-full bg-violet-600"></span>
+                <div class="text-xl font-semibold text-[#111827]">
+                  <ng-container *ngIf="loading; else overdueVal">
+                    <span class="inline-block w-6 h-5 bg-slate-200 rounded animate-pulse"></span>
+                  </ng-container>
+                  <ng-template #overdueVal>{{ stats.overdue }}</ng-template>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== CARTE INFOS (bas) ===== -->
+      <div class="rounded-2xl bg-white shadow-sm border border-slate-200 p-5">
+        <div class="space-y-3">
+          <div class="flex gap-3 p-3 rounded-xl bg-violet-50 items-center
+                    motion-safe:animate-float-in [animation-delay:420ms]">
+            <div class="h-9 w-9 rounded-lg bg-violet-600/10 text-violet-700 grid place-items-center">
+              <i class="fa-regular fa-calendar text-sm"></i>
+            </div>
+            <div class="text-sm">
+              <div class="text-slate-500">Aujourd'hui</div>
+              <div class="font-semibold text-[#16306B] capitalize">
+                {{ todayLabel }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 p-3 rounded-xl bg-red-50 items-center
+                    motion-safe:animate-float-in [animation-delay:460ms]">
+            <div class="relative">
+              <div class="h-9 w-9 rounded-lg bg-red-600/10 text-red-700 grid place-items-center">
+                <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+              </div>
+              <span class="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+            </div>
+
+            <div class="text-sm">
+              <div class="text-slate-500">
+                Tâches urgentes
+                <!-- Pendant le chargement, afficher uniquement ce texte -->
+                <ng-container *ngIf="loadingUrgent">&nbsp;• chargement…</ng-container>
+              </div>
+
+              <!-- N’afficher le sous-titre qu’après chargement -->
+              <div class="font-semibold text-[#16306B]" *ngIf="!loadingUrgent">
+                {{ urgentSubtitle }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+
+<!-- Wizard -->
+<app-project-wizard *ngIf="openWizard" [@wizardAnimation]="openWizard" (closed)="handleWizardClose()">
+</app-project-wizard>

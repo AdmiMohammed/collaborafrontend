@@ -17,12 +17,11 @@ import { SidebarComponent } from './shared/components/sidebar/sidebar.component'
 import { DashboardPageComponent } from './modules/dashboard-page/dashboard-page.component';
 import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { ProfileComponent } from './modules/profile/profile.component';
-import { MainDashComponent } from './modules/main-dash/main-dash.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-import { ProjectCardComponent } from './shared/components/project-card/project-card.component';
+import { ProjectCardComponent } from './components/project/project-card/project-card.component';
 import { SortableDirective } from './sortable.directive';
-import { ProjectWizardComponent } from './modules/project-wizard/project-wizard.component';
-import { ProjectCardSkeletonComponent } from './shared/components/project-card-skeleton/project-card-skeleton.component';
+import { ProjectWizardComponent } from './components/project/project-wizard/project-wizard.component';
+import { ProjectCardSkeletonComponent } from './components/project/project-card-skeleton/project-card-skeleton.component';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { PortalModule } from '@angular/cdk/portal';
 import { MatMenuModule } from '@angular/material/menu';
@@ -34,6 +33,13 @@ import { ColumnComponent } from './components/project/column/column.component';
 import { TaskCardComponent } from './components/project/task-card/task-card.component';
 import { AvatarComponent } from './shared/components/avatar/avatar.component';
 import { AddMemberModalComponent } from './components/project/add-member-modal/add-member-modal.component';
+import { ProjectsPageComponent } from './modules/projects-page/projects-page.component';
+import { AppLayoutComponent } from './modules/app-layout/app-layout.component';
+import { NgChartsModule } from 'ng2-charts';
+import { ProjectsDashboardComponent } from './components/dashboard/projects-dashboard/projects-dashboard.component';
+import { TasksDashboardComponent } from './components/dashboard/tasks-dashboard/tasks-dashboard.component';
+import { MembersDashboardComponent } from './components/dashboard/members-dashboard/members-dashboard.component';
+import { FilterSelectComponent } from './components/dashboard/filter-select/filter-select.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +53,6 @@ import { AddMemberModalComponent } from './components/project/add-member-modal/a
     DashboardPageComponent,
     TopbarComponent,
     ProfileComponent,
-    MainDashComponent,
     ProjectCardComponent,
     SortableDirective,
     ProjectPageComponent,
@@ -58,7 +63,12 @@ import { AddMemberModalComponent } from './components/project/add-member-modal/a
     AvatarComponent,
     ProjectWizardComponent,
     ProjectCardSkeletonComponent,
-
+    ProjectsPageComponent,
+    AppLayoutComponent,
+    ProjectsDashboardComponent,
+    TasksDashboardComponent,
+    MembersDashboardComponent,
+    FilterSelectComponent,
   ],
   imports: [
     BrowserModule,
@@ -72,6 +82,7 @@ import { AddMemberModalComponent } from './components/project/add-member-modal/a
     MatMenuModule,
     MatIconModule,
     MatButtonModule,
+    NgChartsModule,
     ToastrModule.forRoot({
       timeOut: 5000,
       positionClass: 'toast-top-right',

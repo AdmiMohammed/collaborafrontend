@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom, forkJoin, of, switchMap } from 'rxjs';
-import { Project } from 'src/app/models/project';
-import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
+import { Project, ProjectMemberDto } from 'src/app/models/project';
+import {  ProjectService } from 'src/app/services/project-service/project.service';
 import { AppUser } from 'src/app/services/user-service/user1.service';
 import { User1Service } from 'src/app/services/user-service/user1.service';
 
