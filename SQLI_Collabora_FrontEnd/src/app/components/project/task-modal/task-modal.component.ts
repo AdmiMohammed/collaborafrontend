@@ -6,6 +6,11 @@ import { Task, TaskLabel, Label, AttachmentDto, Comment } from 'src/app/models/p
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { UserService } from 'src/app/services/user-service/user.service';
 
+export interface LabelsChangedPayload {
+  projectLabels: Label[];
+  currentTask: Task;
+}
+
 @Component({
   selector: 'app-task-modal',
   templateUrl: './task-modal.component.html',
@@ -34,7 +39,7 @@ export class TaskModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<Task>();
   @Output() commentUpdated = new EventEmitter<Comment[]>(); // New event for comment updates
-  @Output() labelsChanged = new EventEmitter<Label[]>
+  @Output() labelsChanged = new EventEmitter<LabelsChangedPayload>
 
   activeMenu: 'calendar' | 'showLabel' | 'editLabel' | 'assignee' | '' = '';
   activeTab: 'comments' | 'attachments' = 'comments';
@@ -58,8 +63,9 @@ export class TaskModalComponent implements OnInit {
   @ViewChild('modalElement') modalElement!: ElementRef;
 
   @ViewChild('showLabelMenu') labelMenu?: ElementRef;
-  @ViewChild('showLabelToggleBtn') showLabelToggleBtn?: ElementRef;
+  @ViewChildren('showLabelToggleBtn') showLabelToggleBtn?: QueryList<ElementRef>;
   @ViewChild('showLabelToggleBtn2') showLabelToggleBtn2?: ElementRef;
+  @ViewChild('labelSection') labelSection?: ElementRef;
 
   @ViewChild('editLabelMenu') editLabelMenu?: ElementRef;
 
@@ -476,9 +482,9 @@ export class TaskModalComponent implements OnInit {
   // Map from French (UI) → Backend
   mapPriorityToBackend(priority: string | null) {
     switch (priority) {
-      case 'Haute': return 'High';
+      case 'Élevée': return 'High';
       case 'Moyenne': return 'Medium';
-      case 'Basse': return 'Low';
+      case 'Faible': return 'Low';
       case 'Aucune': return null;
       default: return null;
     }
@@ -487,9 +493,9 @@ export class TaskModalComponent implements OnInit {
   // Map from Backend → French (UI)
   mapPriorityToFrontend(priority: string | null) {
     switch (priority) {
-      case 'High': return 'Haute';
+      case 'Élevée': return 'Haute';
       case 'Medium': return 'Moyenne';
-      case 'Low': return 'Basse';
+      case 'Low': return 'Faible';
       case null: return 'Aucune';
       default: return 'Aucune';
     }
@@ -529,7 +535,10 @@ export class TaskModalComponent implements OnInit {
         next: (updated) => {
           this.projectLabels = this.projectLabels.map(l => l.id === this.labelForm.id ? this.labelForm : l);
           this.task.taskLabels!.find(tl => tl.labelId === this.labelForm.id)!.label = this.labelForm;
-          this.labelsChanged.emit(this.projectLabels);
+          this.labelsChanged.emit({
+            projectLabels: this.projectLabels,
+            currentTask: this.task
+          });
           this.cancelLabelEdit();
         },
         error: (err) => console.error('Failed to update label', err)
@@ -554,8 +563,10 @@ export class TaskModalComponent implements OnInit {
               ];
 
               // 3. Emit to parent so card updates
-              // this.save.emit(this.task);
-              this.labelsChanged.emit(this.projectLabels);
+              this.labelsChanged.emit({
+                projectLabels: this.projectLabels,
+                currentTask: this.task
+              });
 
               this.cancelLabelEdit();
             }
@@ -575,7 +586,10 @@ export class TaskModalComponent implements OnInit {
           // Remove from UI
           this.projectLabels = this.projectLabels.filter(l => l.id !== this.editingLabel!.id);
           this.task.taskLabels = this.task.taskLabels!.filter(l => l.labelId !== this.editingLabel!.id);
-          this.labelsChanged.emit(this.projectLabels);
+          this.labelsChanged.emit({
+            projectLabels: this.projectLabels,
+            currentTask: this.task
+          });
           this.cancelLabelEdit();
         },
         error: (err) => {
@@ -601,7 +615,7 @@ export class TaskModalComponent implements OnInit {
     const isChecked = this.isTaskLabelChecked(label);
 
     if (!isChecked) {
-      // ✅ Add label mapping
+      // Add label mapping
       this.projectService.createTaskLabelMapping(this.task.id, label.id).subscribe({
         next: (mapping) => {
           // attach the label if API doesn't return it
@@ -618,7 +632,7 @@ export class TaskModalComponent implements OnInit {
       });
 
     } else {
-      // ❌ Remove label mapping
+      // Remove label mapping
       const idx = this.task.taskLabels!.findIndex(tl => tl.label?.id === label.id);
       if (idx > -1) {
         // optimistic remove
@@ -645,7 +659,7 @@ export class TaskModalComponent implements OnInit {
       next: att => {
         this.task.attachments!.push(att);
         this.uploading = false;
-        input.value = ''; // ✅ reset so selecting the same file again works
+        input.value = ''; // reset so selecting the same file again works
       },
       error: () => {
         this.uploading = false;
@@ -669,16 +683,14 @@ export class TaskModalComponent implements OnInit {
   }
 
   getLabelMenuPosition(): string {
-
-    // Get the position of the calendar icon relative to the modal
-    const icon = this.showLabelToggleBtn?.nativeElement || this.showLabelToggleBtn2?.nativeElement;
+    const icon = this.labelSection?.nativeElement;
     if (!icon) return 'right: 1rem; bottom: 1rem';
 
     const rect = icon.getBoundingClientRect();
     const modalRect = this.modalElement.nativeElement.getBoundingClientRect();
 
     // Calculate position relative to modal
-    const top = rect.bottom - modalRect.top + 4; // Adjust the number as needed
+    const top = rect.bottom - modalRect.top + 4;
     const left = rect.left - modalRect.left;
 
     return `top: ${top}px; left: ${left}px;`;
@@ -703,7 +715,13 @@ export class TaskModalComponent implements OnInit {
 
   onModalRootClick(event: MouseEvent) {
     const t = event.target as Node;
-    const inside = (el?: ElementRef) => el?.nativeElement.contains(t);
+    const inside = (el?: ElementRef | QueryList<ElementRef>) => {
+      if (!el) return false;
+      if (el instanceof QueryList) {
+        return el.some(e => e.nativeElement.contains(t));
+      }
+      return el.nativeElement.contains(t);
+    };
 
     const inAnyMenu =
       inside(this.labelMenu) ||

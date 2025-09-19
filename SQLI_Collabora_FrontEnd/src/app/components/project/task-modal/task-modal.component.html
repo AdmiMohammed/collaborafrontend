@@ -29,7 +29,7 @@
         <!-- Label Menu -->
         <div class="relative mb-4">
           <label class="block text-sm font-medium text-blue-500 mb-2">Étiquettes</label>
-          <div class="flex flex-wrap gap-2">
+          <div class="flex flex-wrap gap-2" #labelSection>
             <span *ngFor="let taskLabel of task.taskLabels" (click)="toggleLabelMenu()" #showLabelToggleBtn
               class="flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-md text-white cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 min-w-16 min-h-6"
               [style.backgroundColor]="taskLabel.label.color">
@@ -301,11 +301,11 @@
           <div class="pt-4">
             <label class="block text-xs font-semibold text-blue-500 mb-5">Priorité</label>
             <div class="grid grid-cols-2 gap-2">
-              <button *ngFor="let p of ['Aucune','Basse','Moyenne','Haute']" (click)="selectPriority(p)" [class]="
+              <button *ngFor="let p of ['Aucune','Faible','Moyenne','Élevée']" (click)="selectPriority(p)" [class]="
                   selectedPriority === 'Aucune' && p === 'Aucune' ? 'bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-100' :
-                  selectedPriority === 'Basse' && p === 'Basse' ? 'bg-[#8432DF] text-white hover:bg-[#8432DF]' :
+                  selectedPriority === 'Faible' && p === 'Faible' ? 'bg-[#8432DF] text-white hover:bg-[#8432DF]' :
                   selectedPriority === 'Moyenne' && p === 'Moyenne' ? 'bg-[#C020D0] text-white hover:bg-[#C020D0]' :
-                  selectedPriority === 'Haute' && p === 'Haute' ? 'bg-[#FC0FC0] text-white hover:bg-[#FC0FC0]' :
+                  selectedPriority === 'Élevée' && p === 'Élevée' ? 'bg-[#FC0FC0] text-white hover:bg-[#FC0FC0]' :
                   'text-slate-600 border border-slate-200 hover:bg-slate-200 hover:text-slate-900'
                 " class="w-full px-3 py-1 rounded-full text-sm transition"> {{ p }}
               </button>

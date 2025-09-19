@@ -12,7 +12,7 @@
     <div class="flex items-start justify-between gap-2">
       <!-- Title view mode -->
       <ng-container *ngIf="!isEditing; else editMode">
-        <h4 class="flex-1 text-gray-900 text-sm leading-snug break-words transition-colors min-w-0" (click)="startEditing(); $event.stopPropagation()">
+        <h4 class="flex-1 text-gray-900 text-sm leading-snug break-words transition-colors min-w-0">
           {{ task.title }}
         </h4>
         <!-- Edit icon -->
@@ -48,7 +48,7 @@
           'text-[#df5b59]': task.priority === 'High'
         }" [attr.data-tooltip]="'Priorité'">
         
-        {{ task.priority }}
+        {{ priorityLabels[task.priority] }}
       </span>
 
       <!-- Deadline -->

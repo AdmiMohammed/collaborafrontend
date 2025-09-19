@@ -2,6 +2,7 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { firstValueFrom } from 'rxjs';
 import { Label, Task } from 'src/app/models/project';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
+import { LabelsChangedPayload } from '../task-modal/task-modal.component';
 
 @Component({
   selector: 'app-task-card',
@@ -21,6 +22,12 @@ export class TaskCardComponent {
   isEditing = false;
   taskTitleDraft = '';
   originalTask!: Task;
+
+  priorityLabels: Record<string, string> = {
+    Low: 'Faible',
+    Medium: 'Moyenne',
+    High: 'Élevée'
+  };
 
   constructor(private projectService: ProjectService) { }
 
@@ -52,7 +59,8 @@ export class TaskCardComponent {
   }
 
   async saveTitle() {
-    await this.saveChanges();
+    this.task.title = this.taskTitleDraft.trim();
+    await this.saveTask(this.task);
     this.isEditing = false;
   }
 
@@ -79,7 +87,7 @@ export class TaskCardComponent {
     this.isModalOpen = false;
     const { attachments, comments, taskLabels, ...restOfFields } = updatedTask;
     await this.saveChanges(restOfFields);
-    this.task = { ...updatedTask, }; // Preserve comments
+    Object.assign(this.task, updatedTask);
   }
 
   ngOnInit() {
@@ -87,8 +95,9 @@ export class TaskCardComponent {
     this.loadComments();
   }
 
-  onLabelsChanged(updated: Label[]) {
-    this.labelsChanged.emit(updated);
+  onLabelsChanged(updated: LabelsChangedPayload) {
+    this.task.taskLabels = updated.currentTask.taskLabels;
+    this.labelsChanged.emit(updated.projectLabels);
   }
 
   loadComments(): void {
@@ -104,8 +113,14 @@ export class TaskCardComponent {
     const updatedTask = await firstValueFrom(
       this.projectService.updateTask(this.task.id, this.originalTask, task)
     );
-    this.task = { ...updatedTask, comments: this.task.comments }; // Preserve comments
-    this.originalTask = { ...updatedTask, comments: this.task.comments }; // Reset original copy
+
+    Object.assign(this.task, updatedTask);
+
+    this.task.comments = this.task.comments;
+
+    Object.assign(this.originalTask, updatedTask);
+    this.originalTask.comments = this.task.comments;
+
     return updatedTask;
   }
 }
