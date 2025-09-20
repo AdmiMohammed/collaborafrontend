@@ -13,7 +13,6 @@ export class ProjectPageComponent implements OnInit {
   project!: Project;
   addingColumn = false;
   newColumnName = '';
-  openMenuColumnId: number | null = null;
   activeAddTaskColumnId: number | null = null;
 
   constructor(private projectService: ProjectService,
@@ -95,20 +94,6 @@ export class ProjectPageComponent implements OnInit {
         }
       }
     })
-  }
-  //column menu
-  toggleMenu(columnId: number) {
-    if (this.openMenuColumnId === columnId) {
-      this.openMenuColumnId = null; // close if clicking same column again
-    } else {
-      this.openMenuColumnId = columnId; // open this column, close others
-    }
-  }
-
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: Event) {
-    const target = event.target as HTMLElement;
-    this.openMenuColumnId = null;
   }
 
   setActiveColumn(columnId: number | null) {

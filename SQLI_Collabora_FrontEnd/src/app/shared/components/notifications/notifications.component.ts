@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import { Notification } from 'src/app/models/notification';
+import { MenuStateService } from 'src/app/services/menu-state-service/menu-state.service';
 
 @Component({
   selector: 'app-notifications',
@@ -27,26 +28,31 @@ import { Notification } from 'src/app/models/notification';
 export class NotificationsComponent {
   @Input() notifications: Notification[] = [];
   @Input() unreadCount = 0;
-  @Input() isOpen = false;
+  menuId = 'notifications';
 
-  @Output() toggleDropdown = new EventEmitter<Event>();
   @Output() markAllAsRead = new EventEmitter<void>();
   @Output() handleAction = new EventEmitter<{ id: number; event: Event }>();
 
-  constructor(private elRef: ElementRef) {}
+  constructor(private elRef: ElementRef, private menuState: MenuStateService) {}
+
+  get isOpen(): boolean {
+    return this.menuState.isOpen(this.menuId);
+  }
 
   onToggle(event: Event) {
     event.stopPropagation();
-    this.isOpen = !this.isOpen;
-    this.toggleDropdown.emit();
+    if (this.menuState.isOpen(this.menuId)) {
+      this.menuState.close(this.menuId);
+    } else {
+      this.menuState.open(this.menuId);
+    }
   }
 
 
   @HostListener('document:mousedown', ['$event'])
   onClickOutside(event: Event) {
     if (this.isOpen && !this.elRef.nativeElement.contains(event.target)) {
-      this.isOpen = false;
-      this.toggleDropdown.emit();
+      this.menuState.close(this.menuId)
     }
   }
 
