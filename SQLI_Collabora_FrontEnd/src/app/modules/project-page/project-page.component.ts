@@ -28,8 +28,8 @@ export class ProjectPageComponent implements OnInit {
   }
 
   openAddColumn() {
-     // On Ferme tous les inputs d'ajout de carte ouverts
-  this.activeAddTaskColumnId = null;
+    // On Ferme tous les inputs d'ajout de carte ouverts
+    this.activeAddTaskColumnId = null;
     this.addingColumn = true;
     this.newColumnName = '';
 
@@ -64,7 +64,7 @@ export class ProjectPageComponent implements OnInit {
   }
 
 
-  
+
   // async ngOnInit() {
   //   const projectId = this.route.snapshot.paramMap.get('id');
   //   if (projectId) {
@@ -76,24 +76,26 @@ export class ProjectPageComponent implements OnInit {
   //     });
   //   }
   // }
-async ngOnInit() {
-  const projectId = this.route.snapshot.paramMap.get('id');
-  if (projectId) {
-    this.project = await firstValueFrom(
-      this.projectService.getProjectDetails(Number(projectId))
-    );
+  async ngOnInit() {
+    this.route.paramMap.subscribe(async params => {
+      const projectId = params.get('id');
+      if (projectId) {
+        this.project = await firstValueFrom(
+          this.projectService.getProjectDetails(Number(projectId))
+        );
 
-    // ✅ filtrer les tasks archivées au chargement
-    this.project.columns.forEach(col => {
-      col.tasks = col.tasks.filter(task => !task.isArchived);
-    });
+        // ✅ filtrer les tasks archivées au chargement
+        this.project.columns.forEach(col => {
+          col.tasks = col.tasks.filter(task => !task.isArchived);
+        });
 
-    // ✅ trier les colonnes par position
-    if (this.project?.columns) {
-      this.project.columns.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-    }
+        // ✅ trier les colonnes par position
+        if (this.project?.columns) {
+          this.project.columns.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+        }
+      }
+    })
   }
-}
   //column menu
   toggleMenu(columnId: number) {
     if (this.openMenuColumnId === columnId) {
@@ -116,41 +118,41 @@ async ngOnInit() {
       this.addingColumn = false;
     }
   }
-onColumnArchived(columnId: number) {
-  const col = this.project.columns.find(c => c.id === columnId);
-  if (col) col.isArchived = true; // Angular masque grâce au *ngIf
-}
-
-restoreColumn(columnId: number) {
-  this.projectService.restoreBoard(columnId).subscribe({
-    next: () => {
-      const col = this.project.columns.find(c => c.id === columnId);
-      if (col) col.isArchived = false;
-    },
-    error: (err) => console.error(err)
-  });
-}
-onTaskRestored(task: Task) {
-  const column = this.project.columns.find(c => c.id === task.boardId);
-  if (column) {
-    // Supprimer l’ancienne version de la tâche (archivée)
-    task.isArchived = false;
-    column.tasks = column.tasks.filter(t => t.id !== task.id);
-
-    // Ajouter la tâche restaurée
-    column.tasks.push(task);
-
-
-    // column.tasks.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-  }
-}
-onColumnRestored(columnId: number) {
-  const column = this.project.columns.find(c => c.id === columnId);
-  if (column) {
-    column.isArchived = false;
+  onColumnArchived(columnId: number) {
+    const col = this.project.columns.find(c => c.id === columnId);
+    if (col) col.isArchived = true; // Angular masque grâce au *ngIf
   }
 
-}
+  restoreColumn(columnId: number) {
+    this.projectService.restoreBoard(columnId).subscribe({
+      next: () => {
+        const col = this.project.columns.find(c => c.id === columnId);
+        if (col) col.isArchived = false;
+      },
+      error: (err) => console.error(err)
+    });
+  }
+  onTaskRestored(task: Task) {
+    const column = this.project.columns.find(c => c.id === task.boardId);
+    if (column) {
+      // Supprimer l’ancienne version de la tâche (archivée)
+      task.isArchived = false;
+      column.tasks = column.tasks.filter(t => t.id !== task.id);
+
+      // Ajouter la tâche restaurée
+      column.tasks.push(task);
+
+
+      // column.tasks.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    }
+  }
+  onColumnRestored(columnId: number) {
+    const column = this.project.columns.find(c => c.id === columnId);
+    if (column) {
+      column.isArchived = false;
+    }
+
+  }
   columnMap: Map<HTMLElement, Board> = new Map();
   @ViewChildren('columnList', { read: ElementRef }) columnEls!: QueryList<ElementRef>;
 

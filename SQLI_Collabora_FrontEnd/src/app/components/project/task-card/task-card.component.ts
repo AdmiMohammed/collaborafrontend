@@ -62,8 +62,11 @@ export class TaskCardComponent {
   }
 
   async saveTitle() {
-    this.task.title = this.taskTitleDraft.trim();
-    await this.saveTask(this.task);
+    const trimmedTitle = this.taskTitleDraft.trim();    
+    if(this.taskTitleDraft.trim().length > 0){
+      this.task.title = trimmedTitle;
+      await this.saveTask(this.task);
+    }
     this.isEditing = false;
   }
 
