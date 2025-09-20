@@ -1,4 +1,4 @@
-import { animate, style, transition, trigger } from '@angular/animations';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, Input, Output, EventEmitter, OnInit, ElementRef, ViewChild, ViewChildren, QueryList, NgZone } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { take } from 'rxjs';
@@ -28,6 +28,16 @@ export interface LabelsChangedPayload {
         // Fade out and slide up slightly when removed
         animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
       ])
+    ]),
+    trigger('overlayAnimation', [
+        state('void', style({ opacity: 0 })),
+        state('*', style({ opacity: 1 })),
+        transition('void <=> *', animate('200ms ease-in-out'))
+      ]),
+    trigger('modalAnimation', [
+        state('void', style({ opacity: 0, transform: 'scale(0.95)' })),
+        state('*', style({ opacity: 1, transform: 'scale(1)' })),
+        transition('void <=> *', animate('200ms ease-in-out')),
     ])
   ]
 })

@@ -1,6 +1,6 @@
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" (click)="onBackdropClick($event)">
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4" (click)="onBackdropClick($event)" @overlayAnimation>
   <div #modalElement class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col relative"
-    (click)="onModalRootClick($event)" (mousedown)="onModalMouseDown($event)" (mouseup)="onModalMouseUp($event)">
+    (click)="onModalRootClick($event)" (mousedown)="onModalMouseDown($event)" (mouseup)="onModalMouseUp($event)" @modalAnimation>
 
     <!-- Header -->
     <div class="flex items-center justify-between px-4 py-3 border-b border-background bg-slate-50/30 rounded-t-2xl">

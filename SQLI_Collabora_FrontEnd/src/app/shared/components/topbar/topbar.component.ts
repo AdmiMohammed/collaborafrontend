@@ -74,7 +74,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   goToDashboard() {
-    return this.router.navigate(['/dashboard'])
+    return this.router.navigate(['/home'])
   }
 
   get initials(): string {

@@ -8,7 +8,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
   templateUrl: './archived-task.component.html',
   styleUrls: [],
   animations: [
-      trigger('overlayAnimation', [
+    trigger('overlayAnimation', [
       state('void', style({ opacity: 0 })),
       state('*', style({ opacity: 1 })),
       transition('void <=> *', animate('200ms ease-in-out'))
@@ -18,52 +18,97 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
       state('*', style({ opacity: 1, transform: 'scale(1)' })),
       transition('void <=> *', animate('200ms ease-in-out')),
     ])
-      ]
+  ]
 })
-export class ArchivedTaskComponent implements OnInit{
+export class ArchivedTaskComponent implements OnInit {
   @Input() projectId!: number;
   archivedTasks: Task[] = [];
   loading = false;
   archivedColumns: Board[] = [];
-  showTasks = true; 
+  showTasks = true;
+  openDeleteMenu: boolean = false;
+  deleteType: 'task' | 'column' | '' = ''
+  deleteItem?: Task | Board;
   @Output() closeModal = new EventEmitter<void>();
   @Output() taskRestored = new EventEmitter<Task>();
   @Output() columnRestored = new EventEmitter<number>();
-  constructor(private projectService: ProjectService) {}
+  constructor(private projectService: ProjectService) { }
 
   ngOnInit() {
-  this.loadArchivedColumns();
-  this.loadArchivedTasks(); 
-}
+    this.loadArchivedColumns();
+    this.loadArchivedTasks();
+  }
+
   toggleView(view: 'tasks' | 'columns') {
     this.showTasks = view === 'tasks';
   }
-loadArchivedTasks() {
-  this.loading = true;
-  this.projectService.getArchivedTasksForProject(this.projectId).subscribe({
-    next: (tasks) => {
-      this.archivedTasks = tasks;
-      this.loading = false;
-    },
-    error: () => this.loading = false
-  });
-}
+
+  loadArchivedTasks() {
+    this.loading = true;
+    this.projectService.getArchivedTasksForProject(this.projectId).subscribe({
+      next: (tasks) => {
+        this.archivedTasks = tasks;
+        this.loading = false;
+      },
+      error: () => this.loading = false
+    });
+  }
+
   close() {
     this.closeModal.emit();
   }
- restoreTask(task: Task) {
-  this.projectService.restoreTask(task.id).subscribe({
-    next: () => {
-      this.archivedTasks = this.archivedTasks.filter(t => t.id !== task.id);
-      this.taskRestored.emit(task); 
-    },
-    error: (err) => console.error('Erreur restauration tâche', err)
-  });
-}
+
+  restoreTask(task: Task) {
+    this.projectService.restoreTask(task.id).subscribe({
+      next: () => {
+        this.archivedTasks = this.archivedTasks.filter(t => t.id !== task.id);
+        this.taskRestored.emit(task);
+      },
+      error: (err) => console.error('Erreur restauration tâche', err)
+    });
+  }
+
+  openDeletionModal(deleteType: 'task' | 'column', deleteItem: Task | Board) {
+    this.openDeleteMenu = true;
+    this.deleteType = deleteType;
+    this.deleteItem = deleteItem;
+  }
+
+  closeDeletionModal() {
+    this.openDeleteMenu = false;
+    this.deleteItem = undefined;
+    this.deleteType = '';
+  }
+
+  onConfirmDelete() {
+    if (!this.deleteItem) return;
+
+    if (this.deleteType === 'task') {
+      this.deleteTask(this.deleteItem as Task);
+    } else if (this.deleteType === 'column') {
+      this.deleteColumn(this.deleteItem.id);
+    }
+
+    this.closeDeletionModal();
+  }
+
+  get deleteItemName(): string {
+    if (!this.deleteItem) return '';
+
+    if ('title' in this.deleteItem) {
+      // It's a Task
+      return this.deleteItem.title;
+    }
+
+    if ('name' in this.deleteItem) {
+      // It's a Board
+      return this.deleteItem.name;
+    }
+
+    return '';
+  }
 
   deleteTask(task: Task) {
-    if (!confirm('Voulez-vous vraiment supprimer cette tâche ?')) return;
-
     this.projectService.deleteTask(task.id).subscribe({
       next: () => {
         this.archivedTasks = this.archivedTasks.filter(t => t.id !== task.id);
@@ -71,24 +116,25 @@ loadArchivedTasks() {
       error: (err) => console.error('Erreur suppression tâche', err)
     });
   }
+
   loadArchivedColumns() {
     this.projectService.getArchivedColumns(this.projectId).subscribe({
       next: (columns) => this.archivedColumns = columns,
       error: (err) => console.error(err)
     });
   }
- restoreColumn(columnId: number) {
-  this.projectService.restoreBoard(columnId).subscribe({
-    next: () => {
-      this.archivedColumns = this.archivedColumns.filter(c => c.id !== columnId);
-      this.columnRestored.emit(columnId); 
-    },
-    error: (err) => console.error(err)
-  });
-}
+
+  restoreColumn(columnId: number) {
+    this.projectService.restoreBoard(columnId).subscribe({
+      next: () => {
+        this.archivedColumns = this.archivedColumns.filter(c => c.id !== columnId);
+        this.columnRestored.emit(columnId);
+      },
+      error: (err) => console.error(err)
+    });
+  }
 
   deleteColumn(columnId: number) {
-    if (!confirm('Voulez-vous vraiment supprimer cette colonne ?')) return;
     this.projectService.deleteColumn(columnId).subscribe({
       next: () => this.archivedColumns = this.archivedColumns.filter(c => c.id !== columnId),
       error: (err) => console.error(err)

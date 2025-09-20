@@ -48,7 +48,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.validateToken(token).subscribe({
           next: (isValid) => {
             if (isValid) {
-              this.router.navigate(['/dashboard']);
+              this.router.navigate(['/home']);
             } else {
               localStorage.removeItem('token'); // Clear invalid token
             }
