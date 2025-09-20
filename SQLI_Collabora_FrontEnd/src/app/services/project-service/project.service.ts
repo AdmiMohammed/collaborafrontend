@@ -21,9 +21,9 @@ export interface ProjectMemberDto {
 export interface ProjectCreateDto {
   name: string;
   description: string;
-  startDate: string;         
-  createdBy: number;          
-  estimatedEndDate: string | null; 
+  startDate: string;
+  createdBy: number;
+  estimatedEndDate: string | null;
   templateId: number;
   initialBoardCount: number;
   memberIds: number[];
@@ -129,7 +129,7 @@ export class ProjectService {
   createColumn(columnData: { name: string; projectId: number, position: number }) {
     return this.http.post<Board>(this.boardApiBase, columnData);
   }
-  
+
   archiveBoard(boardId: number): Observable<void> {
     return this.http.patch<void>(`${this.boardApiBase}/${boardId}/archive`, {});
   }
@@ -139,12 +139,12 @@ export class ProjectService {
   }
 
   getArchivedColumns(projectId: number) {
-  return this.http.get<Board[]>(`${this.boardApiBase}/archived/${projectId}`);
-}
+    return this.http.get<Board[]>(`${this.boardApiBase}/archived/${projectId}`);
+  }
 
-deleteColumn(columnId: number) {
-  return this.http.delete<void>(`${this.boardApiBase}/${columnId}`);
-}
+  deleteColumn(columnId: number) {
+    return this.http.delete<void>(`${this.boardApiBase}/${columnId}`);
+  }
 
   // **************** tâches ****************
   createTask(taskData: { title: string, position: number, boardId: number }): Observable<Task> {
@@ -155,7 +155,7 @@ deleteColumn(columnId: number) {
     )
   }
 
-  
+
   updateTaskName(newTitle: string, taskId: number) {
     const patchPayload = [
       { op: 'replace', path: '/title', value: newTitle }
@@ -175,11 +175,15 @@ deleteColumn(columnId: number) {
     return this.http.get<Task[]>(`${this.taskApiBase}/archived/${projectId}`);
   }
   getArchivedTasksForProject(projectId: number): Observable<Task[]> {
-  return this.http.get<Task[]>(`${this.taskApiBase}/archived-for-project/${projectId}`);
-}
+    return this.http.get<Task[]>(`${this.taskApiBase}/archived-for-project/${projectId}`);
+  }
   updateTask(taskId: number, original: any, updated: any): Observable<any> {
+    const sanitize = (task: any) => {
+      const { canonicalStatus, createdByName, assignedToName, boardName, comments, attachments, taskLabels, ...rest } = task;
+      return rest;
+    };
     // Automatically compute the patch
-    const patchPayload = jsonpatch.compare(original, updated);
+    const patchPayload = jsonpatch.compare(sanitize(original), sanitize(updated));
 
     return this.http.patch(
       `${this.taskApiBase}/${taskId}`,
@@ -235,7 +239,7 @@ deleteColumn(columnId: number) {
     return this.http.delete<void>(`${this.attachmentApiBase}/${id}`);
   }
 
-  reorderTask(taskId: number, dto: {newBoardId: number, newPosition: number}): Observable<void> {
+  reorderTask(taskId: number, dto: { newBoardId: number, newPosition: number }): Observable<void> {
     return this.http.post<void>(`${this.taskApiBase}/${taskId}/reorder`, dto);
   }
 
@@ -252,16 +256,16 @@ deleteColumn(columnId: number) {
   bulkRemoveMembers(projectId: number, userIds: number[]) {
     return this.http.post<ProjectMemberDto>(`${this.apiBase}/${projectId}/members/bulk-remove`, userIds)
   }
-create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
-  return this.user1Service.getCurrentUser().pipe(
-    take(1),
-    switchMap(user => {
-      const body = { ...dto, createdBy: user.id };
-      console.log('[POST /api/projects] payload envoyé =', body); // <-- c’est CE log qui compte
-      return this.http.post<ProjectReadDto>(this.apiBase, body);
-    })
-  );
-}
+  create(dto: Omit<ProjectCreateDto, 'createdBy'>): Observable<ProjectReadDto> {
+    return this.user1Service.getCurrentUser().pipe(
+      take(1),
+      switchMap(user => {
+        const body = { ...dto, createdBy: user.id };
+        console.log('[POST /api/projects] payload envoyé =', body); // <-- c’est CE log qui compte
+        return this.http.post<ProjectReadDto>(this.apiBase, body);
+      })
+    );
+  }
 
   // Create a new comment
   createComment(commentData: CreateCommentDto): Observable<Comment> {

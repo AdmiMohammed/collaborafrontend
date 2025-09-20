@@ -58,6 +58,17 @@ export class TaskModalComponent implements OnInit {
   modalMouseDownInside = false;
   titleError!: boolean;
 
+  readonly statusConfig: Record<string, { label: string; bg: string }> = {
+    ToDo: { label: 'À faire', bg: '#C020D0' },
+    InProgress: { label: 'En cours', bg: '#8432DF' },
+    Review: { label: 'En révision', bg: '#0EA5E9' },
+    Blocked: { label: 'Bloquée', bg: '#F59E0B' },
+    Done: { label: 'Terminée', bg: '#10B981' },
+    Canceled: { label: 'Annulée', bg: '#EF4444' },
+    Archived: { label: 'Archivée', bg: '#64748B' },
+    Unknown: { label: 'Inconnu', bg: '#6B7280' },
+  };
+
   @ViewChild('commentsContainer') commentsContainer!: ElementRef;
   @ViewChild('editCommentInput') editCommentInput!: ElementRef<HTMLTextAreaElement>;
   @ViewChildren('commentContainers') commentContainers!: QueryList<ElementRef<HTMLDivElement>>;
