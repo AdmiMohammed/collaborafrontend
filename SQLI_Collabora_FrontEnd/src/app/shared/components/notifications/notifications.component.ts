@@ -49,7 +49,7 @@ export class NotificationsComponent {
   }
 
 
-  @HostListener('document:mousedown', ['$event'])
+  @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
     if (this.isOpen && !this.elRef.nativeElement.contains(event.target)) {
       this.menuState.close(this.menuId)
