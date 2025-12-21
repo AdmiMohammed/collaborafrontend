@@ -24,7 +24,7 @@ const routes: Routes = [
   { path: 'confirm-email', component: ConfirmEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
   // App (protégé idéalement par un guard)
   {
     path: '',

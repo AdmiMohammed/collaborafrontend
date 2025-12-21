@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, ViewChild, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProjectReadDto } from 'src/app/models/project';
+import { MenuStateService } from 'src/app/services/menu-state-service/menu-state.service';
 
 @Component({
   selector: 'app-search-bar',
@@ -9,39 +10,47 @@ import { ProjectReadDto } from 'src/app/models/project';
 })
 export class SearchBarComponent {
   @ViewChild('searchContainer') searchContainer!: ElementRef;
-  @Input() projects: ProjectReadDto[] = [];  
+  @Input() projects: ProjectReadDto[] = [];
 
   placeholder: string = 'Rechercher';
   searchProject: string = '';
   searchResults: ProjectReadDto[] = [];
-  dropdownOpen: boolean = false;
+  menuId: string = 'searchBar';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private menuState: MenuStateService) { }
+
+  get isOpen(): boolean {
+    return this.menuState.isOpen(this.menuId);
+  }
 
   onSearchChange() {
     const term = this.searchProject.trim().toLowerCase();
-    this.searchResults = term 
+    this.searchResults = term
       ? this.projects.filter(p => p.name.toLowerCase().includes(term))
-      : [...this.projects];  
-    this.dropdownOpen = this.searchResults.length > 0;
+      : [...this.projects];
+    if (this.searchResults.length === 0) {
+      this.menuState.close(this.menuId);
+    }
   }
 
   onInputFocus() {
     this.searchResults = [...this.projects];
-    this.dropdownOpen = this.searchResults.length > 0;
+    if (this.searchResults.length > 0) {
+      this.menuState.open(this.menuId);
+    }
   }
 
   goToProject(project: ProjectReadDto) {
     this.router.navigate(['/projects', project.id]);
     this.searchProject = '';
     this.searchResults = [];
-    this.dropdownOpen = false;
+    this.menuState.close(this.menuId)
   }
 
-  @HostListener('document:mousedown', ['$event'])
+  @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
-    if (this.dropdownOpen && this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
-      this.dropdownOpen = false;
+    if (this.isOpen && this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
+      this.menuState.close(this.menuId)
       this.searchProject = '';
     }
   }

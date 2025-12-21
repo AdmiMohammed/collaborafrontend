@@ -52,10 +52,9 @@
         *ngIf="!column.isArchived"
         [column]="column"
         [members]="project.members"
-        [menuOpen]="openMenuColumnId === column.id"
+        [menuId]="'column-'+column.id"
         [projectLabels]="project.labels"
         [activeColumnId]="activeAddTaskColumnId"
-        (toggleMenu)="toggleMenu(column.id)"
         (requestAddTask)="setActiveColumn($event)"
         (columnArchived)="onColumnArchived($event)"
         (labelsChanged)="onLabelsChanged($event)">

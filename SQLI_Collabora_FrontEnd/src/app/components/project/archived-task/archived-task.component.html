@@ -55,7 +55,7 @@
             </button>
 
             <button 
-              (click)="deleteTask(t)" 
+              (click)="openDeletionModal('task', t)" 
               class="p-2 rounded-lg hover:bg-gray-200 flex items-center justify-center transition transform">
             <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 48 48" width="20" height="20">
                 <path d="M 20.5 4 A 1.50015 1.50015 0 0 0 19.066406 6 L 14.640625 6 C 12.803372 6 11.082924 6.9194511 10.064453 8.4492188 
@@ -90,7 +90,7 @@
                 <path d="M7 11L4.5 13.5L2 11" stroke="#121923" stroke-width="1.2"/>
               </svg>
             </button>
-            <button (click)="deleteColumn(c.id)" 
+            <button (click)="openDeletionModal('column', c)" 
                     class="p-2 rounded-lg  hover:bg-gray-200 flex items-center justify-center transition transform">
               <svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 48 48" width="20" height="20">
                 <path d="M 20.5 4 A 1.50015 1.50015 0 0 0 19.066406 6 L 14.640625 6 C 12.803372 6 11.082924 6.9194511 10.064453 8.4492188 
@@ -114,3 +114,11 @@
 
   </div>
 </div>
+
+<app-delete-confirmation-modal
+  *ngIf="openDeleteMenu"
+  [itemName]="deleteItemName"
+  [type]="deleteType"
+  (confirm)="onConfirmDelete()"
+  (cancel)="closeDeletionModal()">
+</app-delete-confirmation-modal>

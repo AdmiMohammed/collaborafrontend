@@ -48,6 +48,7 @@ import { UserInfoComponent } from './shared/components/user-info/user-info.compo
 import { NotificationsComponent } from './shared/components/notifications/notifications.component';
 import { ArchivedTaskComponent } from './components/project/archived-task/archived-task.component';
 import { TaskModalComponent } from './components/project/task-modal/task-modal.component';
+import { DeleteConfirmationModalComponent } from './shared/components/delete-confirmation-modal/delete-confirmation-modal.component';
 
 @NgModule({
   declarations: [
@@ -85,6 +86,7 @@ import { TaskModalComponent } from './components/project/task-modal/task-modal.c
     NotificationsComponent,
     ArchivedTaskComponent,
     TaskModalComponent,
+    DeleteConfirmationModalComponent,
   ],
   imports: [
     BrowserModule,

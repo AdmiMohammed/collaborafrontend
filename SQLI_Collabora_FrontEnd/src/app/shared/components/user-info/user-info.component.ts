@@ -15,8 +15,7 @@ export class UserInfoComponent {
 
   goToProfile(): void {
     if(this.user) {
-      // this.router.navigate(['/profile', this.user.id]);
-      this.router.navigate(['/dashboard/profile']);
+      this.router.navigate(['/profile']);
     }
   }
 }

@@ -2,6 +2,7 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { firstValueFrom } from 'rxjs';
 
 import { Board, Label, Task } from 'src/app/models/project';
+import { MenuStateService } from 'src/app/services/menu-state-service/menu-state.service';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 
 @Component({
@@ -13,10 +14,9 @@ export class ColumnComponent {
   @Input() projectLabels!: Label[];
   @Input() column!: Board;
   @Input() members!: ProjectMemberDto[];
-  @Input() menuOpen: boolean = false;
+  @Input() menuId!: string;
   @Input() activeColumnId!: number | null;
 
-  @Output() toggleMenu = new EventEmitter<number>();
   @Output() requestAddTask = new EventEmitter<number | null>();
   newTaskName = '';
   menuLeft = 0; // pixels offset from left of viewport
@@ -24,12 +24,12 @@ export class ColumnComponent {
   editedName = '';
   @Output() columnArchived = new EventEmitter<number>();
 
-  constructor(private projectService: ProjectService) { }
+  constructor(private projectService: ProjectService, private menuState: MenuStateService) { }
 
   @ViewChild('taskInput') taskInput!: ElementRef;
   @ViewChild('addTaskContainer') addTaskContainer!: ElementRef;
   @ViewChild('nameInput') nameInput!: ElementRef<HTMLInputElement>;
-  
+
   get addingTask(): boolean {
     return this.activeColumnId === this.column.id;
   }
@@ -43,7 +43,7 @@ export class ColumnComponent {
       }
     });
   }
-  
+
 
   async confirmAddTask() {
     if (this.newTaskName.trim()) {
@@ -62,7 +62,7 @@ export class ColumnComponent {
       this.column.tasks.push(newTask);
     }
     this.newTaskName = '';
-    this.requestAddTask.emit(null); 
+    this.requestAddTask.emit(null);
   }
 
   cancelAddTask() {
@@ -70,9 +70,18 @@ export class ColumnComponent {
     this.requestAddTask.emit(null);
   }
 
+  get isOpen(): boolean {
+    return this.menuState.isOpen(this.menuId);
+  }
+
   onToggleMenu(event: MouseEvent, columnId: number) {
-    if (!this.menuOpen) {
+    if (!this.isOpen) {
       event.stopPropagation(); // Prevents click from bubbling up
+      if (this.menuState.isOpen(this.menuId)) {
+        this.menuState.close(this.menuId);
+      } else {
+        this.menuState.open(this.menuId);
+      }
 
       const button = event.currentTarget as HTMLElement;
       const parent = button.parentElement!; // The .relative container
@@ -94,13 +103,12 @@ export class ColumnComponent {
 
       this.menuLeft = overflowRight; // Final left offset inside parent
     }
-    this.toggleMenu.emit(columnId); // notify parent to toggle open/close
   }
 
   // Optional: close on outside click
   ngOnInit() {
     document.addEventListener('click', () => {
-      this.menuOpen = false;
+      this.menuState.close(this.menuId);
     });
   }
 
@@ -134,14 +142,14 @@ export class ColumnComponent {
   }
 
 
- async archiveColumn() {
-  try {
-    await firstValueFrom(this.projectService.archiveBoard(this.column.id));
-    this.columnArchived.emit(this.column.id); 
-  } catch (error) {
-    console.error('Erreur lors de l’archivage :', error);
+  async archiveColumn() {
+    try {
+      await firstValueFrom(this.projectService.archiveBoard(this.column.id));
+      this.columnArchived.emit(this.column.id);
+    } catch (error) {
+      console.error('Erreur lors de l’archivage :', error);
+    }
   }
-}
 
   onTasksReordered(event: {
     movedItem: Task,

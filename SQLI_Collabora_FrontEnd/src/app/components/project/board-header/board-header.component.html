@@ -60,13 +60,10 @@
     </ng-container>
   </div>
 </div>
-<app-add-member-modal *ngIf="currentModal === 'addMember'" [existingMembers]="project.members"
-        (memberChangesConfirmed)="onMemberChangesConfirmed($event)" 
-        (close)="closeModal()">
-</app-add-member-modal>
+
 <ng-template #projectMenuFull let-isOwner="isOwner">
   <div class="relative">
-    <button (click)="toggleMenu($event)"
+    <button (click)="toggleMenu($event)" #menuIcon
       class="text-gray-600 p-1.5 rounded-full hover:bg-gray-200 transition duration-200 tooltip"
       aria-label="Options supplémentaires" type="button" data-tooltip="Options">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -77,12 +74,12 @@
       </svg>
     </button>
 
-    <div *ngIf="menuOpen"
+    <div *ngIf="isOpen" #menuContainer
          class="absolute right-0 mt-4 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-[1000]">
       <ul class="divide-y divide-gray-100">
         <ng-container *ngIf="isOwner">
           <li>
-            <button (click)="deleteProject()" class="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-purple-100 hover:text-purple-500 text-sm transition-colors">
+            <button (click)="openModal('delete')" class="w-full flex items-center gap-3 px-3 py-1.5 hover:bg-purple-100 hover:text-purple-500 text-sm transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -151,3 +148,16 @@
   [projectId]="project.id"
   (closeModal)="closeModal()">
 </app-activity> 
+
+<app-add-member-modal *ngIf="currentModal === 'addMember'" [existingMembers]="project.members"
+        (memberChangesConfirmed)="onMemberChangesConfirmed($event)" 
+        (close)="closeModal()">
+</app-add-member-modal>
+
+<app-delete-confirmation-modal
+  *ngIf="currentModal === 'delete'"
+  [itemName]="project.name"
+  [type]="'project'"
+  (confirm)="confirmDelete()"
+  (cancel)="closeModal()">
+</app-delete-confirmation-modal>

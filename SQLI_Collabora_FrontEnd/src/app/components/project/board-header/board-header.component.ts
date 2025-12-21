@@ -1,7 +1,8 @@
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom, forkJoin, of, Subscription} from 'rxjs';
+import { firstValueFrom, forkJoin, of, Subscription } from 'rxjs';
 import { Project, Task } from 'src/app/models/project';
+import { MenuStateService } from 'src/app/services/menu-state-service/menu-state.service';
 import { ProjectMemberDto, ProjectService } from 'src/app/services/project-service/project.service';
 import { AppUser } from 'src/app/services/user-service/user1.service';
 import { User1Service } from 'src/app/services/user-service/user1.service';
@@ -13,8 +14,8 @@ import { User1Service } from 'src/app/services/user-service/user1.service';
 })
 export class BoardHeaderComponent {
   @Input() project!: Project;
-  currentModal: 'history' | 'archived' | 'addMember' | null = null;
-  menuOpen: boolean = false;
+  currentModal: 'history' | 'archived' | 'addMember' | 'delete' | null = null;
+  menuId: string = 'project-header'
   private userSub?: Subscription;
   now = new Date();
   options: Intl.DateTimeFormatOptions = {
@@ -30,25 +31,41 @@ export class BoardHeaderComponent {
   @Output() taskRestored = new EventEmitter<Task>();
   @Output() columnRestored = new EventEmitter<number>();
   @ViewChild('projectInput') projectInput!: ElementRef;
-  constructor(private projectService: ProjectService, private router: Router, private userService: User1Service, private elRef: ElementRef) {}
+  @ViewChild('menuContainer') menuContainer!: ElementRef;
+  @ViewChild('menuIcon') menuIcon!: ElementRef;
+  constructor(private projectService: ProjectService, private router: Router, private userService: User1Service, private elRef: ElementRef, private menuState: MenuStateService) { }
 
   toggleMenu(event: MouseEvent) {
     event.stopPropagation();
-    this.menuOpen = !this.menuOpen;
+    if (this.menuState.isOpen(this.menuId)) {
+      this.menuState.close(this.menuId);
+    } else {
+      this.menuState.open(this.menuId);
+    }
   }
 
-  async deleteProject() {
-    await firstValueFrom(
-      this.projectService.deleteProject(this.project.id)
-    )
-    return this.router.navigate(['/dashboard'])
+  get isOpen(): boolean {
+    return this.menuState.isOpen(this.menuId);
   }
-  openModal(type: 'history' | 'archived' | 'addMember') {
-  this.currentModal = type;
-  this.menuOpen = false;
-}
+
+  openModal(type: 'history' | 'archived' | 'addMember' | 'delete') {
+    this.currentModal = type;
+    this.menuState.close(this.menuId)
+  }
+
   closeModal() {
     this.currentModal = null;
+  }
+
+  async confirmDelete() {
+    try {
+      await firstValueFrom(this.projectService.deleteProject(this.project.id));
+      this.router.navigate(['/home']);
+    } catch (err) {
+      console.error("Erreur lors de la suppression du projet", err);
+    } finally {
+      this.closeModal();
+    }
   }
 
   onMemberChangesConfirmed(event: {
@@ -81,7 +98,7 @@ export class BoardHeaderComponent {
       }
     })
   }
-  
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['project'] && this.project) {
       this.setCurrentUserRole();
@@ -89,9 +106,9 @@ export class BoardHeaderComponent {
   }
   setCurrentUserRole() {
     this.userSub = this.userService.getCurrentUser().subscribe(user => {
-    const member = this.project.members.find(m => m.userId === user.id);
-    this.currentUserRole = member ? member.role : null;
-  });
+      const member = this.project.members.find(m => m.userId === user.id);
+      this.currentUserRole = member ? member.role : null;
+    });
   }
   ngOnDestroy() {
     this.userSub?.unsubscribe();
@@ -100,6 +117,7 @@ export class BoardHeaderComponent {
     this.editedName = this.project.name;
     this.isEditingName = true;
     this.focusInput();
+    this.menuState.close(this.menuId)
   }
 
   async saveProjectName() {
@@ -115,7 +133,7 @@ export class BoardHeaderComponent {
         )
       );
       const trimmed = this.editedName.trim();
-  
+
       this.project.name = trimmed;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du nom du projet', error);
@@ -137,10 +155,12 @@ export class BoardHeaderComponent {
     setTimeout(() => this.projectInput?.nativeElement.focus(), 0);
   }
 
- @HostListener('document:mousedown', ['$event'])
+  @HostListener('document:mousedown', ['$event'])
   onClickOutside(event: Event) {
-    if (this.menuOpen && !this.elRef.nativeElement.contains(event.target)) {
-      this.menuOpen = false;
+    const clickedInsideMenu = this.menuContainer?.nativeElement.contains(event.target);
+    const clickedOnIcon = this.menuIcon?.nativeElement.contains(event.target);
+    if (this.isOpen && !clickedInsideMenu && !clickedOnIcon) {
+      this.menuState.close(this.menuId)
     }
   }
 }

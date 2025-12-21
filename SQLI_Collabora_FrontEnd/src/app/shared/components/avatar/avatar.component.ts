@@ -24,7 +24,7 @@ export class AvatarComponent {
       case 'lg': return 'w-16 h-16 text-xl';
       case 'header': return 'sm:w-8 sm:h-8 w-9 h-9 rounded-full border-2 border-white shadow-md'
       case 'global-header': return 'rounded-full object-cover w-10 h-10'
-      case 'task-modal': return 'w-7 h-7 rounded-full text-[10px]'
+      case 'task-modal': return 'w-7 h-7 rounded-full text-[12px]'
       case 'comment': return 'w-8 h-8 rounded-full'
       default: return 'w-10 h-10 text-base';
     }

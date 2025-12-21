@@ -44,6 +44,7 @@ export interface Task {
   attachments?: AttachmentDto[];
   comments?: Comment[];
   isArchived: boolean;
+  canonicalStatus: 'ToDo'| 'InProgress' | 'Review' | 'Blocked' | 'Done' | 'Canceled' | 'Archived' | 'Unknown' | null;
 }
 
 
