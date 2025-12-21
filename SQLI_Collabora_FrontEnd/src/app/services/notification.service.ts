@@ -3,13 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Notification } from '../models/notification';
 import * as signalR from '@microsoft/signalr';
+import { environment } from 'src/environments/environment';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private hubUrl = `http://localhost:5205/notificationHub`;
-  private apiUrl = `http://localhost:5205/api/assignment-notifications`;
+  private hubUrl = `${environment.apiUrl}/notificationHub`;
+  private apiUrl = `${environment.apiUrl}/api/assignment-notifications`;
   private hubConnection!: signalR.HubConnection;
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   public notifications$ = this.notificationsSubject.asObservable();

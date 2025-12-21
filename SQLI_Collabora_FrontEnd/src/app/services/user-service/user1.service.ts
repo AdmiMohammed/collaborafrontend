@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, switchMap, catchError, of, shareReplay } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface AppUser {
   id: number;
@@ -15,7 +16,7 @@ export interface AppUser {
 })
 export class User1Service {
 
-  private apiUrl : string = 'http://localhost:5205/api/User';
+  private apiUrl : string = `${environment.apiUrl}/api/User`;
   constructor(private http: HttpClient) { }
 
   getCurrentUser(): Observable<any> {

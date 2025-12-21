@@ -50,7 +50,7 @@ body { margin: 0; font-family: poppins, sans-serif; }
   position: relative;
   cursor: pointer;
   display: inline-flex;
-  z-index: 999;
+  /*z-index: 999;*/
 }
 
 /* Tooltip text */

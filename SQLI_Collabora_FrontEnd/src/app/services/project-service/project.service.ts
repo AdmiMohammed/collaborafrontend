@@ -7,6 +7,7 @@ import { TaskHistory } from 'src/app/models/task-history';
 
 import { AttachmentDto, Board, Label, Project, Task, TaskLabel, Comment, ProjectTaskReadDto, ProjectReadDto } from 'src/app/models/project';
 import * as jsonpatch from 'fast-json-patch';
+import { environment } from 'src/environments/environment';
 
 export interface ProjectMemberDto {
   userId: number;
@@ -44,13 +45,13 @@ export interface UpdateCommentDto {
 })
 
 export class ProjectService {
-  private apiBase = 'http://localhost:5205/api/Projects';
-  private boardApiBase = 'http://localhost:5205/api/boards';
-  private taskApiBase = 'http://localhost:5205/api/projecttasks';
-  private labelApiBase = 'http://localhost:5205/api/label';
-  private taskLabelApiBase = 'http://localhost:5205/api/taskLabels';
-  private attachmentApiBase = 'http://localhost:5205/api/attachments';
-  private commentApiBase = `http://localhost:5205/api/comments`;
+  private apiBase = `${environment.apiUrl}/api/Projects`;
+  private boardApiBase = `${environment.apiUrl}/api/boards`;
+  private taskApiBase = `${environment.apiUrl}/api/projecttasks`;
+  private labelApiBase = `${environment.apiUrl}/api/label`;
+  private taskLabelApiBase = `${environment.apiUrl}/api/taskLabels`;
+  private attachmentApiBase = `${environment.apiUrl}/api/attachments`;
+  private commentApiBase = `${environment.apiUrl}/api/comments`;
 
   constructor(private http: HttpClient, private user1Service: User1Service) { }
 
@@ -108,7 +109,7 @@ export class ProjectService {
 
 
   getProjectHistory(projectId: number): Observable<TaskHistory[]> {
-    return this.http.get<TaskHistory[]>(`http://localhost:5205/api/projects/${projectId}/history`);
+    return this.http.get<TaskHistory[]>(`${environment.apiUrl}/api/projects/${projectId}/history`);
   }
 
   // ********************* colonnes *********************

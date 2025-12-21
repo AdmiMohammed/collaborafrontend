@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface TemplateReadDto {
   id: number;
@@ -13,7 +14,7 @@ export interface TemplateReadDto {
 
 @Injectable({ providedIn: 'root' })
 export class TemplatesService {
-  private apiBase = 'http://localhost:5205/api/ProjectTemplates';
+  private apiBase = `${environment.apiUrl}/api/ProjectTemplates`;
 
   constructor(private http: HttpClient) {}
 

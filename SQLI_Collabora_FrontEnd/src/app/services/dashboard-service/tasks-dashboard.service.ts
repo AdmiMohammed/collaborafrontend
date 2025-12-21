@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap, map } from 'rxjs';
 import { UserService } from '../user-service/user.service';
 import { User } from 'src/app/models/user';
+import { environment } from 'src/environments/environment';
 
 export interface TaskDashboardResponse {
   userTasks: {
@@ -24,7 +25,7 @@ export interface TaskDashboardResponse {
   providedIn: 'root',
 })
 export class TasksDashboardService {
-  private apiUrl = 'http://localhost:5205/api/Dashboard';
+  private apiUrl = `${environment.apiUrl}/api/Dashboard`;
 
   constructor(
     private http: HttpClient,
